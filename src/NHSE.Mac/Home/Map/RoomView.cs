@@ -23,6 +23,19 @@ public enum RoomEditMode
 }
 
 /// <summary>
+/// Openings of a room, on the sides seen from above: front (the entrance, or the way to the main room) at the bottom.
+/// </summary>
+[Flags]
+public enum RoomDoors
+{
+    None = 0,
+    Front = 1,
+    Back = 2,
+    Left = 4,
+    Right = 8,
+}
+
+/// <summary>
 /// A room of a house seen from above, as in the game: the floor with its flooring, the back wall with its wallpaper,
 /// rugs, furniture and what stands on it, each with its picture on its tiles. In <see cref="RoomEditMode.Walls"/> one wall is
 /// shown face on, with what hangs on it. A click reports the tile of the layer being edited.
@@ -39,6 +52,7 @@ public sealed class RoomView : Control
     private int Squares = 8;
     private IImage? FloorPicture;
     private IImage? WallPicture;
+    private RoomDoors Doors;
 
     private RoomEditMode _mode;
     public RoomEditMode Mode { get => _mode; set { _mode = value; InvalidateVisual(); } }
@@ -79,12 +93,13 @@ public sealed class RoomView : Control
     /// <summary>
     /// Shows a room: its item layers, its size in squares and the pictures of its flooring and wallpaper.
     /// </summary>
-    public void SetRoom(LayerRoomItem[] layers, int squares, IImage? floor, IImage? wall)
+    public void SetRoom(LayerRoomItem[] layers, int squares, IImage? floor, IImage? wall, RoomDoors doors = RoomDoors.None)
     {
         Layers = layers;
         Squares = Math.Clamp(squares, 1, GridSize / 2);
         FloorPicture = floor;
         WallPicture = wall;
+        Doors = doors;
         Hover = null;
         InvalidateVisual();
     }
@@ -103,6 +118,9 @@ public sealed class RoomView : Control
         _ => RoomLayerSurface.Floor,
     };
 
+    /// <summary> Thickness of the walls in the plan, in tiles. </summary>
+    private const double WallThickness = 1.1;
+
     #region Geometry
     /// <summary> Area of the control taken by the floor (or the wall face), and pixels per tile. </summary>
     private (Rect Floor, double Unit, Rect BackWall, Rect Room) Layout()
@@ -117,14 +135,12 @@ public sealed class RoomView : Control
             var face = new Rect(b.X + ((b.Width - w) / 2), b.Y + ((b.Height - h - (2 * unit)) / 2), w, h);
             return (face, unit, face, face);
         }
-        const double back = 4.6; // tiles of the back wall seen from above
-        const double side = 0.9;
-        var u = Math.Min(b.Width / (Span + (2 * side)), b.Height / (Span + back + side));
-        var roomW = (Span + (2 * side)) * u;
-        var roomH = (Span + back + side) * u;
-        var room = new Rect(b.X + ((b.Width - roomW) / 2), b.Y + ((b.Height - roomH) / 2), roomW, roomH);
-        var floor = new Rect(room.X + (side * u), room.Y + (back * u), Span * u, Span * u);
-        var backWall = new Rect(floor.X, room.Y, floor.Width, back * u);
+        // A plan: the floor with its real shape, and the walls as a frame around it.
+        var u = Math.Min(b.Width, b.Height) / (Span + (2 * WallThickness));
+        var size = (Span + (2 * WallThickness)) * u;
+        var room = new Rect(b.X + ((b.Width - size) / 2), b.Y + ((b.Height - size) / 2), size, size);
+        var floor = room.Deflate(WallThickness * u);
+        var backWall = new Rect(floor.X, room.Y, floor.Width, WallThickness * u);
         return (floor, u, backWall, room);
     }
 
@@ -245,54 +261,18 @@ public sealed class RoomView : Control
     {
         var (floor, u, backWall, room) = Layout();
 
-        // Walls: the back one seen in full, the sides and front as a thin edge.
-        var wallBase = Color.FromRgb(0xEF, 0xE7, 0xD8);
-        context.DrawRectangle(new SolidColorBrush(Color.FromRgb(0xB8, 0xA8, 0x90)), null, room.Inflate(3), 10, 10,
-            new BoxShadows(new BoxShadow { Blur = 18, OffsetY = 4, Color = Color.FromArgb(0x50, 0, 0, 0) }));
-        context.DrawRectangle(new SolidColorBrush(wallBase), null, room, 8, 8);
-        // Side walls: the same wallpaper, in shade.
-        foreach (var sideWall in new[] { new Rect(room.X, room.Y, floor.X - room.X, floor.Bottom - room.Y), new Rect(floor.Right, room.Y, room.Right - floor.Right, floor.Bottom - room.Y) })
-        {
-            using (context.PushClip(new RoundedRect(sideWall, new CornerRadius(sideWall.X == room.X ? 8 : 0, sideWall.X == room.X ? 0 : 8, 0, 0))))
-            {
-                PaintWall(context, WallPicture, sideWall, u * 2.4);
-                context.FillRectangle(new SolidColorBrush(Color.FromArgb(0x48, 0x20, 0x14, 0x08)), sideWall);
-            }
-        }
-        using (context.PushClip(backWall))
-        {
-            PaintWall(context, WallPicture, backWall, backWall.Height);
-            // Light from above, and the skirting board.
-            context.FillRectangle(new LinearGradientBrush
-            {
-                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
-                GradientStops = { new GradientStop(Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF), 0), new GradientStop(Color.FromArgb(0x28, 0, 0, 0), 1) },
-            }, backWall);
-            context.FillRectangle(new SolidColorBrush(Color.FromArgb(0x90, 0x4A, 0x34, 0x20)), new Rect(backWall.X, backWall.Bottom - (u * 0.3), backWall.Width, u * 0.3));
-        }
+        // Walls: a frame in the colour of the wallpaper.
+        var wall = AverageColor(WallPicture, WallPatternCrop, Color.FromRgb(0xC9, 0xB8, 0x9C));
+        context.DrawRectangle(new SolidColorBrush(Shade(wall, 0.82)), new Pen(new SolidColorBrush(Shade(wall, 0.5)), 1.5), room, 6, 6,
+            new BoxShadows(new BoxShadow { Blur = 16, OffsetY = 4, Color = Color.FromArgb(0x48, 0, 0, 0) }));
 
         // Floor
         using (context.PushClip(floor))
         {
             context.FillRectangle(new SolidColorBrush(Color.FromRgb(0xE2, 0xCF, 0xAE)), floor);
             TileTexture(context, FloorPicture, floor, u * 3.8, FloorCrop);
-            // Shadow of the back wall on the floor.
-            context.FillRectangle(new LinearGradientBrush
-            {
-                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
-                GradientStops = { new GradientStop(Color.FromArgb(0x50, 0, 0, 0), 0), new GradientStop(Color.FromArgb(0, 0, 0, 0), 1) },
-            }, new Rect(floor.X, floor.Y, floor.Width, u * 0.9));
-            // Light from the back: the floor is a little darker toward the front.
-            context.FillRectangle(new LinearGradientBrush
-            {
-                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
-                GradientStops = { new GradientStop(Color.FromArgb(0x30, 0, 0, 0), 0), new GradientStop(Color.FromArgb(0, 0, 0, 0), 0.08), new GradientStop(Color.FromArgb(0x18, 0, 0, 0), 1) },
-            }, floor);
-            // A faint line on each square, to see where things go.
-            var grid = new Pen(new SolidColorBrush(Color.FromArgb(0x16, 0x40, 0x30, 0x20)), 1);
+            // One faint line per square, to see where things go.
+            var grid = new Pen(new SolidColorBrush(Color.FromArgb(0x30, 0x30, 0x20, 0x10)), 1);
             for (int i = 1; i < Squares; i++)
             {
                 var x = Math.Round(floor.X + (i * 2 * u)) + 0.5;
@@ -300,8 +280,11 @@ public sealed class RoomView : Control
                 context.DrawLine(grid, new Point(x, floor.Y), new Point(x, floor.Bottom));
                 context.DrawLine(grid, new Point(floor.X, y), new Point(floor.Right, y));
             }
+            // The walls cast a little shadow on the floor.
+            context.DrawRectangle(null, new Pen(new SolidColorBrush(Color.FromArgb(0x30, 0, 0, 0)), u * 0.5), floor.Deflate(u * 0.25));
         }
-        context.DrawRectangle(null, new Pen(new SolidColorBrush(Color.FromArgb(0x50, 0x40, 0x30, 0x20)), 1), floor);
+        context.DrawRectangle(null, new Pen(new SolidColorBrush(Shade(wall, 0.5)), 1.5), floor);
+        DrawDoors(context, floor, u, wall);
 
         // What hangs on the back wall, small, at its place along the wall.
         DrawWallStrip(context, Layers[(int)RoomLayerSurface.WallNorth], backWall, u);
@@ -309,20 +292,60 @@ public sealed class RoomView : Control
         // What is being edited is drawn clearly; the rest fades a little.
         var (rugs, floorItems, tables, ceiling) = Mode switch
         {
-            RoomEditMode.Tables => (0.7, 0.5, 1.0, 0.0),
+            RoomEditMode.Tables => (0.6, 0.55, 1.0, 0.0),
             RoomEditMode.Rugs => (1.0, 0.35, 0.3, 0.0),
             RoomEditMode.Ceiling => (0.5, 0.4, 0.35, 1.0),
-            _ => (1.0, 1.0, 1.0, 0.16),
+            _ => (1.0, 1.0, 1.0, 0.0),
         };
         using (context.PushOpacity(rugs))
             DrawLayer(context, Layers[(int)RoomLayerSurface.Rugs], ItemLook.Flat);
-        // Furniture and what stands on it are drawn together from back to front, so nearer things cover farther ones.
-        DrawStanding(context, Layers[(int)RoomLayerSurface.Floor], floorItems, Layers[(int)RoomLayerSurface.FloorSupported], tables);
+        using (context.PushOpacity(floorItems))
+            DrawTokens(context, Layers[(int)RoomLayerSurface.Floor], TokenKind.Furniture);
+        using (context.PushOpacity(tables))
+            DrawTokens(context, Layers[(int)RoomLayerSurface.FloorSupported], TokenKind.OnTable);
         if (ceiling > 0)
         {
             using (context.PushOpacity(ceiling))
-                DrawLayer(context, Layers[(int)RoomLayerSurface.Ceiling], ItemLook.Fit);
+                DrawTokens(context, Layers[(int)RoomLayerSurface.Ceiling], TokenKind.Ceiling);
         }
+    }
+
+    /// <summary>
+    /// Openings in the walls: a gap one square wide in the middle of the wall, with a door drawn as in a plan
+    /// (the leaf and the arc it sweeps).
+    /// </summary>
+    private void DrawDoors(DrawingContext context, Rect floor, double u, Color wall)
+    {
+        var width = 2 * u;
+        var depth = WallThickness * u;
+        var mid = new Point(floor.Center.X, floor.Center.Y);
+        var leaf = new Pen(new SolidColorBrush(Color.FromArgb(0x90, 0x30, 0x20, 0x10)), 1.5);
+        var arc = new Pen(new SolidColorBrush(Color.FromArgb(0x90, 0x40, 0x30, 0x20)), 1) { DashStyle = new DashStyle([3, 3], 0) };
+        var gap = new SolidColorBrush(Color.FromRgb(0xE8, 0xDC, 0xC4));
+
+        void Door(Rect opening, Point hinge, Vector closed, Vector open)
+        {
+            context.FillRectangle(gap, opening);
+            // Leaf open into the room, and the arc of its swing.
+            context.DrawLine(leaf, hinge, hinge + (open * width));
+            var g = new StreamGeometry();
+            using (var c = g.Open())
+            {
+                c.BeginFigure(hinge + (closed * width), false);
+                c.ArcTo(hinge + (open * width), new Size(width, width), 0, false, SweepDirection.Clockwise);
+                c.EndFigure(false);
+            }
+            context.DrawGeometry(null, arc, g);
+        }
+
+        if (Doors.HasFlag(RoomDoors.Front))
+            Door(new Rect(mid.X - (width / 2), floor.Bottom, width, depth), new Point(mid.X - (width / 2), floor.Bottom), new Vector(1, 0), new Vector(0, -1));
+        if (Doors.HasFlag(RoomDoors.Back))
+            Door(new Rect(mid.X - (width / 2), floor.Y - depth, width, depth), new Point(mid.X + (width / 2), floor.Y), new Vector(-1, 0), new Vector(0, 1));
+        if (Doors.HasFlag(RoomDoors.Left))
+            Door(new Rect(floor.X - depth, mid.Y - (width / 2), depth, width), new Point(floor.X, mid.Y - (width / 2)), new Vector(0, 1), new Vector(1, 0));
+        if (Doors.HasFlag(RoomDoors.Right))
+            Door(new Rect(floor.Right, mid.Y - (width / 2), depth, width), new Point(floor.Right, mid.Y + (width / 2)), new Vector(0, -1), new Vector(-1, 0));
     }
 
     private void RenderWall(DrawingContext context)
@@ -412,39 +435,89 @@ public sealed class RoomView : Control
         }
     }
 
-    private static readonly IBrush FootShadow = new SolidColorBrush(Color.FromArgb(0x2C, 0x20, 0x10, 0x00));
+    private enum TokenKind { Furniture, OnTable, Ceiling }
 
     /// <summary>
-    /// Furniture stands on its spot as in the game: its picture rises from the floor, a little taller than the spot, with a
-    /// soft shadow at its foot; what is on top of it stands on its upper part. Drawn from back to front.
+    /// Each item as a piece on its exact spot, the size it takes in the room, with its picture inside:
+    /// furniture on a soft card, what stands on it on a smaller one, ceiling things only outlined.
     /// </summary>
-    private void DrawStanding(DrawingContext context, LayerRoomItem floor, double floorOpacity, LayerRoomItem tables, double tableOpacity)
+    private void DrawTokens(DrawingContext context, LayerRoomItem layer, TokenKind kind)
     {
         using var _ = context.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = BitmapInterpolationMode.HighQuality });
-        var all = Roots(floor).Select(z => (z.Area, z.Item, OnTable: false))
-            .Concat(Roots(tables).Select(z => (z.Area, z.Item, OnTable: true)))
-            .OrderBy(z => z.Area.Bottom).ThenBy(z => z.OnTable);
-        foreach (var (area, item, onTable) in all)
+        foreach (var (area, item) in Roots(layer).OrderBy(z => z.Area.Bottom))
         {
-            var r = ToScreen(area);
+            var r = ToScreen(area).Deflate(1.5);
             var picture = GridItems.GetPicture(item);
-            using (context.PushOpacity(onTable ? tableOpacity : floorOpacity))
+            switch (kind)
             {
-                if (onTable)
+                case TokenKind.Furniture:
                 {
-                    // On the tabletop: a little smaller and raised, but still over its own spot so a click finds it.
-                    var w = r.Width * 0.86;
-                    var foot = r.Bottom - (r.Height * 0.3);
-                    context.DrawEllipse(FootShadow, null, new Point(r.Center.X, foot - (r.Height * 0.06)), r.Width * 0.3, r.Height * 0.1);
-                    DrawPicture(context, picture, new Rect(r.Center.X - (w / 2), foot - w, w, w), anchorBottom: true);
-                    continue;
+                    var radius = Math.Min(r.Width, r.Height) * 0.16;
+                    context.DrawRectangle(TokenFill, TokenEdge, r, radius, radius,
+                        new BoxShadows(new BoxShadow { Blur = 5, OffsetY = 1.5, Color = Color.FromArgb(0x50, 0, 0, 0) }));
+                    DrawPicture(context, picture, r.Deflate(Math.Min(r.Width, r.Height) * 0.06));
+                    break;
                 }
-                context.DrawEllipse(FootShadow, null, new Point(r.Center.X, r.Bottom - (r.Height * 0.2)), r.Width * 0.38, r.Height * 0.15);
-                var width = r.Width * 1.14;
-                var height = Math.Max(r.Width, r.Height) * 1.14;
-                DrawPicture(context, picture, new Rect(r.Center.X - (width / 2), r.Bottom - (r.Height * 0.08) - height, width, height), anchorBottom: true);
+                case TokenKind.OnTable:
+                {
+                    var t = r.Deflate(Math.Min(r.Width, r.Height) * 0.22);
+                    var radius = Math.Min(t.Width, t.Height) / 2;
+                    context.DrawRectangle(TableFill, TokenEdge, t, radius, radius,
+                        new BoxShadows(new BoxShadow { Blur = 4, OffsetY = 1, Color = Color.FromArgb(0x60, 0, 0, 0) }));
+                    DrawPicture(context, picture, t.Deflate(Math.Min(t.Width, t.Height) * 0.1));
+                    break;
+                }
+                default:
+                {
+                    var radius = Math.Min(r.Width, r.Height) * 0.16;
+                    context.DrawRectangle(null, CeilingEdge, r, radius, radius);
+                    DrawPicture(context, picture, r.Deflate(Math.Min(r.Width, r.Height) * 0.1));
+                    break;
+                }
             }
         }
+    }
+
+    private static readonly IBrush TokenFill = new SolidColorBrush(Color.FromArgb(0x9C, 0xFF, 0xFC, 0xF5));
+    private static readonly IBrush TableFill = new SolidColorBrush(Color.FromArgb(0xF0, 0xFF, 0xFF, 0xFF));
+    private static readonly IPen TokenEdge = new Pen(new SolidColorBrush(Color.FromArgb(0x70, 0x40, 0x30, 0x20)), 1);
+    private static readonly IPen CeilingEdge = new Pen(new SolidColorBrush(Color.FromArgb(0xB0, 0xFF, 0xFF, 0xFF)), 1.5) { DashStyle = new DashStyle([4, 3], 0) };
+
+    private static Color Shade(Color c, double f) => Color.FromRgb((byte)(c.R * f), (byte)(c.G * f), (byte)(c.B * f));
+
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Bitmap, object> AverageColors = new();
+
+    /// <summary>
+    /// Average colour of part of a picture (e.g. a wallpaper's pattern), ignoring see-through pixels.
+    /// </summary>
+    private static Color AverageColor(IImage? picture, Rect crop, Color fallback)
+    {
+        if (picture is not Bitmap bmp)
+            return fallback;
+        if (AverageColors.TryGetValue(bmp, out var known))
+            return (Color)known;
+        var (w, h) = (bmp.PixelSize.Width, bmp.PixelSize.Height);
+        using var copy = ImageUtil.Create(w, h);
+        using (var fb = copy.Lock())
+            bmp.CopyPixels(fb);
+        var pixels = copy.GetPixels();
+        long r = 0, g = 0, b = 0, n = 0;
+        for (int y = (int)(crop.Y * h); y < (int)(crop.Bottom * h); y++)
+        {
+            for (int x = (int)(crop.X * w); x < (int)(crop.Right * w); x++)
+            {
+                var p = (uint)pixels[(y * w) + x];
+                if (p >> 24 < 200)
+                    continue;
+                r += (p >> 16) & 0xFF;
+                g += (p >> 8) & 0xFF;
+                b += p & 0xFF;
+                n++;
+            }
+        }
+        var color = n == 0 ? fallback : Color.FromRgb((byte)(r / n), (byte)(g / n), (byte)(b / n));
+        AverageColors.AddOrUpdate(bmp, color);
+        return color;
     }
 
     /// <summary>
@@ -453,18 +526,10 @@ public sealed class RoomView : Control
     private void DrawWallStrip(DrawingContext context, LayerRoomItem layer, Rect strip, double u)
     {
         using var _ = context.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = BitmapInterpolationMode.HighQuality });
-        var scaleY = (strip.Height - (u * 0.5)) / WallRows;
-        for (int x = 0; x < GridSize; x++)
+        foreach (var (area, item) in Roots(layer))
         {
-            for (int y = 0; y < GridSize; y++)
-            {
-                var it = layer.GetTile(x, y);
-                if (it.IsNone || !it.IsRoot)
-                    continue;
-                var (w, h) = GridItems.GetSize(it);
-                var r = new Rect(strip.X + ((x - Start) * u), strip.Y + (y * scaleY), w * u, h * scaleY);
-                DrawPicture(context, GridItems.GetPicture(it), r.Deflate(1));
-            }
+            var r = new Rect(strip.X + ((area.X - Start) * u), strip.Y, area.Width * u, strip.Height);
+            DrawPicture(context, GridItems.GetPicture(item), r.Deflate(1));
         }
     }
 

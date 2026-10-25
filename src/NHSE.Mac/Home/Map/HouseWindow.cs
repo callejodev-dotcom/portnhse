@@ -164,6 +164,20 @@ public sealed class HouseWindow : NhseWindow
         return result;
     }
 
+    /// <summary>
+    /// Doors of a room as seen in the saves: the entrance in the middle of the main room's front wall and the back room's door
+    /// in the middle of its back wall; each side room opens toward the main room. (Where the main room's side doors and the
+    /// stairs are is not known, so they are not drawn.)
+    /// </summary>
+    private RoomDoors GetDoors(int room) => room switch
+    {
+        0 => RoomDoors.Front | (VisibleRooms.Contains(1) ? RoomDoors.Back : RoomDoors.None),
+        1 => RoomDoors.Front,
+        2 => RoomDoors.Right,
+        3 => RoomDoors.Left,
+        _ => RoomDoors.None,
+    };
+
     private static string RoomName(int room) => room switch
     {
         0 => MapStrings.RoomMain,
@@ -234,7 +248,7 @@ public sealed class HouseWindow : NhseWindow
         Message = null;
         ChoosingWallpaper = ChoosingFlooring = false;
         var fw = GetFloorWall();
-        View.SetRoom(Room.Layers, GetRoomSquares(HouseIndex, room), Picture(fw.FloorItem.UniqueID), Picture(fw.WallItem.UniqueID));
+        View.SetRoom(Room.Layers, GetRoomSquares(HouseIndex, room), Picture(fw.FloorItem.UniqueID), Picture(fw.WallItem.UniqueID), GetDoors(room));
         View.Selection = null;
         BuildSpotCard();
         BuildRoomCard();
@@ -477,7 +491,7 @@ public sealed class HouseWindow : NhseWindow
                 SetFloorWall(fw);
                 ChoosingWallpaper = ChoosingFlooring = false;
                 var now = GetFloorWall();
-                View.SetRoom(Room.Layers, GetRoomSquares(HouseIndex, RoomIndex), Picture(now.FloorItem.UniqueID), Picture(now.WallItem.UniqueID));
+                View.SetRoom(Room.Layers, GetRoomSquares(HouseIndex, RoomIndex), Picture(now.FloorItem.UniqueID), Picture(now.WallItem.UniqueID), GetDoors(RoomIndex));
                 BuildSpotCard();
                 BuildRoomCard();
             };
