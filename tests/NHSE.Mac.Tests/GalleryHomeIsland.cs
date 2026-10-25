@@ -277,4 +277,32 @@ public class GalleryHomeIsland
         Dispatcher.UIThread.RunJobs();
         Gallery.Capture(w, "95-home-museum");
     }
+
+    [AvaloniaFact]
+    public void Bulletin()
+    {
+        var sav = Save(out var folder);
+        var w = new BulletinWindow(sav.Main);
+        Gallery.Capture(w, "97-bulletin", false);
+
+        var typed = w.Shown.FirstOrDefault(z => !BulletinWindow.IsHandwritten(sav.Main.Bulletin.Stock.Buffer[z]), -1);
+        Assert.SkipWhen(typed < 0, "the test save has no typed notes");
+        w.SetText(typed, "Hola\nisla");
+        w.SaveAndClose();
+        Assert.Equal("Hola\nisla", SaveAndReload(sav, folder).Main.Bulletin.Stock.Buffer[typed].Body);
+    }
+
+    [AvaloniaFact]
+    public void BulletinCancelKeepsTheSave()
+    {
+        var sav = Save(out _);
+        var before = sav.Main.Bulletin.Stock.Buffer.Select(z => z.Body).ToArray();
+        var w = new BulletinWindow(sav.Main);
+        w.Show();
+        Dispatcher.UIThread.RunJobs();
+        foreach (var slot in w.Shown)
+            w.SetText(slot, "x");
+        w.Close();
+        Assert.Equal(before, sav.Main.Bulletin.Stock.Buffer.Select(z => z.Body).ToArray());
+    }
 }

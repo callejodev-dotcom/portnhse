@@ -123,4 +123,13 @@ public static class IslandStrings
     public static string NothingFound { get; set; } = "Nothing here.";
     public static string ClassicMuseum { get; set; } = "Dates and more…";
     public static string ClassicMuseumHint { get; set; } = "The classic editor: change the date and who donated each piece, export or import the museum.";
+
+    // Bulletin board
+    public static string BulletinHint { get; set; } = "The notes pinned on the plaza board, newest first. You can change what they say.";
+    public static string BulletinEmpty { get; set; } = "There are no notes on the board.";
+    public static string BulletinResidentServices { get; set; } = "Resident Services";
+    public static string BulletinHandwritten { get; set; } = "A note handwritten by {0}. Handwriting can only be seen in the game.";
+    public static string BulletinSignature { get; set; } = "Signed";
+    public static string BulletinSummary { get; set; } = "{0} notes · the latest from {1}";
+    public static string BulletinSummaryEmpty { get; set; } = "No notes";
 }

@@ -48,6 +48,16 @@ internal static class IslandSummaries
             Label($"{IslandUi.ItemName(fruit)} · {FruitsFlowersWindow.FlowerName(flower)}"));
     });
 
+    public static Summary Bulletin(MainSave main) => new(() =>
+    {
+        var notes = main.Bulletin.Stock.Buffer;
+        var dates = notes.Where(z => z.UniqueId != 0 || !string.IsNullOrEmpty(z.Body)).Select(z => PlayerUi.ToDate(z.Date)).ToArray();
+        if (dates.Length == 0)
+            return Label(IslandStrings.BulletinSummaryEmpty);
+        var latest = dates.Max() is { } d ? PlayerUi.FormatDate(d) : "?";
+        return Label(string.Format(IslandStrings.BulletinSummary, dates.Length, latest));
+    });
+
     public static Summary Turnips(MainSave main) => new(() =>
     {
         var t = main.Turnips;

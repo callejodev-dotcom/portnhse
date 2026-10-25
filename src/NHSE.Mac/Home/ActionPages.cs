@@ -40,6 +40,7 @@ public static class ActionPages
         var turnips = IslandSummaries.Turnips(main);
         var campsite = IslandSummaries.Campsite(main);
         var visitors = IslandSummaries.Visitors(main);
+        var bulletin = IslandSummaries.Bulletin(main);
 
         return Page(HomeStrings.IslandTitle, null,
             Tiles(2,
@@ -84,10 +85,9 @@ public static class ActionPages
                 }, visitors),
                 ActionCard("Megaphone", HomeStrings.Bulletin, HomeStrings.BulletinHint, async () =>
                 {
-                    var editor = new SingleObjectEditor<object>(main.Bulletin, PropertySort.NoSort, false);
-                    if (await ctx.Edit(editor))
-                        main.Bulletin = (GSaveBulletinBoard)editor.Object;
-                })));
+                    if (await ctx.Edit(new BulletinWindow(main)))
+                        bulletin.Refresh();
+                }, bulletin)));
     }
 
     public static Control Museum(HomeContext ctx)
