@@ -108,7 +108,7 @@ public partial class MainWindow : Window
     {
         var path = Program.Settings.LastFilePath;
         if (Directory.Exists(path))
-            await TryOpenSaveFile(path);
+            await TryOpenSaveFile(path, newest: true);
     }
 
     private void B_Backups_Click(object? sender, RoutedEventArgs e) => UiUtil.OpenInFinder(SaveFileLoader.BackupPath);
@@ -145,14 +145,23 @@ public partial class MainWindow : Window
             await TryOpenSaveFile(path);
     }
 
-    public async Task<bool> TryOpenSaveFile(string path)
+    /// <param name="newest">
+    /// With what was last brought or sent over Wi-Fi when it is newer than the files (the game was edited in the
+    /// console after the save was copied to the Mac).
+    /// </param>
+    public async Task<bool> TryOpenSaveFile(string path, bool newest = false)
     {
         var sav = await SaveFileLoader.TryGetSaveFile(path);
         if (sav is null)
             return false;
         Program.SaveSettings();
 
-        ShowEditor(new HomeWindow(sav));
+        var main = Path.Combine(path, "main.dat");
+        var fromConsole = newest && File.Exists(main) ? LiveBackups.UseNewest(sav, File.GetLastWriteTime(main)) : null;
+        var editor = new HomeWindow(sav);
+        if (fromConsole is { } date)
+            editor.OpenedWithCopy(date);
+        ShowEditor(editor);
         return true;
     }
 

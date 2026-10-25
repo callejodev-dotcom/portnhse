@@ -268,3 +268,4 @@ LiveStatus=En directo con la consola
 LiveStatusDirty=Hay cambios sin mandar
 LiveStatusCopies=Se guarda una copia cada vez que traes la partida y antes de cada envío.
 LiveReloadUnsent=Hay cambios sin mandar: se perderán al volver a traer la isla. ¿Recargar igualmente?
+StatusFromConsole=Abierta con lo último de la consola ({0}), más nuevo que los archivos. «Guardar» lo escribe en la carpeta.

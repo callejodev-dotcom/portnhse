@@ -244,6 +244,7 @@ public static class HomeStrings
     public static string LiveWriteDone { get; set; } = "Sent. In the game, close and open the pockets to see them.";
     public static string LiveSame { get; set; } = "Nothing to send: they are the same as in the game.";
     public static string LiveNotFound { get; set; } = "Your pockets are not where they should be in the game's memory, so nothing was changed. Are you on your island with your character?";
+    public static string StatusFromConsole { get; set; } = "Opened with the newest from the console ({0}), newer than the files. «Save» writes it into the folder.";
     public static string LiveError { get; set; } = "Could not talk to the console: {0}";
     public static string LiveUnreachable { get; set; } = "The console at {0} does not answer. Is it on, on the same Wi-Fi, with sys-botbase? (Its IP is in System Settings → Internet.)";
     public static string RawMemory { get; set; } = "Game memory (raw)";

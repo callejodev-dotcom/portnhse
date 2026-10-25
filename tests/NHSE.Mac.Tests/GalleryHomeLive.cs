@@ -63,4 +63,21 @@ public class GalleryHomeLive
         Assert.Contains(HomeStrings.LiveCard, all);
         files.Close();
     }
+
+    /// <summary> Reopened with what came from the console: it says so, and it is not in the files until saved. </summary>
+    [AvaloniaFact]
+    public void ReopenedWithTheConsoleState()
+    {
+        Assert.SkipUnless(TestSave.Available, "NHSE_TEST_SAVE is not set");
+        var w = new HomeWindow(TestSave.LoadCopy(out _));
+        w.Show();
+        var date = new DateTime(2026, 10, 25, 21, 30, 0);
+        w.OpenedWithCopy(date);
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(w.Dirty);
+        var status = w.FindControl<TextBlock>("L_Status")!.Text;
+        Assert.Contains(date.ToString("HH:mm"), status);
+        Assert.StartsWith(HomeStrings.StatusFromConsole.Split('(')[0], status);
+        Gallery.Capture(w, "79-home-reopened");
+    }
 }

@@ -229,6 +229,7 @@ public sealed class LiveGame : IDisposable
             return HomeStrings.LiveGameOther;
 
         LiveBackups.Save(gameMain, gamePlayer, sav.Players[0].Personal, HomeStrings.LiveBackupPulled);
+        LiveBackups.SaveLatest(gameMain, gamePlayer, sav.Players[0].Personal);
         gameMain.CopyTo(main);
         gamePlayer.CopyTo(player);
         MainBefore = gameMain;
@@ -257,6 +258,8 @@ public sealed class LiveGame : IDisposable
             LiveBackups.Save(MainBefore, PlayerBefore, personal, HomeStrings.LiveBackupBeforeSend);
         int sent = Send(MainAddress, sav.Main.Data, MainBefore);
         sent += Send(PlayerAddress, personal.Data, PlayerBefore);
+        if (sent != 0)
+            LiveBackups.SaveLatest(MainBefore, PlayerBefore, personal);
         return sent;
     }
 

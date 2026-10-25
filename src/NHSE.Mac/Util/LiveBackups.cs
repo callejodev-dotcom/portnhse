@@ -33,6 +33,62 @@ public static class LiveBackups
         return path;
     }
 
+    /// <summary> Where the last known state of each island's game is kept (one file per island and player). </summary>
+    private static string LatestFolder => Path.Combine(Folder, "ultima");
+
+    private static string LatestPath(Personal personal) => Path.Combine(LatestFolder, $"{personal.TownID:X8}-{personal.PlayerID:X8}.zip");
+
+    /// <summary>
+    /// Keeps the game as it is now (after bringing it, or after sending changes), replacing the one kept before: it is
+    /// what «Reopen the last one» opens when it is newer than the files of the save.
+    /// </summary>
+    public static void SaveLatest(ReadOnlySpan<byte> main, ReadOnlySpan<byte> player, Personal personal)
+    {
+        Directory.CreateDirectory(LatestFolder);
+        var path = LatestPath(personal);
+        var temp = path + ".tmp";
+        using (var zip = ZipFile.Open(temp, ZipArchiveMode.Create))
+        {
+            Write(zip, "main.bin", main);
+            Write(zip, "personal.bin", player);
+        }
+        File.Move(temp, path, true);
+    }
+
+    /// <summary>
+    /// The newest state of this island's game known on the Mac (the last one brought or sent over Wi-Fi, or else the
+    /// newest copy), if it is newer than <paramref name="than"/>: it goes into the save (only in memory).
+    /// </summary>
+    /// <returns>When that state was kept, or null if the save is already the newest.</returns>
+    public static DateTime? UseNewest(HorizonSave sav, DateTime than)
+    {
+        var pers = sav.Players[0].Personal;
+        var candidates = List().Select(c => (c.Path, c.Date)).ToList();
+        var latest = LatestPath(pers);
+        if (File.Exists(latest))
+            candidates.Add((latest, File.GetLastWriteTime(latest)));
+        var id = pers.Offsets.PersonalId;
+        foreach (var (path, date) in candidates.Where(c => c.Date > than).OrderByDescending(c => c.Date))
+        {
+            (byte[] Main, byte[] Player)? copy;
+            try
+            {
+                copy = Read(path, sav.Main.Data.Length, pers.Data.Length);
+            }
+            catch (Exception ex) when (ex is IOException or InvalidDataException)
+            {
+                continue;
+            }
+            // Only this island and this player.
+            if (copy is not { } c || !c.Player.AsSpan(id, 0x38).SequenceEqual(pers.Data.Slice(id, 0x38)))
+                continue;
+            c.Main.CopyTo(sav.Main.Data);
+            c.Player.CopyTo(pers.Data);
+            return date;
+        }
+        return null;
+    }
+
     private static void Write(ZipArchive zip, string name, ReadOnlySpan<byte> data)
     {
         using var s = zip.CreateEntry(name, CompressionLevel.SmallestSize).Open();

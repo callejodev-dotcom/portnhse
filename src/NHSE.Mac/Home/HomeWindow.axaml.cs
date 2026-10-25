@@ -20,6 +20,19 @@ public sealed partial class HomeWindow : NhseWindow
     private bool CloseConfirmed;
     private DateTime? LastSaved;
 
+    /// <summary> When the state from the console that was put into the save was kept (until it is saved). </summary>
+    private DateTime? FromConsole;
+
+    /// <summary>
+    /// The save was opened with a newer state of the game brought over Wi-Fi: it is not in the files until «Save».
+    /// </summary>
+    public void OpenedWithCopy(DateTime date)
+    {
+        FromConsole = date;
+        Dirty = true;
+        UpdateStatus();
+    }
+
     private sealed record NavEntry(string Key, string Text, IImage? Icon, int Player = -1);
 
     /// <summary> The console the save was brought from, when it was opened over Wi-Fi: «Save» sends to it. </summary>
@@ -163,7 +176,7 @@ public sealed partial class HomeWindow : NhseWindow
         }
         B_Save.Content = HomeStrings.SaveButton;
         L_Status.Text = Dirty
-            ? HomeStrings.StatusDirty
+            ? FromConsole is { } copy ? string.Format(HomeStrings.StatusFromConsole, copy.ToString("d MMM, HH:mm", System.Globalization.CultureInfo.CurrentCulture)) : HomeStrings.StatusDirty
             : LastSaved is { } t ? string.Format(HomeStrings.StatusJustSaved, t.ToString("HH:mm")) : HomeStrings.StatusSaved;
         if (Dirty)
             L_Status.Foreground = Brushes.DarkOrange;
@@ -193,6 +206,7 @@ public sealed partial class HomeWindow : NhseWindow
             return false;
         }
         Dirty = false;
+        FromConsole = null;
         LastSaved = DateTime.Now;
         UpdateStatus();
         Sound.Asterisk();
