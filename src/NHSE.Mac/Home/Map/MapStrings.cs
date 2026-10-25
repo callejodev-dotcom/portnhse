@@ -22,7 +22,7 @@ public static class MapStrings
     public static string LayerTopHint { get; set; } = "Things placed on top of other furniture, like whatever sits on an outdoor table.";
     public static string Cancel { get; set; } = "Cancel";
     public static string Save { get; set; } = "Save";
-    public static string NavigationHint { get; set; } = "Drag the map to move around · Drag a thing to move it · ⇧ + drag marks an area · ⌘Z undoes · Delete removes what is selected";
+    public static string NavigationHint { get; set; } = "Drag the map to move around · Drag a thing to move it · M marks an area · E eraser · ⌘Z undoes · Delete removes what is selected";
 
     // Side panel
     public static string NothingSelected { get; set; } = "Choose a spot";
@@ -190,7 +190,7 @@ public static class MapStrings
 
     // Tidying the island, moving things, undo
     public static string TidyTitle { get; set; } = "Tidy up the island";
-    public static string TidyHint { get; set; } = "Everything at once, on the whole island. To do it in one part only, drag over the map holding ⇧ (Shift).";
+    public static string TidyHint { get; set; } = "Everything at once, on the whole island. To do it in one part only, mark an area with «Mark an area» (or drag holding ⇧).";
     public static string TidyBranches { get; set; } = "Branches";
     public static string TidyShells { get; set; } = "Shells";
     public static string TidyHoles { get; set; } = "Holes";
@@ -206,6 +206,24 @@ public static class MapStrings
     public static string Undone { get; set; } = "Undone.";
     public static string UndoButton { get; set; } = "Undo the last change (⌘Z)";
     public static string AreaTitle { get; set; } = "Chosen area · {0} × {1} squares";
-    public static string AreaHint { get; set; } = "What is in the area you marked (on the layer you are editing). Esc or a click on the map to stop.";
+    public static string AreaHint { get; set; } = "What is in the area you marked (on the layer you are editing). ⌫ removes everything in it; Esc forgets it.";
     public static string AreaClear { get; set; } = "Forget the area";
+
+    // Tools of the map
+    public static string ToolMove { get; set; } = "✋ Move";
+    public static string ToolMoveHint { get; set; } = "Click to choose a spot; drag things to move them and the map to look around (V).";
+    public static string ToolSelect { get; set; } = "▭ Mark an area";
+    public static string ToolSelectHint { get; set; } = "Drag over the map to mark an area and see or remove what is in it (M). ⌫ removes everything in it.";
+    public static string ToolErase { get; set; } = "⌫ Eraser";
+    public static string ToolEraseHint { get; set; } = "Drag over what you want to remove (E). ⌘Z undoes each stroke.";
+    public static string EraseSize { get; set; } = "Size";
+    public static string EraseSizeHint { get; set; } = "Squares across the eraser";
+    public static string EraseWhat { get; set; } = "Removes";
+    public static string EraseOnly { get; set; } = "Only: {0}";
+    public static string EraseThese { get; set; } = "Eraser for {0} only";
+    public static string RemoveSame { get; set; } = "Remove all of these ({0})";
+    public static string ByKind { get; set; } = "Each kind on its own ({0})";
+    public static string SearchKinds { get; set; } = "Search…";
+    public static string AskRemoveNamed { get; set; } = "Remove «{0}» ({1}) from {2}? You can undo it with ⌘Z.";
+    public static string AskRemoveArea { get; set; } = "Remove everything in the chosen area ({0} things)? ⌘Z undoes it.";
 }

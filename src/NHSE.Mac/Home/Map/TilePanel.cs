@@ -37,6 +37,9 @@ public sealed class TilePanelOptions
     public required Action<Item> Put { get; init; }
     public required Action Remove { get; init; }
     public Action? Rotate { get; init; }
+
+    /// <summary> More buttons for the chosen thing (remove all of the same…). </summary>
+    public IReadOnlyList<(string Text, Action Act)>? MoreActions { get; init; }
 }
 
 /// <summary>
@@ -88,6 +91,17 @@ public static class TilePanel
                 actions.Children.Add(turn);
             }
             panel.Children.Add(actions);
+            if (o.MoreActions is { Count: > 0 } more)
+            {
+                var row = new WrapPanel { ItemSpacing = 8, LineSpacing = 6 };
+                foreach (var (text, act) in more)
+                {
+                    var b = new Button { Content = text, Padding = new Thickness(10, 3), FontSize = 12 };
+                    b.Click += (_, _) => act();
+                    row.Children.Add(b);
+                }
+                panel.Children.Add(row);
+            }
         }
 
         if (!string.IsNullOrEmpty(o.Message))

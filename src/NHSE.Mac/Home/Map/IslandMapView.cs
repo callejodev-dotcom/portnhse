@@ -20,6 +20,17 @@ public sealed record MapBuilding(BuildingType Type, double CenterX, double Cente
     public bool IsCrossing => Type is BuildingType.Bridge or BuildingType.Incline;
 }
 
+/// <summary> What dragging on the map does. </summary>
+public enum MapTool
+{
+    /// <summary> Drag a thing to move it, or the map to look around. </summary>
+    Move,
+    /// <summary> Drag to mark an area. </summary>
+    Select,
+    /// <summary> Drag over things to remove them. </summary>
+    Erase,
+}
+
 /// <summary>
 /// The island drawn like the game's map: the painted ground, the buildings and every item with its picture.
 /// Drag to move, ⌘ + scroll / pinch / <see cref="ZoomBy"/> to zoom; a click reports the tile under the pointer.
@@ -83,11 +94,34 @@ public sealed class IslandMapView : Control
     /// <summary> Whether an item would fit with its corner at a map tile, to colour the item being dragged. </summary>
     public Func<Item, int, int, bool>? CanPut { get; set; }
 
-    private enum Gesture { None, Pan, Item, Area }
+    /// <summary> What dragging does (the middle button and the trackpad always move the map). </summary>
+    public MapTool Tool
+    {
+        get => _tool;
+        set
+        {
+            _tool = value;
+            Cursor = new Cursor(value == MapTool.Move ? StandardCursorType.Hand : StandardCursorType.Cross);
+            InvalidateVisual();
+        }
+    }
+    private MapTool _tool;
+
+    /// <summary> Squares across the eraser (1, 3, 5…). </summary>
+    public int BrushSquares { get; set; } = 1;
+
+    /// <summary> Raised when a stroke of the eraser starts, then with the map item tiles under it as it moves, and when it ends. </summary>
+    public event Action? EraseStarted;
+    public event Action<Rect>? Erasing;
+    public event Action? EraseEnded;
+
+    private enum Gesture { None, Pan, Item, Area, Erase }
     private Gesture Doing;
     private (int X, int Y, int HoldX, int HoldY, Item Item)? Held;
     private (Item Item, int X, int Y)? Ghost;
     private Point AreaStart;
+    private bool AreaDragged;
+    private Point LastErase;
 
     // Pointer state
     private Point PressPoint;
@@ -351,10 +385,18 @@ public sealed class IslandMapView : Control
         if (!Panning)
         {
             var map = ToMap(point.Position);
-            if ((e.KeyModifiers & KeyModifiers.Shift) != 0)
+            if (Tool == MapTool.Erase)
+            {
+                Doing = Gesture.Erase;
+                LastErase = map;
+                EraseStarted?.Invoke();
+                Erasing?.Invoke(Brush(map));
+            }
+            else if (Tool == MapTool.Select || (e.KeyModifiers & KeyModifiers.Shift) != 0)
             {
                 Doing = Gesture.Area;
                 AreaStart = map;
+                AreaDragged = false;
             }
             else if (ItemAt(map) is { } held)
             {
@@ -409,13 +451,34 @@ public sealed class IslandMapView : Control
                     InvalidateVisual();
                     break;
                 }
-                case Gesture.Area:
+                case Gesture.Area when moved || AreaDragged:
+                    AreaDragged = true;
                     Area = Snap(AreaStart, ToMap(p));
                     break;
+                case Gesture.Erase:
+                {
+                    // Along the way, so a quick stroke leaves no gaps.
+                    var to = ToMap(p);
+                    var steps = (int)Math.Ceiling(Math.Max(Math.Abs(to.X - LastErase.X), Math.Abs(to.Y - LastErase.Y)));
+                    for (int i = 1; i <= steps; i++)
+                        Erasing?.Invoke(Brush(LastErase + ((to - LastErase) * i / steps)));
+                    LastErase = to;
+                    HoverPoint = p;
+                    InvalidateVisual();
+                    break;
+                }
             }
             return;
         }
         SetHover(p);
+    }
+
+    /// <summary> The squares under the eraser at a map point (item tiles). </summary>
+    public Rect Brush(Point map)
+    {
+        var n = Math.Max(1, BrushSquares);
+        var half = n / 2 * 2;
+        return new Rect((Math.Floor(map.X / 2) * 2) - half, (Math.Floor(map.Y / 2) * 2) - half, n * 2, n * 2);
     }
 
     /// <summary> The whole squares covered by the rectangle between two map points. </summary>
@@ -434,15 +497,21 @@ public sealed class IslandMapView : Control
         if (!Pressed)
             return;
         Pressed = false;
-        e.Pointer.Capture(null);
-        Cursor = new Cursor(StandardCursorType.Hand);
+        // Read before letting the pointer go: losing the capture forgets the gesture (OnPointerCaptureLost).
         var doing = Doing;
         Doing = Gesture.None;
         Panning = false;
         var ghost = Ghost;
         Ghost = null;
+        e.Pointer.Capture(null);
+        Cursor = new Cursor(Tool == MapTool.Move ? StandardCursorType.Hand : StandardCursorType.Cross);
         if (doing == Gesture.Pan)
             return;
+        if (doing == Gesture.Erase)
+        {
+            EraseEnded?.Invoke();
+            return;
+        }
         if (e.InitialPressMouseButton != MouseButton.Left)
             return;
         if (doing == Gesture.Item && Held is { } held && ghost is { } to)
@@ -451,7 +520,7 @@ public sealed class IslandMapView : Control
             ItemDragged?.Invoke(held.X, held.Y, to.X, to.Y);
             return;
         }
-        if (doing == Gesture.Area && Area is { } area)
+        if (doing == Gesture.Area && AreaDragged && Area is { } area)
         {
             AreaChosen?.Invoke(area);
             return;
@@ -465,6 +534,8 @@ public sealed class IslandMapView : Control
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
     {
         base.OnPointerCaptureLost(e);
+        if (Doing == Gesture.Erase)
+            EraseEnded?.Invoke();
         Pressed = false;
         Panning = false;
         Doing = Gesture.None;
@@ -581,7 +652,7 @@ public sealed class IslandMapView : Control
             DrawGrid(context, bounds);
         DrawLabels(context, bounds);
 
-        if (Hover is { } hover && !Panning)
+        if (Hover is { } hover && !Panning && Tool != MapTool.Erase)
             context.DrawRectangle(new SolidColorBrush(Color.FromArgb(0x30, 0xFF, 0xFF, 0xFF)), new Pen(new SolidColorBrush(Color.FromArgb(0xD0, 0xFF, 0xFF, 0xFF)), 1.5), ToScreen(hover.Area).Inflate(1), 4, 4);
         if (Selection is { } sel && Doing != Gesture.Item)
             RoomView.DrawSelection(context, ToScreen(sel), SelectionFacing);
@@ -590,11 +661,29 @@ public sealed class IslandMapView : Control
             var r = ToScreen(area);
             context.DrawRectangle(new SolidColorBrush(Color.FromArgb(0x30, 0xFF, 0xFF, 0xFF)), new Pen(Brushes.White, 2) { DashStyle = new DashStyle([5, 4], 0) }, r, 4, 4);
             context.DrawRectangle(null, new Pen(new SolidColorBrush(Color.FromArgb(0x70, 0, 0, 0)), 1), r.Inflate(1.5), 5, 5);
+            DrawAreaSize(context, area, r);
+        }
+        if (Tool == MapTool.Erase && HoverPoint is { } brushAt && !Panning)
+        {
+            var b = ToScreen(Brush(ToMap(brushAt)));
+            var red = Color.FromRgb(0xE0, 0x4A, 0x3C);
+            context.DrawRectangle(new SolidColorBrush(red, 0.22), new Pen(new SolidColorBrush(red), 2), b, 3, 3);
         }
         if (Ghost is { } ghost)
             DrawGhost(context, ghost.Item, ghost.X, ghost.Y);
-        if (Hover is { Text.Length: > 0 } tip && HoverPoint is { } at && !Panning && Doing == Gesture.None)
+        if (Hover is { Text.Length: > 0 } tip && HoverPoint is { } at && !Panning && Doing == Gesture.None && Tool != MapTool.Erase)
             RoomView.DrawBubble(context, tip.Text, tip.Picture, at, bounds.Size, ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark);
+    }
+
+    /// <summary> Size of the marked area in squares, on a label at its top left corner. </summary>
+    private static void DrawAreaSize(DrawingContext context, Rect area, Rect screen)
+    {
+        var text = new FormattedText($"{area.Width / 2:0} × {area.Height / 2:0}", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, LabelFont, 12, Brushes.White);
+        var pill = new Rect(screen.X, screen.Y - text.Height - 8, text.Width + 12, text.Height + 4);
+        if (pill.Y < 0)
+            pill = pill.Translate(new Vector(4, text.Height + 12));
+        context.DrawRectangle(new SolidColorBrush(Color.FromArgb(0xB0, 0, 0, 0)), null, pill, pill.Height / 2, pill.Height / 2);
+        context.DrawText(text, new Point(pill.X + 6, pill.Y + 2));
     }
 
     /// <summary>

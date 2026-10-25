@@ -57,6 +57,9 @@ public sealed class IslandMapWindow : NhseWindow
         View.ItemDragged += (x, y, toX, toY) => MoveItem(x, y, toX, toY);
         View.AreaChosen += ChooseArea;
         View.CanPut = (item, x, y) => Layer.Contains(x - Origin.X, y - Origin.Y);
+        View.EraseStarted += StartErasing;
+        View.Erasing += area => Erase(area);
+        View.EraseEnded += StopErasing;
         GroundReady = PaintGround();
 
         // Header
@@ -69,6 +72,7 @@ public sealed class IslandMapWindow : NhseWindow
         mapHost.Children.Add(View);
         mapHost.Children.Add(LayerControls());
         mapHost.Children.Add(ZoomControls());
+        mapHost.Children.Add(ToolControls());
         var mapCard = new Border { Child = mapHost, CornerRadius = new CornerRadius(12), ClipToBounds = true, BorderThickness = new Thickness(1) };
         mapCard.Bind(Border.BorderBrushProperty, mapCard.GetResourceObservable("NhCardBorderBrush"));
 
@@ -163,6 +167,90 @@ public sealed class IslandMapWindow : NhseWindow
         box.VerticalAlignment = VerticalAlignment.Top;
         box.Margin = new Thickness(12);
         return box;
+    }
+
+    private Action<int>? ShowTool;
+    private readonly StackPanel EraseOptions = new() { Spacing = 6, IsVisible = false };
+    private readonly ComboBox EraseWhat = new() { MinWidth = 190 };
+    private readonly TextBlock ToolHint = new() { TextWrapping = TextWrapping.Wrap, FontSize = 12, MaxWidth = 330 };
+
+    /// <summary> What the eraser takes: a kind of thing, or only some items (one kind of flower…). </summary>
+    private readonly List<(string Label, Tidy Kind, HashSet<string>? Names)> EraseChoices = [];
+
+    /// <summary>
+    /// The tools of the map, floating at the bottom left: move, mark an area, and the eraser with its size and what it takes.
+    /// </summary>
+    private Control ToolControls()
+    {
+        string[] names = [MapStrings.ToolMove, MapStrings.ToolSelect, MapStrings.ToolErase];
+        string[] tips = [MapStrings.ToolMoveHint, MapStrings.ToolSelectHint, MapStrings.ToolEraseHint];
+        var (seg, show) = TilePanel.Segmented(names, 0, i => SetTool((MapTool)i), tips);
+        ShowTool = show;
+
+        var (sizes, _) = TilePanel.Segmented(["1", "3", "5"], 0, i => View.BrushSquares = (i * 2) + 1, [MapStrings.EraseSizeHint, MapStrings.EraseSizeHint, MapStrings.EraseSizeHint]);
+        var sizeRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        sizeRow.Children.Add(new TextBlock { Text = MapStrings.EraseSize, VerticalAlignment = VerticalAlignment.Center, FontSize = 12 });
+        sizeRow.Children.Add(sizes);
+        var whatRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        whatRow.Children.Add(new TextBlock { Text = MapStrings.EraseWhat, VerticalAlignment = VerticalAlignment.Center, FontSize = 12 });
+        whatRow.Children.Add(EraseWhat);
+        EraseOptions.Children.Add(sizeRow);
+        EraseOptions.Children.Add(whatRow);
+        FillEraseChoices(null);
+
+        var stack = new StackPanel { Spacing = 6 };
+        stack.Children.Add(seg);
+        stack.Children.Add(EraseOptions);
+        ToolHint.Margin = new Thickness(6, 0, 6, 2);
+        ToolHint.Bind(TextBlock.ForegroundProperty, ToolHint.GetResourceObservable("NhSubtleBrush"));
+        ToolHint.Text = MapStrings.ToolMoveHint;
+        stack.Children.Add(ToolHint);
+        var box = TilePanel.Floating(stack);
+        box.HorizontalAlignment = HorizontalAlignment.Left;
+        box.VerticalAlignment = VerticalAlignment.Bottom;
+        box.Margin = new Thickness(12);
+        return box;
+    }
+
+    /// <summary> The choices of what the eraser takes; with a group of items (from the side panel) first, chosen. </summary>
+    private void FillEraseChoices((string Label, HashSet<string> Names)? only)
+    {
+        EraseChoices.Clear();
+        if (only is { } o)
+            EraseChoices.Add((string.Format(MapStrings.EraseOnly, o.Label), Tidy.Everything, o.Names));
+        EraseChoices.Add((MapStrings.CountFlowers, Tidy.Flowers, null));
+        EraseChoices.Add((MapStrings.CountWeeds, Tidy.Weeds, null));
+        EraseChoices.Add((MapStrings.TidyBranches, Tidy.Branches, null));
+        EraseChoices.Add((MapStrings.TidyShells, Tidy.Shells, null));
+        EraseChoices.Add((MapStrings.TidyHoles, Tidy.Holes, null));
+        EraseChoices.Add((MapStrings.TidyBushes, Tidy.Bushes, null));
+        EraseChoices.Add((MapStrings.CountTrees, Tidy.Trees, null));
+        EraseChoices.Add((MapStrings.CountFences, Tidy.Fences, null));
+        EraseChoices.Add((MapStrings.CountFurniture, Tidy.Things, null));
+        EraseChoices.Add((MapStrings.TidyEverything, Tidy.Everything, null));
+        EraseWhat.ItemsSource = EraseChoices.Select(z => z.Label).ToArray();
+        EraseWhat.SelectedIndex = 0;
+    }
+
+    /// <summary> Chooses what dragging on the map does. </summary>
+    public void SetTool(MapTool tool)
+    {
+        View.Tool = tool;
+        ShowTool?.Invoke((int)tool);
+        EraseOptions.IsVisible = tool == MapTool.Erase;
+        ToolHint.Text = tool switch
+        {
+            MapTool.Select => MapStrings.ToolSelectHint,
+            MapTool.Erase => MapStrings.ToolEraseHint,
+            _ => MapStrings.ToolMoveHint,
+        };
+    }
+
+    /// <summary> Takes the eraser to remove only these items (one kind of flower…). </summary>
+    private void EraseOnly(string label, HashSet<string> names)
+    {
+        FillEraseChoices((label, names));
+        SetTool(MapTool.Erase);
     }
 
     private void SetLayer(int layer)
@@ -434,8 +522,8 @@ public sealed class IslandMapWindow : NhseWindow
         return new Rect(a.X - Origin.X, a.Y - Origin.Y, a.Width, a.Height);
     }
 
-    /// <summary> Corners of the things of a kind whose corner is inside an area of the active layer. </summary>
-    private List<(int X, int Y)> Find(Tidy kind, Rect area)
+    /// <summary> Corners of the things that match whose corner is inside an area of the active layer. </summary>
+    private List<(int X, int Y)> Find(Func<Item, bool> match, Rect area)
     {
         var layer = Layer;
         var result = new List<(int, int)>();
@@ -446,7 +534,7 @@ public sealed class IslandMapWindow : NhseWindow
                 if (!layer.Contains(x, y))
                     continue;
                 var t = layer.GetTile(x, y);
-                if (!t.IsNone && t.IsRoot && IsKind(t, kind))
+                if (!t.IsNone && t.IsRoot && match(t))
                     result.Add((x, y));
             }
         }
@@ -454,15 +542,20 @@ public sealed class IslandMapWindow : NhseWindow
     }
 
     /// <summary> How many things of a kind there are in the chosen area (or the whole island). </summary>
-    public int Count(Tidy kind, Rect? area = null) => Find(kind, LayerArea(area)).Count;
+    public int Count(Tidy kind, Rect? area = null) => Find(t => IsKind(t, kind), LayerArea(area)).Count;
 
     /// <summary>
     /// Removes every thing of a kind (whole things: every square of the big ones) in the chosen area or the whole island.
     /// </summary>
     /// <returns>How many were removed.</returns>
-    public int RemoveAll(Tidy kind, Rect? area = null)
+    public int RemoveAll(Tidy kind, Rect? area = null) => RemoveWhere(t => IsKind(t, kind), area);
+
+    /// <summary> Removes every thing called one of these names (as <see cref="GridItems.GetName"/> says), in the area or the whole island. </summary>
+    public int RemoveNamed(IReadOnlySet<string> names, Rect? area = null) => RemoveWhere(t => names.Contains(GridItems.GetName(t)), area);
+
+    private int RemoveWhere(Func<Item, bool> match, Rect? area)
     {
-        var found = Find(kind, LayerArea(area));
+        var found = Find(match, LayerArea(area));
         if (found.Count == 0)
             return 0;
         Remember();
@@ -471,6 +564,78 @@ public sealed class IslandMapWindow : NhseWindow
         AfterTidy(string.Format(MapStrings.Removed, found.Count));
         return found.Count;
     }
+
+    /// <summary> A kind of thing in the area: its name, picture and how many there are. </summary>
+    public sealed record ThingKind(string Name, IImage? Picture, int Count);
+
+    /// <summary> Each kind of thing in the area (or the whole island) by its name, most first. </summary>
+    public List<ThingKind> Kinds(Rect? area = null)
+    {
+        var groups = new Dictionary<string, (Item First, int Count)>();
+        foreach (var (x, y) in Find(_ => true, LayerArea(area)))
+        {
+            var t = Layer.GetTile(x, y);
+            var name = GridItems.GetName(t);
+            groups[name] = groups.TryGetValue(name, out var g) ? (g.First, g.Count + 1) : (t, 1);
+        }
+        return [.. groups.Select(g => new ThingKind(g.Key, GridItems.GetPicture(g.Value.First), g.Value.Count))
+            .OrderByDescending(z => z.Count).ThenBy(z => z.Name, StringComparer.CurrentCulture)];
+    }
+
+    #region Eraser
+    private int Erased;
+    private bool ErasingNow;
+
+    private void StartErasing()
+    {
+        Remember();
+        Erased = 0;
+        ErasingNow = true;
+    }
+
+    /// <summary>
+    /// Removes the things under the eraser (map item tiles) that it takes; big ones go whole when any square is touched.
+    /// </summary>
+    /// <returns>How many were removed.</returns>
+    public int Erase(Rect area)
+    {
+        var choice = EraseWhat.SelectedIndex is var i && i >= 0 && i < EraseChoices.Count ? EraseChoices[i] : (string.Empty, Tidy.Flowers, null);
+        bool Takes(Item t) => choice.Names is { } names ? names.Contains(GridItems.GetName(t)) : IsKind(t, choice.Kind);
+        var layer = Layer;
+        var a = LayerArea(area);
+        int removed = 0;
+        for (int x = (int)a.X; x < a.Right; x++)
+        {
+            for (int y = (int)a.Y; y < a.Bottom; y++)
+            {
+                if (!layer.Contains(x, y) || !GridItems.TryGetRoot(layer, x, y, out var root, out var rx, out var ry))
+                    continue;
+                if (!(root.IsRoot ? Takes(root) : choice.Kind == Tidy.Everything && choice.Names is null))
+                    continue;
+                GridItems.Remove(layer, rx, ry);
+                removed++;
+            }
+        }
+        if (removed == 0)
+            return 0;
+        Erased += removed;
+        View.RefreshItems();
+        return removed;
+    }
+
+    private void StopErasing()
+    {
+        if (!ErasingNow)
+            return;
+        ErasingNow = false;
+        if (Erased == 0)
+        {
+            UndoSteps.RemoveAt(UndoSteps.Count - 1);
+            return;
+        }
+        AfterTidy(string.Format(MapStrings.Removed, Erased));
+    }
+    #endregion
 
     /// <summary> Waters every flower in the chosen area or the whole island. </summary>
     public int WaterFlowers(Rect? area = null)
@@ -573,6 +738,7 @@ public sealed class IslandMapWindow : NhseWindow
 
         var p = new StackPanel { Spacing = 8 };
         p.Children.Add(grid);
+        p.Children.Add(KindList(area));
         if (CanUndo)
         {
             var undo = new Button { Content = MapStrings.UndoButton, HorizontalAlignment = HorizontalAlignment.Left };
@@ -582,6 +748,73 @@ public sealed class IslandMapWindow : NhseWindow
         return p;
     }
     #endregion
+
+    /// <summary>
+    /// Every kind of thing by its name (red roses, white tulips…) with how many there are, to remove one kind at once or
+    /// take the eraser for it. In an expander: the whole island can have hundreds.
+    /// </summary>
+    private Control KindList(Rect? area)
+    {
+        var kinds = Kinds(area);
+        var list = new StackPanel { Spacing = 4 };
+        var search = new TextBox { PlaceholderText = MapStrings.SearchKinds, IsVisible = kinds.Count > 10 };
+        var host = new StackPanel { Spacing = 6 };
+        host.Children.Add(search);
+        host.Children.Add(list);
+        void Fill()
+        {
+            list.Children.Clear();
+            var text = (search.Text ?? string.Empty).Trim();
+            foreach (var k in kinds.Where(z => text.Length == 0 || z.Name.Contains(text, StringComparison.CurrentCultureIgnoreCase)))
+            {
+                var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto"), ColumnSpacing = 8 };
+                row.Children.Add(new Image { Source = k.Picture, Width = 24, Height = 24 });
+                var shown = k.Name.Length == 0 ? k.Name : char.ToUpper(k.Name[0], System.Globalization.CultureInfo.CurrentCulture) + k.Name[1..];
+                var name = new TextBlock { Text = shown, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+                ToolTip.SetTip(name, k.Name);
+                Grid.SetColumn(name, 1);
+                row.Children.Add(name);
+                var count = new TextBlock { Text = k.Count.ToString("N0"), FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center };
+                Grid.SetColumn(count, 2);
+                row.Children.Add(count);
+                var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+                var eraser = new Button { Content = "✎", Padding = new Thickness(8, 2), FontSize = 12 };
+                ToolTip.SetTip(eraser, string.Format(MapStrings.EraseThese, k.Name));
+                eraser.Click += (_, _) => EraseOnly(k.Name, [k.Name]);
+                buttons.Children.Add(eraser);
+                var remove = new Button { Content = MapStrings.Remove, Padding = new Thickness(8, 2), FontSize = 12 };
+                remove.Click += async (_, _) =>
+                {
+                    var where = area is null ? MapStrings.WholeIsland : MapStrings.ChosenArea;
+                    if (await Dialogs.Prompt(MessageBoxButtons.YesNo, string.Format(MapStrings.AskRemoveNamed, k.Name, k.Count, where)) == DialogResult.Yes)
+                        RemoveNamed(new HashSet<string> { k.Name }, area);
+                };
+                buttons.Children.Add(remove);
+                Grid.SetColumn(buttons, 3);
+                row.Children.Add(buttons);
+                list.Children.Add(row);
+            }
+        }
+        search.TextChanged += (_, _) => Fill();
+        var expander = new Expander
+        {
+            Header = string.Format(MapStrings.ByKind, kinds.Count),
+            Content = host,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            IsExpanded = area is not null && kinds.Count <= 30,
+            IsVisible = kinds.Count != 0,
+        };
+        // The list is made when it is opened (the whole island has many).
+        if (expander.IsExpanded)
+            Fill();
+        else
+            expander.PropertyChanged += (_, e) =>
+            {
+                if (e.Property == Expander.IsExpandedProperty && expander.IsExpanded && list.Children.Count == 0)
+                    Fill();
+            };
+        return expander;
+    }
 
     private async Task SaveAndClose()
     {
@@ -629,7 +862,29 @@ public sealed class IslandMapWindow : NhseWindow
             Put = i => PutItem(i),
             Remove = RemoveSelected,
             Rotate = GridItems.CanRotate(item) ? () => RotateSelected() : null,
+            MoreActions = SameActions(item),
         });
+    }
+
+    /// <summary> For a chosen thing: remove all of the same on the island, or take the eraser for them. </summary>
+    private List<(string Text, Action Act)>? SameActions(Item item)
+    {
+        if (item.IsNone || !item.IsRoot)
+            return null;
+        var name = GridItems.GetName(item);
+        var names = new HashSet<string> { name };
+        var count = Find(t => GridItems.GetName(t) == name, LayerArea(null)).Count;
+        if (count < 2)
+            return null;
+        return
+        [
+            (string.Format(MapStrings.RemoveSame, count), async () =>
+            {
+                if (await Dialogs.Prompt(MessageBoxButtons.YesNo, string.Format(MapStrings.AskRemoveNamed, name, count, MapStrings.WholeIsland)) == DialogResult.Yes)
+                    RemoveNamed(names);
+            }),
+            (string.Format(MapStrings.EraseThese, name), () => EraseOnly(name, names)),
+        ];
     }
 
     private Control AreaDetails(Rect area)
@@ -707,8 +962,20 @@ public sealed class IslandMapWindow : NhseWindow
         var cmd = UiUtil.CommandModifier;
         switch (e.Key)
         {
+            case Key.Delete or Key.Back when ChosenArea is { } area:
+                _ = RemoveArea(area);
+                break;
             case Key.Delete or Key.Back when Selected is not null:
                 RemoveSelected();
+                break;
+            case Key.V when e.KeyModifiers == KeyModifiers.None:
+                SetTool(MapTool.Move);
+                break;
+            case Key.M when e.KeyModifiers == KeyModifiers.None:
+                SetTool(MapTool.Select);
+                break;
+            case Key.E when e.KeyModifiers == KeyModifiers.None:
+                SetTool(MapTool.Erase);
                 break;
             case Key.Z when e.KeyModifiers == cmd:
                 Undo();
@@ -717,6 +984,9 @@ public sealed class IslandMapWindow : NhseWindow
                 ChosenArea = null;
                 View.Area = null;
                 BuildDetails();
+                break;
+            case Key.Escape when View.Tool != MapTool.Move:
+                SetTool(MapTool.Move);
                 break;
             case Key.Left: Move(-2, 0); break;
             case Key.Right: Move(2, 0); break;
@@ -736,6 +1006,16 @@ public sealed class IslandMapWindow : NhseWindow
                 return;
         }
         e.Handled = true;
+    }
+
+    /// <summary> Removes everything in the area, after asking (⌫ with an area marked). </summary>
+    private async Task RemoveArea(Rect area)
+    {
+        var count = Count(Tidy.Everything, area);
+        if (count == 0)
+            return;
+        if (await Dialogs.Prompt(MessageBoxButtons.YesNo, string.Format(MapStrings.AskRemoveArea, count)) == DialogResult.Yes)
+            RemoveAll(Tidy.Everything, area);
     }
 
     private void Move(int dx, int dy)

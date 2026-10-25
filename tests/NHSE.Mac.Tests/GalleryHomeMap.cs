@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.Headless;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using NHSE.Core;
@@ -414,6 +416,111 @@ public class GalleryHomeMap
     }
 
     private static void Assume(bool condition, string what) => Assert.SkipUnless(condition, what);
+
+    /// <summary> A piece of furniture dragged with the mouse lands where it was let go. </summary>
+    [AvaloniaFact]
+    public void MapDragWithMouse()
+    {
+        var sav = Save();
+        var map = MapTileManagerUtil.FromSaveFile(sav.Main);
+        var (ox, oy) = map.ConfigItems.GetCoordinatesAbsolute();
+        var layer = map.FieldItems.Layer0;
+        var (fx, fy) = FindEmptySquare(sav);
+        var piece = Enumerable.Range(0, layer.TileInfo.TotalWidth).SelectMany(x => Enumerable.Range(0, layer.TileInfo.TotalHeight).Select(y => (x, y)))
+            .First(p => layer.GetTile(p.x, p.y) is { IsRoot: true, IsNone: false } t && !t.IsFieldItem && GridItems.GetSize(t) == (2, 2)
+                && Math.Abs(p.x - fx) < 30 && Math.Abs(p.y - fy) < 20);
+        var w = ShowMap(sav, out var view);
+        view.ShowArea(new Rect(Math.Min(piece.x, fx) + ox - 6, Math.Min(piece.y, fy) + oy - 6, Math.Abs(piece.x - fx) + 14, Math.Abs(piece.y - fy) + 14));
+        Dispatcher.UIThread.RunJobs();
+        Point At(double x, double y) => view.TranslatePoint(view.ToScreen(new Point(x + ox, y + oy)), w)!.Value;
+        var from = At(piece.x + 1, piece.y + 1);
+        var to = At(fx + 1, fy + 1);
+        w.MouseMove(from, RawInputModifiers.None);
+        w.MouseDown(from, MouseButton.Left, RawInputModifiers.None);
+        w.MouseMove(to, RawInputModifiers.LeftMouseButton);
+        w.MouseUp(to, MouseButton.Left, RawInputModifiers.None);
+        w.ApplyToSave();
+        w.Close();
+        var after = MapTileManagerUtil.FromSaveFile(sav.Main).FieldItems.Layer0;
+        Assert.Equal(layer.GetTile(piece.x, piece.y).ItemId, after.GetTile(fx, fy).ItemId);
+        Assert.True(after.GetTile(piece.x, piece.y).IsNone);
+    }
+
+    /// <summary> The eraser takes only flowers along a stroke; a whole kind of flower goes at once; an area is marked without ⇧. </summary>
+    [AvaloniaFact]
+    public void MapEraserKindsAndSelect()
+    {
+        var sav = Save();
+        var w = ShowMap(sav, out var view);
+        var map = MapTileManagerUtil.FromSaveFile(sav.Main);
+        var (ox, oy) = map.ConfigItems.GetCoordinatesAbsolute();
+        var layer = map.FieldItems.Layer0;
+        var height = layer.TileInfo.TotalHeight;
+        var flower = Enumerable.Range(0, layer.Tiles.Length).Select(i => (I: i, T: layer.Tiles[i]))
+            .FirstOrDefault(z => z.T.IsRoot && FieldItemList.Items.TryGetValue(z.T.ItemId, out var d) && d.Kind.IsFlower);
+        Assume(flower.T is not null, "the test save has flowers");
+        var (fx, fy) = (flower.I / height, flower.I % height);
+        view.ShowArea(new Rect(fx + ox - 20, fy + oy - 12, 40, 24));
+        Dispatcher.UIThread.RunJobs();
+        Point At(double x, double y) => view.TranslatePoint(view.ToScreen(new Point(x + ox, y + oy)), w)!.Value;
+
+        // The eraser along three squares: flowers go, nothing else.
+        var flowers = w.Count(IslandMapWindow.Tidy.Flowers);
+        var everything = w.Count(IslandMapWindow.Tidy.Everything);
+        w.SetTool(MapTool.Erase);
+        var from = At(fx + 1, fy + 1);
+        var to = At(fx + 7, fy + 1);
+        w.MouseMove(from, RawInputModifiers.None);
+        w.MouseDown(from, MouseButton.Left, RawInputModifiers.None);
+        w.MouseMove(to, RawInputModifiers.LeftMouseButton);
+        Gallery.Capture(w, "60-map-eraser", false);
+        w.MouseUp(to, MouseButton.Left, RawInputModifiers.None);
+        var gone = flowers - w.Count(IslandMapWindow.Tidy.Flowers);
+        Assert.True(gone >= 1);
+        Assert.Equal(everything - gone, w.Count(IslandMapWindow.Tidy.Everything));
+        w.Undo();
+        Assert.Equal(flowers, w.Count(IslandMapWindow.Tidy.Flowers));
+
+        // One kind of flower, on the whole island.
+        var name = GridItems.GetName(flower.T);
+        var kind = w.Kinds().Single(k => k.Name == name);
+        Assert.Equal(kind.Count, w.RemoveNamed(new HashSet<string> { name }));
+        Assert.DoesNotContain(w.Kinds(), k => k.Name == name);
+        Assert.Equal(flowers - kind.Count, w.Count(IslandMapWindow.Tidy.Flowers));
+        w.Undo();
+
+        // The chosen flower offers to remove all of the same, or the eraser for them only.
+        w.SetTool(MapTool.Move);
+        w.SelectTile(fx, fy);
+        Dispatcher.UIThread.RunJobs();
+        Gallery.Capture(w, "60-map-same", false);
+        if (kind.Count > 1)
+        {
+            var buttons = w.GetVisualDescendants().OfType<Button>().ToList();
+            Assert.Contains(buttons, b => Equals(b.Content, string.Format(MapStrings.RemoveSame, kind.Count)));
+            var only = buttons.First(b => Equals(b.Content, string.Format(MapStrings.EraseThese, name)));
+            only.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal(MapTool.Erase, view.Tool);
+            var what = w.GetVisualDescendants().OfType<ComboBox>().First(c => c.SelectedItem is string t && t == string.Format(MapStrings.EraseOnly, name));
+            Assert.NotNull(what);
+        }
+
+        // An area marked by dragging, without ⇧.
+        w.SetTool(MapTool.Select);
+        var a = At(fx - 6, fy - 6);
+        var b2 = At(fx + 8, fy + 6);
+        w.MouseMove(a, RawInputModifiers.None);
+        w.MouseDown(a, MouseButton.Left, RawInputModifiers.None);
+        w.MouseMove(b2, RawInputModifiers.LeftMouseButton);
+        var marked = view.Area;
+        w.MouseUp(b2, MouseButton.Left, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+        Assert.NotNull(marked);
+        Assert.Equal(marked, view.Area); // the area stays after letting go (losing the capture used to forget it)
+        Assert.Contains(w.GetVisualDescendants().OfType<Expander>(), e => e.IsExpanded && e.Header is string h && h.StartsWith(MapStrings.ByKind.Split('(')[0], StringComparison.Ordinal));
+        Gallery.Capture(w, "60-map-select");
+    }
 
     [AvaloniaFact]
     public void BridgeShapes()
