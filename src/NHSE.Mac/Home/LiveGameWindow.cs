@@ -69,15 +69,26 @@ public sealed class LiveGameWindow : NhseWindow
 
         var notes = new Border { Classes = { "card" }, Padding = new Thickness(12, 8), Child = new TextBlock { Text = HomeStrings.LiveGameNotes, TextWrapping = TextWrapping.Wrap, FontSize = 12 } };
 
-        var close = new Button { Content = HomeStrings.Close, IsCancel = true, MinWidth = 100, HorizontalAlignment = HorizontalAlignment.Right };
+        var close = new Button { Content = HomeStrings.Close, IsCancel = true, MinWidth = 100 };
         close.Click += (_, _) => Close();
+        var copies = PlayerUi.MenuButton(HomeStrings.LiveBackups,
+            (HomeStrings.LiveBackupUse, () => _ = ChooseCopy()),
+            (HomeStrings.LiveBackupFolder, () =>
+            {
+                Directory.CreateDirectory(LiveBackups.Folder);
+                UiUtil.OpenInFinder(LiveBackups.Folder);
+            }));
+        var bottom = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+        bottom.Children.Add(copies);
+        Grid.SetColumn(close, 1);
+        bottom.Children.Add(close);
 
         var root = new StackPanel { Margin = new Thickness(22, 18, 22, 18), Spacing = 12 };
         root.Children.Add(Text(HomeStrings.LiveGameTitle, "title"));
         root.Children.Add(Text(HomeStrings.LiveGameHint, "subtle"));
         root.Children.Add(Card(steps));
         root.Children.Add(notes);
-        root.Children.Add(close);
+        root.Children.Add(bottom);
         Content = root;
         this.Bind(BackgroundProperty, this.GetResourceObservable("NhWindowBrush"));
         Say(HomeStrings.LiveNotConnected);
@@ -169,6 +180,65 @@ public sealed class LiveGameWindow : NhseWindow
         await Game.Reload(text => Avalonia.Threading.Dispatcher.UIThread.Post(() => Say(text)));
         // What was brought belongs to the game before it loaded again: bring it again before changing more.
         Pull.IsEnabled = true;
+    }
+
+    /// <summary>
+    /// Lists the kept copies; the chosen one goes into the open save, ready to be sent to the game with «Send the changes».
+    /// </summary>
+    private async Task ChooseCopy()
+    {
+        var list = LiveBackups.List();
+        if (list.Count == 0)
+        {
+            await Dialogs.Alert(HomeStrings.LiveBackupNone);
+            return;
+        }
+        if (!Game.Connected)
+        {
+            await Dialogs.Alert(HomeStrings.LiveNotConnected);
+            return;
+        }
+        var box = new ListBox { ItemsSource = list.Select(LiveBackups.Describe).ToArray(), SelectedIndex = 0, Height = 260 };
+        var dialog = new Window
+        {
+            Title = HomeStrings.LiveBackupUse,
+            Width = 460,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+        };
+        var ok = new Button { Content = HomeStrings.LiveBackupUseThis, Classes = { "accent" }, IsDefault = true };
+        var cancel = new Button { Content = HomeStrings.Cancel, IsCancel = true };
+        ok.Click += (_, _) => dialog.Close(true);
+        cancel.Click += (_, _) => dialog.Close(false);
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };
+        buttons.Children.Add(cancel);
+        buttons.Children.Add(ok);
+        var panel = new StackPanel { Margin = new Thickness(18), Spacing = 10 };
+        panel.Children.Add(Text(HomeStrings.LiveBackupUseHint, "subtle"));
+        panel.Children.Add(box);
+        panel.Children.Add(buttons);
+        dialog.Content = panel;
+        dialog.Bind(BackgroundProperty, dialog.GetResourceObservable("NhWindowBrush"));
+        if (!await dialog.ShowDialog<bool>(this) || box.SelectedIndex < 0)
+            return;
+
+        var path = list[box.SelectedIndex].Path;
+        await Run(Pull, async () =>
+        {
+            Say(HomeStrings.LiveGamePulling);
+            Progress.Value = 0;
+            Progress.IsVisible = true;
+            var problem = await Task.Run(() => Game.UseCopy(Ctx.SAV, path, p => Avalonia.Threading.Dispatcher.UIThread.Post(() => Progress.Value = p)));
+            if (problem is not null)
+            {
+                Say(problem, true);
+                return;
+            }
+            Reload();
+            Push.IsEnabled = true;
+            Say(HomeStrings.LiveBackupReady);
+        });
     }
 
     protected override void OnClosed(EventArgs e)

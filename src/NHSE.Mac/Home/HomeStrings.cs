@@ -276,4 +276,16 @@ public static class HomeStrings
     public static string LiveReloadTitle { get; set; } = "Going back to the title screen…";
     public static string LiveReloadEnter { get; set; } = "Entering the island again…";
     public static string LiveReloadDone { get; set; } = "Done. If it stayed on the title screen, press A yourself. Bring the game again before changing more.";
+
+    // Copies of the game brought over Wi-Fi
+    public static string LiveBackupPulled { get; set; } = "brought";
+    public static string LiveBackupBeforeSend { get; set; } = "before sending";
+    public static string LiveBackups { get; set; } = "Copies";
+    public static string LiveBackupUse { get; set; } = "Go back to a copy…";
+    public static string LiveBackupFolder { get; set; } = "Show the copies in Finder";
+    public static string LiveBackupNone { get; set; } = "There are no copies yet: one is kept every time you bring the game and before every send.";
+    public static string LiveBackupUseHint { get; set; } = "One is kept every time you bring the game and before every send. The chosen one is put in NHSE; then «Send the changes» leaves the game as it was then.";
+    public static string LiveBackupUseThis { get; set; } = "Use this copy";
+    public static string LiveBackupWrong { get; set; } = "That copy is not of this island or game version.";
+    public static string LiveBackupReady { get; set; } = "The copy is in NHSE. «Send the changes» puts it in the game, and «Save and reload the island» shows it.";
 }

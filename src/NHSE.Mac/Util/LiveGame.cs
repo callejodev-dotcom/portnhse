@@ -164,6 +164,7 @@ public sealed class LiveGame : IDisposable
         if (Likeness(gamePlayer, player) < 0.5 || Likeness(gameMain, main) < 0.5)
             return HomeStrings.LiveGameOther;
 
+        LiveBackups.Save(gameMain, gamePlayer, sav.Players[0].Personal, HomeStrings.LiveBackupPulled);
         gameMain.CopyTo(main);
         gamePlayer.CopyTo(player);
         MainBefore = gameMain;
@@ -186,9 +187,30 @@ public sealed class LiveGame : IDisposable
         if (!check.AsSpan().SequenceEqual(PlayerBefore.AsSpan(id, 0x38)))
             return -1;
 
+        // The game as it is now, in case it has to go back.
+        if (!sav.Main.Data.SequenceEqual(MainBefore) || !personal.Data.SequenceEqual(PlayerBefore))
+            LiveBackups.Save(MainBefore, PlayerBefore, personal, HomeStrings.LiveBackupBeforeSend);
         int sent = Send(MainAddress, sav.Main.Data, MainBefore);
         sent += Send(PlayerAddress, personal.Data, PlayerBefore);
         return sent;
+    }
+
+    /// <summary>
+    /// Puts a kept copy into the open save, to send it to the game: brings what the game has now first, so that only what
+    /// differs from the copy is sent.
+    /// </summary>
+    /// <returns>Null if done, or why not.</returns>
+    public string? UseCopy(HorizonSave sav, string path, Action<double>? progress = null)
+    {
+        var main = sav.Main.Data.Length;
+        var player = sav.Players[0].Personal.Data.Length;
+        if (LiveBackups.Read(path, main, player) is not { } copy)
+            return HomeStrings.LiveBackupWrong;
+        if (Pull(sav, progress) is { } problem)
+            return problem;
+        copy.Main.CopyTo(sav.Main.Data);
+        copy.Player.CopyTo(sav.Players[0].Personal.Data);
+        return null;
     }
 
     /// <summary> Writes the runs of bytes that differ (close runs joined), and keeps them as the new state. </summary>
