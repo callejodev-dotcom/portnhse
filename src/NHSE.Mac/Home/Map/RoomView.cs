@@ -117,8 +117,8 @@ public sealed class RoomView : Control
             var face = new Rect(b.X + ((b.Width - w) / 2), b.Y + ((b.Height - h - (2 * unit)) / 2), w, h);
             return (face, unit, face, face);
         }
-        const double back = 3.2; // tiles of the back wall seen from above
-        const double side = 0.8;
+        const double back = 4.6; // tiles of the back wall seen from above
+        const double side = 0.9;
         var u = Math.Min(b.Width / (Span + (2 * side)), b.Height / (Span + back + side));
         var roomW = (Span + (2 * side)) * u;
         var roomH = (Span + back + side) * u;
@@ -250,18 +250,40 @@ public sealed class RoomView : Control
         context.DrawRectangle(new SolidColorBrush(Color.FromRgb(0xB8, 0xA8, 0x90)), null, room.Inflate(3), 10, 10,
             new BoxShadows(new BoxShadow { Blur = 18, OffsetY = 4, Color = Color.FromArgb(0x50, 0, 0, 0) }));
         context.DrawRectangle(new SolidColorBrush(wallBase), null, room, 8, 8);
-        using (context.PushClip(new RoundedRect(backWall, new CornerRadius(8, 8, 0, 0))))
+        // Side walls: the same wallpaper, in shade.
+        foreach (var sideWall in new[] { new Rect(room.X, room.Y, floor.X - room.X, floor.Bottom - room.Y), new Rect(floor.Right, room.Y, room.Right - floor.Right, floor.Bottom - room.Y) })
         {
-            TileTexture(context, WallPicture, backWall, u * 4, WallCrop);
-            // Skirting board
-            context.FillRectangle(new SolidColorBrush(Color.FromArgb(0x70, 0x5A, 0x40, 0x28)), new Rect(backWall.X, backWall.Bottom - (u * 0.35), backWall.Width, u * 0.35));
+            using (context.PushClip(new RoundedRect(sideWall, new CornerRadius(sideWall.X == room.X ? 8 : 0, sideWall.X == room.X ? 0 : 8, 0, 0))))
+            {
+                PaintWall(context, WallPicture, sideWall, u * 2.4);
+                context.FillRectangle(new SolidColorBrush(Color.FromArgb(0x48, 0x20, 0x14, 0x08)), sideWall);
+            }
+        }
+        using (context.PushClip(backWall))
+        {
+            PaintWall(context, WallPicture, backWall, backWall.Height);
+            // Light from above, and the skirting board.
+            context.FillRectangle(new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                GradientStops = { new GradientStop(Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF), 0), new GradientStop(Color.FromArgb(0x28, 0, 0, 0), 1) },
+            }, backWall);
+            context.FillRectangle(new SolidColorBrush(Color.FromArgb(0x90, 0x4A, 0x34, 0x20)), new Rect(backWall.X, backWall.Bottom - (u * 0.3), backWall.Width, u * 0.3));
         }
 
         // Floor
         using (context.PushClip(floor))
         {
             context.FillRectangle(new SolidColorBrush(Color.FromRgb(0xE2, 0xCF, 0xAE)), floor);
-            TileTexture(context, FloorPicture, floor, u * 4, FloorCrop);
+            TileTexture(context, FloorPicture, floor, u * 3.8, FloorCrop);
+            // Shadow of the back wall on the floor.
+            context.FillRectangle(new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                GradientStops = { new GradientStop(Color.FromArgb(0x50, 0, 0, 0), 0), new GradientStop(Color.FromArgb(0, 0, 0, 0), 1) },
+            }, new Rect(floor.X, floor.Y, floor.Width, u * 0.9));
             // Light from the back: the floor is a little darker toward the front.
             context.FillRectangle(new LinearGradientBrush
             {
@@ -270,7 +292,7 @@ public sealed class RoomView : Control
                 GradientStops = { new GradientStop(Color.FromArgb(0x30, 0, 0, 0), 0), new GradientStop(Color.FromArgb(0, 0, 0, 0), 0.08), new GradientStop(Color.FromArgb(0x18, 0, 0, 0), 1) },
             }, floor);
             // A faint line on each square, to see where things go.
-            var grid = new Pen(new SolidColorBrush(Color.FromArgb(0x22, 0x40, 0x30, 0x20)), 1);
+            var grid = new Pen(new SolidColorBrush(Color.FromArgb(0x16, 0x40, 0x30, 0x20)), 1);
             for (int i = 1; i < Squares; i++)
             {
                 var x = Math.Round(floor.X + (i * 2 * u)) + 0.5;
@@ -293,15 +315,13 @@ public sealed class RoomView : Control
             _ => (1.0, 1.0, 1.0, 0.16),
         };
         using (context.PushOpacity(rugs))
-            DrawLayer(context, Layers[(int)RoomLayerSurface.Rugs], 0, true);
-        using (context.PushOpacity(floorItems))
-            DrawLayer(context, Layers[(int)RoomLayerSurface.Floor], -0.1);
-        using (context.PushOpacity(tables))
-            DrawLayer(context, Layers[(int)RoomLayerSurface.FloorSupported], 0.06);
+            DrawLayer(context, Layers[(int)RoomLayerSurface.Rugs], ItemLook.Flat);
+        // Furniture and what stands on it are drawn together from back to front, so nearer things cover farther ones.
+        DrawStanding(context, Layers[(int)RoomLayerSurface.Floor], floorItems, Layers[(int)RoomLayerSurface.FloorSupported], tables);
         if (ceiling > 0)
         {
             using (context.PushOpacity(ceiling))
-                DrawLayer(context, Layers[(int)RoomLayerSurface.Ceiling], -0.02);
+                DrawLayer(context, Layers[(int)RoomLayerSurface.Ceiling], ItemLook.Fit);
         }
     }
 
@@ -312,14 +332,14 @@ public sealed class RoomView : Control
         context.DrawRectangle(new SolidColorBrush(Color.FromRgb(0xE2, 0xCF, 0xAE)), null, floorStrip.Inflate(new Thickness(0, 0, 0, 0)), 0, 0,
             new BoxShadows(new BoxShadow { Blur = 18, OffsetY = 4, Color = Color.FromArgb(0x50, 0, 0, 0) }));
         using (context.PushClip(floorStrip))
-            TileTexture(context, FloorPicture, floorStrip, u * 4, FloorCrop);
+            TileTexture(context, FloorPicture, floorStrip, u * 3.8, FloorCrop);
         context.FillRectangle(new SolidColorBrush(Color.FromArgb(0x30, 0, 0, 0)), floorStrip);
         context.DrawRectangle(new SolidColorBrush(Color.FromRgb(0xEF, 0xE7, 0xD8)), null, face, 0, 0,
             new BoxShadows(new BoxShadow { Blur = 18, OffsetY = 4, Color = Color.FromArgb(0x50, 0, 0, 0) }));
         using (context.PushClip(face))
         {
-            TileTexture(context, WallPicture, face, u * 4, WallCrop);
-            var grid = new Pen(new SolidColorBrush(Color.FromArgb(0x26, 0x30, 0x20, 0x10)), 1);
+            PaintWall(context, WallPicture, face, u * 2.6);
+            var grid = new Pen(new SolidColorBrush(Color.FromArgb(0x1C, 0x30, 0x20, 0x10)), 1);
             for (int i = 1; i < Span; i++)
             {
                 var x = Math.Round(face.X + (i * u)) + 0.5;
@@ -332,15 +352,22 @@ public sealed class RoomView : Control
             }
         }
         context.FillRectangle(new SolidColorBrush(Color.FromArgb(0x80, 0x5A, 0x40, 0x28)), new Rect(face.X, face.Bottom - (u * 0.3), face.Width, u * 0.3));
-        DrawLayer(context, Layers[(int)Wall], 0.04);
+        DrawLayer(context, Layers[(int)Wall], ItemLook.Fit);
+    }
+
+    private enum ItemLook
+    {
+        /// <summary> Lying on the floor (rugs). </summary>
+        Flat,
+        /// <summary> Inside its spot (walls, ceiling). </summary>
+        Fit,
     }
 
     /// <summary>
-    /// Items of a layer on their tiles (in the active coordinates: the floor, or the wall face).
+    /// Root items of a layer with their area in tiles.
     /// </summary>
-    private void DrawLayer(DrawingContext context, LayerRoomItem layer, double pad, bool rug = false)
+    private static List<(Rect Area, Item Item)> Roots(LayerRoomItem layer)
     {
-        using var _ = context.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = BitmapInterpolationMode.HighQuality });
         var items = new List<(Rect Area, Item Item)>();
         for (int x = 0; x < GridSize; x++)
         {
@@ -353,26 +380,70 @@ public sealed class RoomView : Control
                 items.Add((new Rect(x, y, w, h), it));
             }
         }
-        foreach (var (area, item) in items.OrderBy(z => z.Area.Bottom))
+        return items;
+    }
+
+    /// <summary>
+    /// Items of a layer on their tiles (in the active coordinates: the floor, or the wall face).
+    /// </summary>
+    private void DrawLayer(DrawingContext context, LayerRoomItem layer, ItemLook look)
+    {
+        using var _ = context.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = BitmapInterpolationMode.HighQuality });
+        foreach (var (area, item) in Roots(layer).OrderBy(z => z.Area.Bottom))
         {
             var r = ToScreen(area);
             var picture = GridItems.GetPicture(item);
-            if (rug)
+            if (look == ItemLook.Fit)
             {
-                // Rugs lie flat: turned rugs are drawn turned.
-                if ((item.Rotation & 1) == 1)
-                {
-                    var c = r.Center;
-                    using (context.PushTransform(Matrix.CreateTranslation(-c.X, -c.Y) * Matrix.CreateRotation(Math.PI / 2) * Matrix.CreateTranslation(c.X, c.Y)))
-                        DrawPicture(context, picture, new Rect(c.X - (r.Height / 2), c.Y - (r.Width / 2), r.Height, r.Width).Inflate(2));
-                }
-                else
-                {
-                    DrawPicture(context, picture, r.Inflate(2));
-                }
+                DrawPicture(context, picture, r.Deflate(Math.Min(r.Width, r.Height) * 0.04));
                 continue;
             }
-            DrawPicture(context, picture, r.Deflate(Math.Min(r.Width, r.Height) * pad));
+            // Rugs lie flat: turned rugs are drawn turned.
+            if ((item.Rotation & 1) == 1)
+            {
+                var c = r.Center;
+                using (context.PushTransform(Matrix.CreateTranslation(-c.X, -c.Y) * Matrix.CreateRotation(Math.PI / 2) * Matrix.CreateTranslation(c.X, c.Y)))
+                    DrawPicture(context, picture, new Rect(c.X - (r.Height / 2), c.Y - (r.Width / 2), r.Height, r.Width).Inflate(2));
+            }
+            else
+            {
+                DrawPicture(context, picture, r.Inflate(2));
+            }
+        }
+    }
+
+    private static readonly IBrush FootShadow = new SolidColorBrush(Color.FromArgb(0x2C, 0x20, 0x10, 0x00));
+
+    /// <summary>
+    /// Furniture stands on its spot as in the game: its picture rises from the floor, a little taller than the spot, with a
+    /// soft shadow at its foot; what is on top of it stands on its upper part. Drawn from back to front.
+    /// </summary>
+    private void DrawStanding(DrawingContext context, LayerRoomItem floor, double floorOpacity, LayerRoomItem tables, double tableOpacity)
+    {
+        using var _ = context.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = BitmapInterpolationMode.HighQuality });
+        var all = Roots(floor).Select(z => (z.Area, z.Item, OnTable: false))
+            .Concat(Roots(tables).Select(z => (z.Area, z.Item, OnTable: true)))
+            .OrderBy(z => z.Area.Bottom).ThenBy(z => z.OnTable);
+        foreach (var (area, item, onTable) in all)
+        {
+            var r = ToScreen(area);
+            var picture = GridItems.GetPicture(item);
+            using (context.PushOpacity(onTable ? tableOpacity : floorOpacity))
+            {
+                if (onTable)
+                {
+                    // On the tabletop: a little smaller and raised, but still over its own spot so a click finds it.
+                    var w = r.Width * 0.86;
+                    var foot = r.Bottom - (r.Height * 0.3);
+                    context.DrawEllipse(FootShadow, null, new Point(r.Center.X, foot - (r.Height * 0.06)), r.Width * 0.3, r.Height * 0.1);
+                    DrawPicture(context, picture, new Rect(r.Center.X - (w / 2), foot - w, w, w), anchorBottom: true);
+                    continue;
+                }
+                context.DrawEllipse(FootShadow, null, new Point(r.Center.X, r.Bottom - (r.Height * 0.2)), r.Width * 0.38, r.Height * 0.15);
+                var width = r.Width * 1.14;
+                var height = Math.Max(r.Width, r.Height) * 1.14;
+                DrawPicture(context, picture, new Rect(r.Center.X - (width / 2), r.Bottom - (r.Height * 0.08) - height, width, height), anchorBottom: true);
+            }
         }
     }
 
@@ -397,8 +468,37 @@ public sealed class RoomView : Control
         }
     }
 
-    private static readonly Rect FloorCrop = new(0.28, 0.28, 0.44, 0.44);
-    private static readonly Rect WallCrop = new(0.32, 0.2, 0.4, 0.32);
+    /// <summary> The flooring's square in its picture (it spans 15–85 %), without the bevelled edge. </summary>
+    private static readonly Rect FloorCrop = new(0.165, 0.165, 0.67, 0.67);
+
+    /// <summary> The wallpaper's pattern in its picture (the upper part of the wall panel, seen slightly from the side). </summary>
+    private static readonly Rect WallPatternCrop = new(0.26, 0.26, 0.42, 0.25);
+
+    /// <summary> The lower part of the wall panel: wood panelling in many wallpapers, more pattern in the rest. </summary>
+    private static readonly Rect WallLowerCrop = new(0.26, 0.65, 0.42, 0.14);
+
+    /// <summary> Share of the wall height taken by its lower part. </summary>
+    private const double WallLowerShare = 0.36;
+
+    /// <summary>
+    /// Paints a wall as its wallpaper looks: the pattern above, repeated in rows no taller than <paramref name="rowHeight"/>,
+    /// and the lower part in one row below, with a thin rail between them.
+    /// </summary>
+    private static void PaintWall(DrawingContext context, IImage? picture, Rect wall, double rowHeight)
+    {
+        if (picture is null)
+            return;
+        var lowerHeight = wall.Height * WallLowerShare;
+        var upper = new Rect(wall.X, wall.Y, wall.Width, wall.Height - lowerHeight);
+        var lower = new Rect(wall.X, upper.Bottom, wall.Width, lowerHeight);
+        var rows = Math.Max(1, Math.Ceiling(upper.Height / Math.Max(1, rowHeight)));
+        TileTexture(context, picture, upper, Width(picture, WallPatternCrop, upper.Height / rows), WallPatternCrop);
+        TileTexture(context, picture, lower, Width(picture, WallLowerCrop, lower.Height), WallLowerCrop);
+        context.FillRectangle(new SolidColorBrush(Color.FromArgb(0x48, 0x20, 0x14, 0x08)), new Rect(wall.X, lower.Y - 1, wall.Width, 2.5));
+
+        static double Width(IImage picture, Rect crop, double height)
+            => height * (picture.Size.Width * crop.Width) / (picture.Size.Height * crop.Height);
+    }
 
     /// <summary>
     /// Fills an area with the middle of an item picture (a flooring or a wallpaper), repeated.
@@ -434,20 +534,17 @@ public sealed class RoomView : Control
         }
     }
 
-    private static void DrawPicture(DrawingContext context, IImage? picture, Rect dest, bool stretch = false)
+    /// <param name="anchorBottom">Puts the picture at the bottom of <paramref name="dest"/> (standing on it) instead of in the middle.</param>
+    private static void DrawPicture(DrawingContext context, IImage? picture, Rect dest, bool anchorBottom = false)
     {
         if (picture is null)
             return;
         var size = picture.Size;
-        if (stretch)
-        {
-            context.DrawImage(picture, new Rect(size), dest);
-            return;
-        }
         var scale = Math.Min(dest.Width / size.Width, dest.Height / size.Height);
         var w = size.Width * scale;
         var h = size.Height * scale;
-        context.DrawImage(picture, new Rect(size), new Rect(dest.X + ((dest.Width - w) / 2), dest.Y + ((dest.Height - h) / 2), w, h));
+        var y = anchorBottom ? dest.Bottom - h : dest.Y + ((dest.Height - h) / 2);
+        context.DrawImage(picture, new Rect(size), new Rect(dest.X + ((dest.Width - w) / 2), y, w, h));
     }
 
     private void DrawBubble(DrawingContext context, string text, IImage? picture, Point at)

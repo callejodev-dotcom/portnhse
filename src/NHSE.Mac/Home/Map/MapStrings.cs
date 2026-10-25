@@ -99,7 +99,7 @@ public static class MapStrings
     public static string EditRugs { get; set; } = "Rugs";
     public static string EditRugsHint { get; set; } = "Rugs lie under the furniture.";
     public static string EditWalls { get; set; } = "Walls";
-    public static string EditWallsHint { get; set; } = "Things hanging on the walls. Choose a wall with the buttons on the right.";
+    public static string EditWallsHint { get; set; } = "Things hanging on the walls. Choose a wall with the buttons above.";
     public static string EditCeiling { get; set; } = "Ceiling";
     public static string EditCeilingHint { get; set; } = "Lamps and things hanging from the ceiling.";
     public static string WallBack { get; set; } = "Back wall";
