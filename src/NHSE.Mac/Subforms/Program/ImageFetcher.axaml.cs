@@ -1,12 +1,8 @@
 using System.IO.Compression;
-using System.Runtime.CompilerServices;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using NHSE.Core;
-
-// The gallery tests replace the network (ImageFetcher.MessageHandler) and the settings.
-[assembly: InternalsVisibleTo("NHSE.Mac.Tests")]
 
 namespace NHSE.Mac;
 
