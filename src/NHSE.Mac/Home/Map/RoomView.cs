@@ -49,7 +49,8 @@ public sealed class RoomView : Control
     public const int WallRows = 8;
 
     private LayerRoomItem[] Layers = [];
-    private int Squares = 8;
+    /// <summary> The room's floor in tiles of the 20×20 grid (not always square or centred: the upstairs room is 10×6 squares). </summary>
+    private PixelRect FloorTiles = new(2, 2, 16, 16);
     private IImage? FloorPicture;
     private IImage? WallPicture;
     private RoomDoors Doors;
@@ -105,19 +106,27 @@ public sealed class RoomView : Control
         MinHeight = 300;
     }
 
-    /// <summary> First tile of the room's floor (rooms are centered in the 20×20 grid). </summary>
-    public int Start => (GridSize - (Squares * 2)) / 2;
+    /// <summary> The room's floor in tiles of the 20×20 grid. </summary>
+    public PixelRect Floor => FloorTiles;
 
-    /// <summary> Tiles across the room's floor. </summary>
-    public int Span => Squares * 2;
+    /// <summary> Where the wall being edited starts along the grid, and its length in tiles (back and front walls run across, side walls along the depth). </summary>
+    public (int Start, int Length) WallRange => Wall is RoomLayerSurface.WallWest or RoomLayerSurface.WallEast
+        ? (FloorTiles.Y, FloorTiles.Height)
+        : (FloorTiles.X, FloorTiles.Width);
+
+    /// <summary> First tile along x of what is shown (the floor, or the wall being edited). </summary>
+    private int StartX => Mode == RoomEditMode.Walls ? WallRange.Start : FloorTiles.X;
+
+    /// <summary> First tile along y of what is shown (the floor, or the top of the wall). </summary>
+    private int StartY => Mode == RoomEditMode.Walls ? 0 : FloorTiles.Y;
 
     /// <summary>
     /// Shows a room: its item layers, its size in squares and the pictures of its flooring and wallpaper.
     /// </summary>
-    public void SetRoom(LayerRoomItem[] layers, int squares, IImage? floor, IImage? wall, RoomDoors doors = RoomDoors.None)
+    public void SetRoom(LayerRoomItem[] layers, PixelRect floorTiles, IImage? floor, IImage? wall, RoomDoors doors = RoomDoors.None)
     {
         Layers = layers;
-        Squares = Math.Clamp(squares, 1, GridSize / 2);
+        FloorTiles = floorTiles;
         FloorPicture = floor;
         WallPicture = wall;
         Doors = doors;
@@ -150,16 +159,18 @@ public sealed class RoomView : Control
         if (Mode == RoomEditMode.Walls)
         {
             // The wall face on, with a strip of floor below.
-            var unit = Math.Min(b.Width / Span, b.Height / (WallRows + 2.5));
-            var w = Span * unit;
+            var length = WallRange.Length;
+            var unit = Math.Min(b.Width / length, b.Height / (WallRows + 2.5));
+            var w = length * unit;
             var h = WallRows * unit;
             var face = new Rect(b.X + ((b.Width - w) / 2), b.Y + ((b.Height - h - (2 * unit)) / 2), w, h);
             return (face, unit, face, face);
         }
         // A plan: the floor with its real shape, and the walls as a frame around it.
-        var u = Math.Min(b.Width, b.Height) / (Span + (2 * WallThickness));
-        var size = (Span + (2 * WallThickness)) * u;
-        var room = new Rect(b.X + ((b.Width - size) / 2), b.Y + ((b.Height - size) / 2), size, size);
+        var (fw, fh) = (FloorTiles.Width, FloorTiles.Height);
+        var u = Math.Min(b.Width / (fw + (2 * WallThickness)), b.Height / (fh + (2 * WallThickness)));
+        var (rw, rh) = ((fw + (2 * WallThickness)) * u, (fh + (2 * WallThickness)) * u);
+        var room = new Rect(b.X + ((b.Width - rw) / 2), b.Y + ((b.Height - rh) / 2), rw, rh);
         var floor = room.Deflate(WallThickness * u);
         var backWall = new Rect(floor.X, room.Y, floor.Width, WallThickness * u);
         return (floor, u, backWall, room);
@@ -169,8 +180,7 @@ public sealed class RoomView : Control
     private Rect ToScreen(Rect tiles)
     {
         var (floor, u, _, _) = Layout();
-        var yStart = Mode == RoomEditMode.Walls ? 0 : Start;
-        return new Rect(floor.X + ((tiles.X - Start) * u), floor.Y + ((tiles.Y - yStart) * u), tiles.Width * u, tiles.Height * u);
+        return new Rect(floor.X + ((tiles.X - StartX) * u), floor.Y + ((tiles.Y - StartY) * u), tiles.Width * u, tiles.Height * u);
     }
 
     /// <summary> Tile of the active layer under a point, if any. </summary>
@@ -179,8 +189,8 @@ public sealed class RoomView : Control
         var (floor, u, _, _) = Layout();
         if (!floor.Contains(p) || u <= 0)
             return null;
-        var x = Start + (int)((p.X - floor.X) / u);
-        var y = (Mode == RoomEditMode.Walls ? 0 : Start) + (int)((p.Y - floor.Y) / u);
+        var x = StartX + (int)((p.X - floor.X) / u);
+        var y = StartY + (int)((p.Y - floor.Y) / u);
         return (Math.Clamp(x, 0, GridSize - 1), Math.Clamp(y, 0, GridSize - 1));
     }
     #endregion
@@ -381,11 +391,14 @@ public sealed class RoomView : Control
             TileTexture(context, FloorPicture, floor, u * 3.8, FloorCrop);
             // One faint line per square, to see where things go.
             var grid = new Pen(new SolidColorBrush(Color.FromArgb(0x30, 0x30, 0x20, 0x10)), 1);
-            for (int i = 1; i < Squares; i++)
+            for (int i = 1; i < FloorTiles.Width / 2; i++)
             {
                 var x = Math.Round(floor.X + (i * 2 * u)) + 0.5;
-                var y = Math.Round(floor.Y + (i * 2 * u)) + 0.5;
                 context.DrawLine(grid, new Point(x, floor.Y), new Point(x, floor.Bottom));
+            }
+            for (int i = 1; i < FloorTiles.Height / 2; i++)
+            {
+                var y = Math.Round(floor.Y + (i * 2 * u)) + 0.5;
                 context.DrawLine(grid, new Point(floor.X, y), new Point(floor.Right, y));
             }
             // The walls cast a little shadow on the floor.
@@ -471,7 +484,7 @@ public sealed class RoomView : Control
         {
             PaintWall(context, WallPicture, face);
             var grid = new Pen(new SolidColorBrush(Color.FromArgb(0x1C, 0x30, 0x20, 0x10)), 1);
-            for (int i = 1; i < Span; i++)
+            for (int i = 1; i < WallRange.Length; i++)
             {
                 var x = Math.Round(face.X + (i * u)) + 0.5;
                 context.DrawLine(grid, new Point(x, face.Y), new Point(x, face.Bottom));
@@ -632,7 +645,7 @@ public sealed class RoomView : Control
         using var _ = context.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = BitmapInterpolationMode.HighQuality });
         foreach (var (area, item) in Roots(layer))
         {
-            var r = new Rect(strip.X + ((area.X - Start) * u), strip.Y, area.Width * u, strip.Height);
+            var r = new Rect(strip.X + ((area.X - FloorTiles.X) * u), strip.Y, area.Width * u, strip.Height);
             DrawPicture(context, GridItems.GetPicture(item), r.Deflate(1));
         }
     }

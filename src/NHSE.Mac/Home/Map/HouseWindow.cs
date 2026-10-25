@@ -192,36 +192,20 @@ public sealed class HouseWindow : NhseWindow
     };
 
     /// <summary>
-    /// Squares across the room: its usual size, or more if things are placed further out.
+    /// The floor of a room in tiles of its 20×20 grid, as measured in the game (things placed by the game itself sit
+    /// inside): the main room 8×8 squares (6×6 before the first expansion), the back and side rooms 6×6, all centred,
+    /// and upstairs 10×6 squares (the whole width, from the fifth row). The basement is not measured yet: it is taken
+    /// as the whole grid.
     /// </summary>
-    private int GetRoomSquares(int house, int room)
+    internal static PixelRect GetRoomArea(uint level, int room) => room switch
     {
-        var level = Houses[house].HouseLevel;
-        int size = room switch
-        {
-            0 => level >= 3 ? 8 : 6,
-            4 => 8,
-            5 => 10,
-            _ => 6,
-        };
-        var layers = GetRoom(house, room).Layers;
-        for (int li = 0; li < layers.Length; li++)
-        {
-            bool wall = li is >= (int)RoomLayerSurface.WallNorth and <= (int)RoomLayerSurface.WallEast;
-            for (int x = 0; x < RoomView.GridSize; x++)
-            {
-                for (int y = 0; y < RoomView.GridSize; y++)
-                {
-                    if (layers[li].GetTile(x, y).IsNone)
-                        continue;
-                    size = Math.Max(size, Math.Max(10 - x, x - 9));
-                    if (!wall)
-                        size = Math.Max(size, Math.Max(10 - y, y - 9));
-                }
-            }
-        }
-        return Math.Min(size, 10);
-    }
+        0 => level >= 3 ? new PixelRect(2, 2, 16, 16) : new PixelRect(4, 4, 12, 12),
+        4 => new PixelRect(0, 4, 20, 12),
+        5 => new PixelRect(0, 0, 20, 20),
+        _ => new PixelRect(4, 4, 12, 12),
+    };
+
+    private PixelRect GetRoomArea(int house, int room) => GetRoomArea(Houses[house].HouseLevel, room);
 
     public void ShowHouse(int index)
     {
@@ -252,7 +236,7 @@ public sealed class HouseWindow : NhseWindow
         ChoosingWallpaper = ChoosingFlooring = false;
         StopPlacing();
         var fw = GetFloorWall();
-        View.SetRoom(Room.Layers, GetRoomSquares(HouseIndex, room), Picture(fw.FloorItem.UniqueID), Picture(fw.WallItem.UniqueID), GetDoors(room));
+        View.SetRoom(Room.Layers, GetRoomArea(HouseIndex, room), Picture(fw.FloorItem.UniqueID), Picture(fw.WallItem.UniqueID), GetDoors(room));
         View.Selection = null;
         BuildSpotCard();
         BuildRoomCard();
@@ -373,8 +357,8 @@ public sealed class HouseWindow : NhseWindow
     /// The space of the room where things of the current kind go: the floor, or the wall's face.
     /// </summary>
     private Rect Limits => View.Mode == RoomEditMode.Walls
-        ? new Rect(View.Start, 0, View.Span, RoomView.WallRows)
-        : new Rect(View.Start, View.Start, View.Span, View.Span);
+        ? new Rect(View.WallRange.Start, 0, View.WallRange.Length, RoomView.WallRows)
+        : View.Floor.ToRect(1);
 
     private bool Fits(int x, int y, Item item)
     {
@@ -589,7 +573,7 @@ public sealed class HouseWindow : NhseWindow
                 SetFloorWall(fw);
                 ChoosingWallpaper = ChoosingFlooring = false;
                 var now = GetFloorWall();
-                View.SetRoom(Room.Layers, GetRoomSquares(HouseIndex, RoomIndex), Picture(now.FloorItem.UniqueID), Picture(now.WallItem.UniqueID), GetDoors(RoomIndex));
+                View.SetRoom(Room.Layers, GetRoomArea(HouseIndex, RoomIndex), Picture(now.FloorItem.UniqueID), Picture(now.WallItem.UniqueID), GetDoors(RoomIndex));
                 BuildSpotCard();
                 BuildRoomCard();
             };
