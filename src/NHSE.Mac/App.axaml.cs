@@ -38,7 +38,8 @@ public partial class App : Application
             desktop.MainWindow = main;
             desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
             desktop.ShutdownRequested += (_, _) => Program.SaveSettings();
-            BuildAppMenu();
+            TranslateAppMenu();
+            LanguageChanged += _ => TranslateAppMenu();
 
             foreach (var path in Program.StartupPaths)
                 main.OpenWhenShown(path);
@@ -96,14 +97,14 @@ public partial class App : Application
     /// <summary>
     /// Items of the application menu (the one named after the app, on the left of the macOS menu bar).
     /// </summary>
-    private void BuildAppMenu()
+    private void TranslateAppMenu()
     {
-        var about = new NativeMenuItem(MacStrings.MenuAbout);
-        about.Click += async (_, _) => await Dialogs.Alert(false, $"NHSE {GetVersion()}", MacStrings.MsgAbout, "https://github.com/kwsch/NHSE · https://github.com/callejodev-dotcom/portnhse");
-        var menu = new NativeMenu();
-        menu.Items.Add(about);
-        NativeMenu.SetMenu(this, menu);
+        if (NativeMenu.GetMenu(this)?.Items.FirstOrDefault() is NativeMenuItem about)
+            about.Header = MacStrings.MenuAbout;
     }
+
+    private async void About_Click(object? sender, EventArgs e)
+        => await Dialogs.Alert(false, $"NHSE {GetVersion()}", MacStrings.MsgAbout, "https://github.com/kwsch/NHSE · https://github.com/callejodev-dotcom/portnhse");
 
     public static string GetVersion() => typeof(App).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
 }

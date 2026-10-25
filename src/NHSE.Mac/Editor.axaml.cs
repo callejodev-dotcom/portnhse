@@ -34,7 +34,12 @@ public sealed partial class Editor : NhseWindow
 
         this.TranslateInterface(GameInfo.CurrentLanguage);
         App.LanguageChanged += OnLanguageChanged;
-        Closed += (_, _) => App.LanguageChanged -= OnLanguageChanged;
+        AppMenus.ThemeChanged += BuildMenu;
+        Closed += (_, _) =>
+        {
+            App.LanguageChanged -= OnLanguageChanged;
+            AppMenus.ThemeChanged -= BuildMenu;
+        };
 
         Title = SAV.GetSaveTitle("NHSE");
     }
@@ -52,94 +57,29 @@ public sealed partial class Editor : NhseWindow
     /// </summary>
     private void BuildMenu()
     {
-        static NativeMenuItem Item(string key, string text, Action action, KeyGesture? gesture = null)
-        {
-            var item = new NativeMenuItem(Translator.Tr($"Editor.{key}", text)) { Gesture = gesture };
-            item.Click += (_, _) => action();
-            return item;
-        }
-        static NativeMenuItem Sub(string header, params NativeMenuItemBase[] items)
-        {
-            var menu = new NativeMenu();
-            foreach (var i in items)
-                menu.Items.Add(i);
-            return new NativeMenuItem(header) { Menu = menu };
-        }
-
         var cmd = UiUtil.CommandModifier;
-        var main = MainWindow.Instance;
-        var file = Sub(Translator.Tr("Editor.Menu_File", "File"),
-            new NativeMenuItem(MacStrings.MenuOpenFolder) { Gesture = new KeyGesture(Key.O, cmd), Command = new RelayCommand(() => main?.MenuOpenFolder()) },
-            new NativeMenuItem(MacStrings.MenuOpenFile) { Gesture = new KeyGesture(Key.O, cmd | KeyModifiers.Shift), Command = new RelayCommand(() => main?.MenuOpenFile()) },
+        var file = AppMenus.Sub(AppMenus.FileHeader,
+        [
+            .. AppMenus.OpenItems(),
             new NativeMenuItemSeparator(),
-            Item("Menu_Save", "Save", Menu_Save_Click, new KeyGesture(Key.S, cmd)),
+            AppMenus.Item("Menu_Save", "Save", Menu_Save_Click, new KeyGesture(Key.S, cmd)),
             new NativeMenuItemSeparator(),
-            new NativeMenuItem(MacStrings.MenuCloseWindow) { Gesture = new KeyGesture(Key.W, cmd), Command = new RelayCommand(Close) });
+            AppMenus.Item(MacStrings.MenuCloseWindow, Close, new KeyGesture(Key.W, cmd)),
+        ]);
 
-        var tools = Sub(Translator.Tr("Editor.Menu_Tools", "Tools"),
-            Item("Menu_DumpDecrypted", "Dump Decrypted", Menu_DumpDecrypted_Click),
-            Item("Menu_VerifyHashes", "Verify Hashes", Menu_VerifyHashes_Click),
-            Item("Menu_LoadDecrypted", "Load Decrypted", Menu_LoadDecrypted_Click),
+        var tools = AppMenus.Sub(Translator.Tr("Editor.Menu_Tools", "Tools"),
+            AppMenus.Item("Menu_DumpDecrypted", "Dump Decrypted", Menu_DumpDecrypted_Click),
+            AppMenus.Item("Menu_VerifyHashes", "Verify Hashes", Menu_VerifyHashes_Click),
+            AppMenus.Item("Menu_LoadDecrypted", "Load Decrypted", Menu_LoadDecrypted_Click),
             new NativeMenuItemSeparator(),
-            Item("Menu_RAMEdit", "RAM Edit", Menu_RAMEdit_Click),
-            Item("Menu_ItemImages", "Item Images", Menu_ItemImages_Click));
-
-        var languages = new NativeMenuItemBase[App.LanguageNames.Length];
-        var current = GameLanguage.GetLanguageIndex(GameInfo.CurrentLanguage);
-        for (int i = 0; i < languages.Length; i++)
-        {
-            var index = i;
-            var item = new NativeMenuItem(App.LanguageNames[i]) { ToggleType = MenuItemToggleType.Radio, IsChecked = i == current };
-            item.Click += (_, _) => Menu_Language_Changed(index);
-            languages[i] = item;
-        }
-
-        var theme = Program.Settings.Theme;
-        var themes = Sub(Translator.Tr("Editor.Menu_Theme", "Theme"),
-            ThemeItem("Menu_Theme_System", "System Theme", ThemeSetting.System),
-            ThemeItem("Menu_Theme_Classic", "Light (Classic)", ThemeSetting.Light),
-            ThemeItem("Menu_Theme_Dark", "Dark", ThemeSetting.Dark));
-        NativeMenuItem ThemeItem(string key, string text, ThemeSetting t)
-        {
-            var item = Item(key, text, () => Menu_Theme_Click(t));
-            item.ToggleType = MenuItemToggleType.Radio;
-            item.IsChecked = theme == t;
-            return item;
-        }
-
-        var options = Sub(Translator.Tr("Editor.Menu_Options", "Options"),
-            Sub(MacStrings.MenuLanguage, languages),
-            themes,
-            new NativeMenuItemSeparator(),
-            Item("Menu_Settings", "Settings", Menu_Settings_Click, new KeyGesture(Key.OemComma, cmd)));
+            AppMenus.Item("Menu_RAMEdit", "RAM Edit", Menu_RAMEdit_Click),
+            AppMenus.Item("Menu_ItemImages", "Item Images", Menu_ItemImages_Click));
 
         var menu = new NativeMenu();
         menu.Items.Add(file);
         menu.Items.Add(tools);
-        menu.Items.Add(options);
+        menu.Items.Add(AppMenus.Options(this));
         NativeMenu.SetMenu(this, menu);
-    }
-
-    private async void Menu_Settings_Click()
-    {
-        var editor = new SettingsEditor();
-        await editor.ShowDialog(this);
-    }
-
-    private void Menu_Language_Changed(int index)
-    {
-        App.SetLanguage(index); // triggers translation of every open editor
-        Program.SaveSettings();
-    }
-
-    private void Menu_Theme_Click(ThemeSetting theme)
-    {
-        // Avalonia switches themes live, no restart needed (WinForms asked to save and restart).
-        Program.Settings.Theme = theme;
-        Program.SaveSettings();
-        if (Avalonia.Application.Current is { } app)
-            app.RequestedThemeVariant = theme.ToVariant();
-        BuildMenu();
     }
 
     private async void Menu_Save_Click()

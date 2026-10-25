@@ -98,6 +98,15 @@ public static class UiUtil
         c.Open(n);
     }
 
+    /// <summary>
+    /// Path for messages, with the home folder as ~.
+    /// </summary>
+    public static string ShortPath(string path)
+    {
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        return path.StartsWith(home, StringComparison.Ordinal) ? "~" + path[home.Length..] : path;
+    }
+
     public static void OpenInFinder(string path)
     {
         try

@@ -21,6 +21,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         LoadText();
         App.LanguageChanged += _ => LoadText();
+        AppMenus.ThemeChanged += BuildMenu;
 
         DragDrop.SetAllowDrop(this, true);
         AddHandler(DragDrop.DragOverEvent, Main_DragOver);
@@ -46,6 +47,23 @@ public partial class MainWindow : Window
         L_Warning.Text = MacStrings.LauncherWarning;
         B_Reopen.IsEnabled = Directory.Exists(Program.Settings.LastFilePath);
         B_Backups.IsVisible = Directory.Exists(SaveFileLoader.BackupPath);
+        BuildMenu();
+    }
+
+    /// <summary>
+    /// Menu bar while the launcher is the active window (the editors have their own).
+    /// </summary>
+    private void BuildMenu()
+    {
+        var reopen = AppMenus.Item(MacStrings.LauncherReopen, () => B_Reopen_Click(null, new RoutedEventArgs()));
+        reopen.IsEnabled = B_Reopen.IsEnabled;
+        var backups = AppMenus.Item(MacStrings.LauncherBackups, () => UiUtil.OpenInFinder(SaveFileLoader.BackupPath));
+        backups.IsEnabled = B_Backups.IsVisible;
+
+        var menu = new NativeMenu();
+        menu.Items.Add(AppMenus.Sub(AppMenus.FileHeader, [.. AppMenus.OpenItems(), reopen, new NativeMenuItemSeparator(), backups]));
+        menu.Items.Add(AppMenus.Options(this));
+        NativeMenu.SetMenu(this, menu);
     }
 
     /// <summary>

@@ -82,7 +82,7 @@ public static class SaveFileLoader
             return;
 
         settings.BackupPrompted = true;
-        var line1 = string.Format(MacStrings.MsgBackupMac, BackupPath);
+        var line1 = string.Format(MacStrings.MsgBackupMac, UiUtil.ShortPath(BackupPath));
         var line2 = MessageStrings.MsgBackupCreateQuestion;
         var prompt = await Dialogs.Prompt(MessageBoxButtons.YesNo, line1, line2);
         settings.AutomaticBackup = prompt == DialogResult.Yes;
