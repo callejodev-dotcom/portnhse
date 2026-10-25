@@ -48,13 +48,8 @@ public static class ActionPages
                 Card(CardHeader("PlaneTicket", HomeStrings.AirportColor, null, airport))),
             Section(HomeStrings.MapTitle),
             Tiles(2,
-                ActionCard("Fence", HomeStrings.MapTitle, HomeStrings.MapHint, () => ctx.Edit(new FieldItemEditor(main))),
-                ActionCard("Porch", HomeStrings.PlayerHouses, HomeStrings.PlayerHousesHint, async () =>
-                {
-                    var houses = main.GetPlayerHouses();
-                    if (await ctx.Edit(new PlayerHouseEditor(houses, ctx.SAV.Players, main, ctx.PlayerIndex)))
-                        main.SetPlayerHouses(houses);
-                })),
+                ActionCard("Fence", HomeStrings.MapTitle, HomeStrings.MapHint, () => IslandMapWindow.Open(ctx)),
+                ActionCard("Porch", HomeStrings.PlayerHouses, HomeStrings.PlayerHousesHint, () => HouseWindow.Open(ctx))),
             Section(HomeStrings.IslandLife),
             Tiles(2,
                 ActionCard("Peach", IslandStrings.FruitTitle, IslandStrings.FruitHint, async () =>
