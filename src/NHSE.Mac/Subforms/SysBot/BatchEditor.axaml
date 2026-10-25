@@ -1,0 +1,23 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.BatchEditor"
+        Title="Batch Editor"
+        Width="520" Height="300" MinWidth="440" MinHeight="240">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="Auto,*,Auto,Auto" Margin="12">
+        <ComboBox Name="CB_Format" Width="80" SelectionChanged="CB_Format_SelectedIndexChanged" />
+        <ComboBox Name="CB_Property" Grid.Column="1" IsEditable="True" HorizontalAlignment="Stretch" Margin="6,0,0,0" MaxDropDownHeight="400"
+                  SelectionChanged="CB_Property_SelectedIndexChanged" />
+        <ComboBox Name="CB_Require" Grid.Column="2" Width="160" Margin="6,0,0,0" />
+        <Button Name="B_Add" Grid.Column="3" Content="Add" Width="64" Margin="6,0,0,0" Click="B_Add_Click" />
+
+        <TextBlock Name="L_PropType" Grid.Row="1" Grid.Column="1" Text="PropertyType" Margin="8,4,0,4" />
+        <TextBlock Name="L_PropValue" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Text="PropertyValue" Margin="6,4,0,4" TextTrimming="CharacterEllipsis" />
+
+        <TextBox Name="RTB_Instructions" Grid.Row="2" Grid.ColumnSpan="4" AcceptsReturn="True" TextWrapping="NoWrap"
+                 FontFamily="Menlo, Courier New, monospace" FontSize="12" />
+
+        <ProgressBar Name="PB_Show" Grid.Row="3" Grid.ColumnSpan="3" VerticalAlignment="Center" Margin="0,8,0,0" />
+        <Button Name="B_Go" Grid.Row="3" Grid.Column="3" Content="Run" Width="64" Margin="6,8,0,0" Click="B_Go_Click" />
+    </Grid>
+</nh:NhseWindow>

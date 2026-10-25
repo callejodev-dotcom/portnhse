@@ -1,0 +1,13 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.BuildingHelp"
+        Title="Building Help"
+        SizeToContent="Height" Width="300" MinWidth="260">
+    <StackPanel Margin="12" Spacing="4">
+        <TextBlock Name="L_StructureType" Text="Structure Type:" />
+        <ComboBox Name="CB_StructureType" HorizontalAlignment="Stretch" MaxDropDownHeight="400" SelectionChanged="CB_StructureType_SelectedIndexChanged" />
+        <TextBlock Name="L_StructureValues" Text="Values:" Margin="0,8,0,0" />
+        <ComboBox Name="CB_StructureValues" HorizontalAlignment="Stretch" MaxDropDownHeight="400" />
+    </StackPanel>
+</nh:NhseWindow>

@@ -1,0 +1,251 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.FieldItemEditor"
+        Title="Field Item Editor"
+        SizeToContent="WidthAndHeight" CanResize="False">
+    <nh:NhseWindow.Styles>
+        <Style Selector="CheckBox">
+            <Setter Property="MinHeight" Value="22" />
+        </Style>
+        <Style Selector="RadioButton">
+            <Setter Property="MinHeight" Value="22" />
+        </Style>
+        <Style Selector="Border.picture">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+        <Style Selector="Button.dropdown">
+            <Setter Property="Height" Value="52" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="Slider">
+            <Setter Property="IsSnapToTickEnabled" Value="True" />
+            <Setter Property="TickFrequency" Value="1" />
+            <Setter Property="SmallChange" Value="1" />
+            <Setter Property="Margin" Value="4,-6,4,0" />
+        </Style>
+    </nh:NhseWindow.Styles>
+
+    <Grid ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto,Auto" Margin="12">
+        <!-- Acre viewport: terrain + buildings behind, items in front -->
+        <Border Classes="picture">
+            <nh:MapPictureBox Name="PB_Viewport" Width="512" Height="512" ToolTip.ShowDelay="100"
+                              PointerPressed="ViewportMouseDown" PointerReleased="ViewportMouseUp" PointerMoved="ViewportMouseMove">
+                <nh:MapPictureBox.ContextMenu>
+                    <ContextMenu Name="CM_Click" Opening="CM_Click_Opening">
+                        <MenuItem Name="Menu_View" Header="View" Click="Menu_View_Click" />
+                        <MenuItem Name="Menu_Set" Header="Set" Click="Menu_Set_Click" />
+                        <MenuItem Name="Menu_Reset" Header="Reset" Click="Menu_Reset_Click" />
+                        <MenuItem Name="Menu_Activate" Header="Activate" Click="Menu_Activate_Click" />
+                    </ContextMenu>
+                </nh:MapPictureBox.ContextMenu>
+            </nh:MapPictureBox>
+        </Border>
+
+        <!-- Full map and navigation -->
+        <StackPanel Name="tableLayoutPanel2" Grid.Column="1" Margin="14,0,0,0" Width="300" Spacing="2">
+            <CheckBox Name="CHK_SnapToAcre" Content="Snap to nearest Acre on Click" />
+            <Border Classes="picture">
+                <nh:MapPictureBox Name="PB_Map" PointerPressed="PB_Map_MouseDown" PointerMoved="PB_Map_MouseMove">
+                    <nh:MapPictureBox.ContextMenu>
+                        <ContextMenu Name="CM_Picture">
+                            <MenuItem Name="Menu_SavePNG" Header="Save .png" Click="Menu_SavePNG_Click" />
+                            <MenuItem Name="Menu_SavePNGItems" Header="Include Items" ToggleType="CheckBox" IsChecked="True" StaysOpenOnClick="True" Click="Menu_SavePNGCheck_Click" />
+                            <MenuItem Name="Menu_SavePNGTerrain" Header="Include Terrain" ToggleType="CheckBox" IsChecked="True" StaysOpenOnClick="True" Click="Menu_SavePNGCheck_Click" />
+                        </ContextMenu>
+                    </nh:MapPictureBox.ContextMenu>
+                </nh:MapPictureBox>
+            </Border>
+            <TextBlock Name="L_Coordinates" Text="(000,000) = (0x00,0x00)" FontFamily="Courier New, Menlo, monospace" FontSize="11"
+                       HorizontalAlignment="Right" Margin="0,2,10,10" />
+
+            <StackPanel Name="FLP_Navigation" Orientation="Horizontal" Spacing="10">
+                <Grid Name="PAN_Arrows" ColumnDefinitions="40,40,40" RowDefinitions="40,40,40" VerticalAlignment="Top">
+                    <Button Name="B_Up" Grid.Column="1" Content="↑" Width="40" Height="40" Padding="0" Click="B_Up_Click" />
+                    <Button Name="B_Left" Grid.Row="1" Content="←" Width="40" Height="40" Padding="0" Click="B_Left_Click" />
+                    <Button Name="B_Right" Grid.Row="1" Grid.Column="2" Content="→" Width="40" Height="40" Padding="0" Click="B_Right_Click" />
+                    <Button Name="B_Down" Grid.Row="2" Grid.Column="1" Content="↓" Width="40" Height="40" Padding="0" Click="B_Down_Click" />
+                </Grid>
+                <Grid Name="tableLayoutPanel1" ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto" VerticalAlignment="Top">
+                    <TextBlock Name="L_TileMode" Grid.ColumnSpan="2" Text="Tile Editor Mode" />
+                    <RadioButton Name="RB_Terrain" Grid.Row="1" Grid.ColumnSpan="2" GroupName="TileMode" Content="Terrain" Margin="8,0,0,0" />
+                    <RadioButton Name="RB_Item" Grid.Row="2" Grid.ColumnSpan="2" GroupName="TileMode" Content="Items" IsChecked="True" Margin="8,0,0,0" />
+                    <TextBlock Name="L_Layer" Grid.Row="3" Classes="label" Text="Item Layer:" />
+                    <NumericUpDown Name="NUD_Layer" Grid.Row="3" Grid.Column="1" Minimum="1" Maximum="2" Value="1" Width="90" Margin="0,2"
+                                   ValueChanged="NUD_Layer_ValueChanged" />
+                    <TextBlock Name="L_Acre" Grid.Row="4" Classes="label" Text="Acre:" />
+                    <ComboBox Name="CB_Acre" Grid.Row="4" Grid.Column="1" Width="90" Margin="0,2" MaxDropDownHeight="400" SelectionChanged="ChangeAcre" />
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Name="FLP_GridOptions" Margin="0,8,0,0">
+                <CheckBox Name="CHK_MoveOnDrag" Content="Move Field Item Editor on mouse drag" IsChecked="True" />
+                <CheckBox Name="CHK_NoOverwrite" Content="Prevent Writing Occupied Item Tiles" IsChecked="True" />
+                <CheckBox Name="CHK_AutoExtension" Content="Handle Item Extensions Automatically" IsChecked="True" />
+                <CheckBox Name="CHK_RedirectExtensionLoad" Content="View Root instead of Extension" IsChecked="True" />
+                <CheckBox Name="CHK_FieldItemSnap" Content="Snap Field Items to Grid on Set" IsChecked="True" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Editors -->
+        <TabControl Name="TC_Editor" Grid.Column="2" Width="340" Height="570" Margin="14,-8,0,0"
+                    VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
+            <TabItem Name="Tab_Item" Header="Items">
+                <Grid RowDefinitions="*,Auto,Auto" Margin="4,8,4,0">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <nh:ItemEditor Name="ItemEdit" Width="220" HorizontalAlignment="Left" Margin="4,0,0,0" />
+                    </ScrollViewer>
+                    <TextBlock Name="GB_Remove" Grid.Row="1" Text="Remove from View (Hold Shift=Map)" Margin="4,8,0,4" TextWrapping="Wrap" />
+                    <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Name="B_DumpLoadField" Classes="dropdown" Content="Dump/Import">
+                            <Button.Flyout>
+                                <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                    <MenuItem Name="B_DumpAcre" Header="Dump Acre" Click="B_DumpAcreItem_Click" />
+                                    <MenuItem Name="B_DumpAllAcres" Header="Dump All Acres" Click="B_DumpAllAcres_Click" />
+                                    <MenuItem Name="B_ImportAcre" Header="Import Acre" Click="B_ImportAcreItem_Click" />
+                                    <MenuItem Name="B_ImportAllAcres" Header="Import All Acres" Click="B_ImportAllAcres_Click" />
+                                    <MenuItem Name="B_DumpAllAcresFlag" Header="Dump All Flags" Click="B_DumpAllAcresFlag_Click" />
+                                    <MenuItem Name="B_ImportAllAcresFlag" Header="Import All Flags" Click="B_ImportAllAcresFlag_Click" />
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+                        <Button Name="B_RemoveItemDropDown" Grid.Column="1" Classes="dropdown" Content="Remove Items...">
+                            <Button.Flyout>
+                                <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                    <MenuItem Name="B_RemoveAllWeeds" Header="Weeds" Click="B_RemoveAllWeeds_Click" />
+                                    <MenuItem Name="B_RemoveAllTrees" Header="Trees" Click="B_RemoveAllTrees_Click" />
+                                    <MenuItem Name="B_RemovePlants" Header="Plants" Click="B_RemovePlants_Click" />
+                                    <MenuItem Name="B_RemoveObjects" Header="Objects" Click="B_RemoveObjects_Click" />
+                                    <MenuItem Name="B_RemovePlacedItems" Header="Placed Items" Click="B_RemovePlacedItems_Click" />
+                                    <MenuItem Name="B_RemoveFences" Header="Fences" Click="B_RemoveFences_Click" />
+                                    <MenuItem Name="B_RemoveBranches" Header="Branches" Click="B_RemoveBranches_Click" />
+                                    <MenuItem Name="B_RemoveShells" Header="Shells" Click="B_RemoveShells_Click" />
+                                    <MenuItem Name="B_RemoveFlowers" Header="Flowers" Click="B_RemoveFlowers_Click" />
+                                    <MenuItem Name="B_RemoveBushes" Header="Bushes" Click="B_RemoveBushes_Click" />
+                                    <MenuItem Name="B_FillHoles" Header="Holes" Click="B_FillHoles_Click" />
+                                    <MenuItem Name="B_RemoveEditor" Header="Editor Item" Click="B_RemoveEditor_Click" />
+                                    <MenuItem Name="B_RemoveAll" Header="All" Click="B_RemoveAll_Click" />
+                                    <Separator />
+                                    <MenuItem Name="B_WaterFlowers" Header="Water Flowers" Click="B_WaterFlowers_Click" />
+                                    <MenuItem Name="Menu_Spawn" Header="Spawn..." Click="Menu_Spawn_Click" />
+                                    <MenuItem Name="Menu_Batch" Header="Batch Editor" Click="Menu_Bulk_Click" />
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Name="Tab_Building" Header="Buildings">
+                <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="4,8,4,0">
+                    <Grid ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="4">
+                        <TextBlock Name="L_PlazaX" Classes="label" Text="Plaza X:" />
+                        <NumericUpDown Name="NUD_PlazaX" Grid.Column="1" Minimum="0" Maximum="1024" Value="555" ValueChanged="NUD_PlazaX_ValueChanged" />
+                        <TextBlock Name="L_PlazaY" Grid.Column="2" Classes="label" Text="Plaza Y:" Margin="8,0,2,0" />
+                        <NumericUpDown Name="NUD_PlazaY" Grid.Column="3" Minimum="0" Maximum="1024" Value="555" ValueChanged="NUD_PlazaY_ValueChanged" />
+                    </Grid>
+                    <ListBox Name="LB_Items" Grid.Row="1" Margin="0,6" SelectionMode="Single" SelectionChanged="LB_Items_SelectedIndexChanged" />
+                    <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="3">
+                        <TextBlock Name="L_BuildingType" Classes="label" Text="Building Type:" />
+                        <NumericUpDown Name="NUD_BuildingType" Grid.Column="1" Grid.ColumnSpan="3" Minimum="0" Maximum="100" Width="110" HorizontalAlignment="Left" ValueChanged="NUD_BuildingType_ValueChanged" />
+                        <StackPanel Grid.Row="1" Grid.ColumnSpan="4" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                            <TextBlock Name="L_BuildingX" Classes="label" Text="X:" />
+                            <NumericUpDown Name="NUD_X" Minimum="0" Maximum="1024" Width="110" ValueChanged="NUD_BuildingType_ValueChanged" />
+                            <TextBlock Name="L_BuildingY" Classes="label" Text="Y:" Margin="8,0,6,0" />
+                            <NumericUpDown Name="NUD_Y" Minimum="0" Maximum="1024" Width="110" ValueChanged="NUD_BuildingType_ValueChanged" />
+                        </StackPanel>
+                        <TextBlock Name="L_BuildingRotation" Grid.Row="2" Classes="label" Text="Angle:" />
+                        <NumericUpDown Name="NUD_Angle" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Minimum="0" Maximum="65535" Width="110" HorizontalAlignment="Left" ValueChanged="NUD_BuildingType_ValueChanged" />
+                        <TextBlock Name="L_Bit" Grid.Row="3" Classes="label" Text="Bit:" />
+                        <NumericUpDown Name="NUD_Bit" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Minimum="-200" Maximum="200" Width="110" HorizontalAlignment="Left" ValueChanged="NUD_BuildingType_ValueChanged" />
+                        <TextBlock Name="L_BuildingStructureType" Grid.Row="4" Classes="label" Text="Type:" />
+                        <NumericUpDown Name="NUD_Type" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Minimum="0" Maximum="65535" Width="110" HorizontalAlignment="Left" ValueChanged="NUD_BuildingType_ValueChanged" />
+                        <TextBlock Name="L_BuildingStructureArg" Grid.Row="5" Classes="label" Text="TypeArg:" />
+                        <NumericUpDown Name="NUD_TypeArg" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" Minimum="0" Maximum="65535" Width="110" HorizontalAlignment="Left" ValueChanged="NUD_BuildingType_ValueChanged" />
+                        <TextBlock Name="L_BuildingUniqueID" Grid.Row="6" Classes="label" Text="UniqueID:" />
+                        <NumericUpDown Name="NUD_UniqueID" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" Minimum="0" Maximum="65535" Width="110" HorizontalAlignment="Left" ValueChanged="NUD_BuildingType_ValueChanged" />
+                    </Grid>
+                    <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,10,0,0">
+                        <Button Name="B_DumpLoadBuildings" Classes="dropdown" Content="Dump/Import">
+                            <Button.Flyout>
+                                <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                    <MenuItem Name="B_DumpBuildings" Header="Dump Buildings" Click="B_DumpBuildings_Click" />
+                                    <MenuItem Name="B_ImportBuildings" Header="Import Buildings" Click="B_ImportBuildings_Click" />
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+                        <Button Name="B_Help" Grid.Column="1" Classes="dropdown" Content="Help" Click="B_Help_Click" />
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Name="Tab_Terrain" Header="Terrain">
+                <Grid RowDefinitions="*,Auto,Auto" Margin="4,8,4,0">
+                    <nh:PropertyGrid Name="PG_TerrainTile" PropertySort="Categorized" />
+                    <StackPanel Name="FLP_Transparency" Grid.Row="1" Margin="0,8,0,0">
+                        <TextBlock Name="L_TerrainTileLabelTransparency" Text="Terrain Tile Label Transparency" TextWrapping="Wrap" />
+                        <Slider Name="TR_Terrain" Minimum="0" Maximum="255" Value="0" ValueChanged="TR_Terrain_Scroll" />
+                        <TextBlock Name="L_FieldItemTransparency" Text="Field Item Transparency" TextWrapping="Wrap" />
+                        <Slider Name="TR_Transparency" Minimum="0" Maximum="100" Value="90" ValueChanged="TR_Transparency_Scroll" />
+                        <TextBlock Name="L_BuildingTransparency" Text="Building Transparency" TextWrapping="Wrap" />
+                        <Slider Name="TR_BuildingTransparency" Minimum="0" Maximum="255" Value="255" ValueChanged="TR_BuildingTransparency_Scroll" />
+                    </StackPanel>
+                    <Grid Grid.Row="2" ColumnDefinitions="*,*,*" ColumnSpacing="6" Margin="0,4,0,0">
+                        <Button Name="B_DumpLoadTerrain" Classes="dropdown" Content="Dump/Import">
+                            <Button.Flyout>
+                                <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                    <MenuItem Name="B_DumpTerrainAcre" Header="Dump Acre" Click="B_DumpTerrainAcre_Click" />
+                                    <MenuItem Name="B_DumpTerrainAll" Header="Dump All Acres" Click="B_DumpTerrainAll_Click" />
+                                    <MenuItem Name="B_ImportTerrainAcre" Header="Import Acre" Click="B_ImportTerrainAcre_Click" />
+                                    <MenuItem Name="B_ImportTerrainAll" Header="Import All Acres" Click="B_ImportTerrainAll_Click" />
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+                        <Button Name="B_ModifyAllTerrain" Grid.Column="1" Classes="dropdown" Content="Modify All...">
+                            <Button.Flyout>
+                                <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                    <MenuItem Name="B_ZeroElevation" Header="Zero Elevation" Click="B_ZeroElevation_Click" />
+                                    <MenuItem Name="B_SetAllTerrain" Header="Set All Tiles using Tile from Editor" Click="B_SetAllTerrain_Click" />
+                                    <MenuItem Name="B_SetAllRoadTiles" Header="Set All Road Tiles from Editor" Click="B_SetAllRoadTiles_Click" />
+                                    <MenuItem Name="B_ClearPlacedDesigns" Header="Clear all Placed Designs" Click="B_ClearPlacedDesigns_Click" />
+                                    <MenuItem Name="B_ImportPlacedDesigns" Header="Import all Placed Design Choices" Click="B_ImportPlacedDesigns_Click" />
+                                    <MenuItem Name="B_ExportPlacedDesigns" Header="Export all Placed Design Choices" Click="B_ExportPlacedDesigns_Click" />
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+                        <Button Name="B_TerrainBrush" Grid.Column="2" Classes="dropdown" Content="Terrain brushes" Click="B_TerrainBrush_Click" />
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Name="Tab_Acres" Header="Acres">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" ColumnDefinitions="*,Auto" RowSpacing="6" Margin="8,10,8,0">
+                    <TextBlock Name="L_MapAcre" Classes="label" HorizontalAlignment="Left" Text="Acre:" />
+                    <ComboBox Name="CB_MapAcre" Grid.Column="1" Width="110" MaxDropDownHeight="400" SelectionChanged="CB_MapAcre_SelectedIndexChanged" />
+                    <ComboBox Name="CB_MapAcreSelect" Grid.Row="1" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" MaxDropDownHeight="400"
+                              SelectionChanged="CB_MapAcreSelect_SelectedValueChanged" />
+                    <TextBlock Name="L_MapAcreTemplateOutside" Grid.Row="2" Classes="label" HorizontalAlignment="Left" Text="Outside Acre Template:" />
+                    <NumericUpDown Name="NUD_MapAcreTemplateOutside" Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="65535" Width="110" />
+                    <TextBlock Name="L_MapAcreTemplateField" Grid.Row="3" Classes="label" HorizontalAlignment="Left" Text="Field Acre Template:" />
+                    <NumericUpDown Name="NUD_MapAcreTemplateField" Grid.Row="3" Grid.Column="1" Minimum="0" Maximum="65535" Width="110" />
+                    <Button Name="B_DumpLoadAcres" Grid.Row="5" Classes="dropdown" HorizontalAlignment="Left" Width="150" Content="Dump/Import" Margin="0,0,0,8">
+                        <Button.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <MenuItem Name="B_DumpMapAcres" Header="Dump Map Acres" Click="B_DumpMapAcres_Click" />
+                                <MenuItem Name="B_ImportMapAcres" Header="Import Map Acres" Click="B_ImportMapAcres_Click" />
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0,12,0,0">
+            <Button Name="B_Cancel" Content="Cancel" Width="84" IsCancel="True" Click="B_Cancel_Click" />
+            <Button Name="B_Save" Content="Save" Width="84" Classes="accent" Click="B_Save_Click" />
+        </StackPanel>
+    </Grid>
+</nh:NhseWindow>
