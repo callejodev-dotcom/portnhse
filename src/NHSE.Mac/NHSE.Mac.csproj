@@ -42,6 +42,7 @@
     <EmbeddedResource Include="$(NHSEDir)NHSE.WinForms/Resources/network/hosts_images.txt" LogicalName="network/hosts_images.txt" />
     <EmbeddedResource Include="Resources/*Strings_*.txt" LogicalName="mac/%(Filename)%(Extension)" />
     <EmbeddedResource Include="Resources/exterior.tsv" LogicalName="mac/exterior.tsv" />
+    <EmbeddedResource Include="Resources/flags_*.tsv" LogicalName="mac/%(Filename)%(Extension)" />
     <AvaloniaResource Include="Assets/**" />
   </ItemGroup>
 

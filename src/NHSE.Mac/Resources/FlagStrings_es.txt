@@ -1,0 +1,15 @@
+PlayerTitle=Progreso de {0}
+IslandTitle=Progreso de la isla
+PlayerHint=Lo que el juego recuerda de este jugador: conversaciones, encargos, primeras veces…
+IslandHint=Lo que el juego recuerda de la isla: construcciones, eventos, visitas…
+Warning=Son notas que el juego guarda de lo que ya ha pasado. Si las cambias, puede que se repitan o se salten conversaciones y eventos: haz antes una copia de tu partida.
+Search=Buscar (museo, Tom Nook, Totakeke…)
+FilterAll=Todos
+FilterOn=Activados
+FilterOff=Sin activar
+FilterChanged=Cambiados
+Yes=Sí
+Summary={0} de {1} · {2} cambiados
+Undo=Deshacer todos los cambios
+Export=Guardar en un archivo…
+Import=Cargar de un archivo…

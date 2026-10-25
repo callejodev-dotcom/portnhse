@@ -73,12 +73,16 @@ public sealed class VillagerHouseWindow : PlayerDialog
         fields.Children.Add(Text(VillagerStrings.HouseOutside, "cardtitle"));
         // The "order" is what the house turns into the next day: set it too, so the change stays.
         // Villager roofs have no pictures in the game list: they are chosen by name.
-        fields.Children.Add(PlayerUi.Labeled(MapStrings.Roof, 80, Picker(house.RoofUniqueID, v => { house.RoofUniqueID = v; house.OrderRoofUniqueID = v; })));
+        var preview = new HousePreview { HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(80, 4, 0, 4) };
+        void ShowPreview() => preview.Set(house.RoofUniqueID.ToString(), house.WallUniqueID.ToString(), house.DoorUniqueID.ToString());
+        ShowPreview();
+        fields.Children.Add(preview);
+        fields.Children.Add(PlayerUi.Labeled(MapStrings.Roof, 80, Picker(house.RoofUniqueID, v => { house.RoofUniqueID = v; house.OrderRoofUniqueID = v; ShowPreview(); })));
         var walls = new HousePartPicker<WallType>(HouseStyleNames.Offered<WallType>("HouseWallN"), house.WallUniqueID) { Width = 300 };
-        walls.Changed += v => { house.WallUniqueID = v; house.OrderWallUniqueID = v; };
+        walls.Changed += v => { house.WallUniqueID = v; house.OrderWallUniqueID = v; ShowPreview(); };
         fields.Children.Add(PlayerUi.Labeled(MapStrings.Walls, 80, walls));
         var door = new DoorPicker(house.DoorUniqueID) { Width = 300 };
-        door.Changed += v => { house.DoorUniqueID = v; house.OrderDoorUniqueID = v; };
+        door.Changed += v => { house.DoorUniqueID = v; house.OrderDoorUniqueID = v; ShowPreview(); };
         fields.Children.Add(PlayerUi.Labeled(MapStrings.Door, 80, door));
         ExteriorPictures.EnsureDownloaded();
 

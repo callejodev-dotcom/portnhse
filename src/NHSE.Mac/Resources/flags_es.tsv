@@ -1,0 +1,2202 @@
+# What each event flag of the island (land) and of a player (player) means, in plain words: kind, index, text.
+# Translated from the Japanese comments of the developers kept in NHSE.Core (EventFlagLand.cs, EventFlagPlayer.cs).
+land	0	Hoy se ha creado la isla.
+land	1	Hoy se ha mudado un jugador a la isla.
+land	2	Totakeke ya ha dado su primer concierto en la isla.
+land	3	El primer jugador ha terminado el prólogo del principio del juego.
+land	4	Un vecino ya te ha consultado si debería mudarse.
+land	5	Se cumplen las condiciones para construir el Comercio Nook.
+land	6	Dato interno: los datos de guardado de la isla ya se han validado.
+land	7	Veces que se han oído en la isla charlas de aviso.
+land	8	Veces que se han oído en la isla charlas sobre eventos.
+land	10	Dato interno: clave aleatoria de la isla.
+land	11	Se han terminado las obras del museo.
+land	12	Al empezar la isla ya se ha montado la tienda de campaña del jugador.
+land	13	Ya se ha colocado la parcela de la tienda de Sócrates (el futuro museo).
+land	14	Ya se ha colocado el cartel de obras del Comercio Nook.
+land	15	Al empezar la isla ya se ha montado la tienda de campaña del primer vecino inicial.
+land	16	Al empezar la isla ya se ha montado la tienda de campaña del segundo vecino inicial.
+land	17	Hoy es el primer día de la isla que ha creado el primer jugador.
+land	18	Ya se pueden poner artículos a la venta en la tienda.
+land	19	La isla ha llegado a la fase 2 de desarrollo.
+land	20	Tendo ya tiene el cartel de su tienda.
+land	21	Ya se ha colocado el cartel de la tienda de campaña de Tendo.
+land	22	Dato interno: ya no se comprueban los islotes del río.
+land	23	Se ha decidido convertir la tienda de campaña de Tendo en el Comercio Nook.
+land	24	Hoy es el día de inauguración del Comercio Nook.
+land	25	Número de charlas del prólogo del principio del juego que ya se han visto.
+land	26	Bayas donadas para construir la plaza de eventos.
+land	27	Arcilla donada para construir la plaza de eventos.
+land	28	Ya se ha reunido todo el dinero de la colecta para la plaza de eventos.
+land	29	Se ha terminado la plaza de eventos.
+land	30	Canela ha conseguido un giroide.
+land	31	Ya se ha colocado en la plaza de eventos el giroide de la colecta.
+land	32	Se cumplen las condiciones para que la tienda de Sócrates se convierta en museo.
+land	33	Paso de las obras para convertir la tienda de Sócrates en el edificio del museo.
+land	34	Se ha terminado de construir el edificio del museo.
+land	35	Hoy se ha terminado el edificio del museo.
+land	36	Bichos que llevaba atrapados el anfitrión al empezar el juego en línea.
+land	37	Se han desbloqueado los eventos de temporada comunes a todo el mundo.
+land	38	La isla ya ha celebrado algún torneo de bichos.
+land	39	Se ha decidido ampliar el Comercio Nook a su versión grande.
+land	40	Hoy es el día de reapertura del Comercio Nook ampliado.
+land	41	Dato interno: tipo de edificio que Tom Nook tiene apuntado para trasladar.
+land	42	Se han desbloqueado los encargos de Tom Nook.
+land	43	Días que han pasado desde que se creó la isla.
+land	44	Gandulio ya puede venir a vender a la isla.
+land	45	Se ha construido el Comercio Nook.
+land	46	Juana ya puede venir a vender nabos.
+land	47	El Comercio Nook está en obras para pasar de tienda de campaña a tienda.
+land	48	El Comercio Nook está en obras para ampliarse.
+land	49	Alguien de la isla ya ha comprado nabos alguna vez.
+land	50	Ya se ha aplicado la primera tendencia de precios de los nabos.
+land	51	Obras de arte que le quedan a Ladino a la venta.
+land	52	Hoy se ha terminado la plaza de eventos.
+land	53	Número de parcelas para vecinos que ya se han preparado.
+land	54	Se está preparando un evento de temporada común a todo el mundo.
+land	55	Dato interno: última variante del aviso de cumpleaños de un vecino en el tablón.
+land	58	Se cumplen las condiciones para construir el edificio de Servicios a residentes.
+land	59	Se ha terminado el edificio de Servicios a residentes.
+land	60	Hoy se ha terminado el edificio de Servicios a residentes.
+land	61	Ya se puede empezar a construir el edificio de Servicios a residentes.
+land	62	Dato interno: tipos de objetos donados para construir Servicios a residentes.
+land	63	Número de objetos donados para construir Servicios a residentes.
+land	65	Ya se ha mudado al menos un vecino nuevo a la isla.
+land	66	Ya se ha montado la tienda de campaña del museo.
+land	67	Se ha construido la sastrería de las Hermanas Manitas.
+land	68	Dato interno: forma de leer en japonés la palabra «isla».
+land	69	Dato interno: número del evento mundial que se celebra hoy.
+land	70	Dato interno: número del evento regional que se celebra hoy.
+land	71	La partida se guardó con una región de la consola no compatible.
+land	72	Alguien de la isla ya ha hablado con Buh.
+land	73	Alguien ya le ha enseñado un fósil a Sócrates.
+land	74	La tienda ya vende las recetas de la pala endeble y la pértiga.
+land	75	La sastrería está en obras.
+land	76	La isla ya ha celebrado algún torneo de pesca.
+land	77	Pili está de visita en el Comercio Nook.
+land	78	Pili ya puede venir de visita a la isla.
+land	79	Se cumplen las condiciones para construir la sastrería.
+land	80	Ya se ha colocado el cartel de obras de la sastrería.
+land	81	Ya se ha recibido el kit de la parcela de la sastrería.
+land	82	Ya se ha avisado de que se ha colocado la parcela de la sastrería.
+land	83	Dato interno: contador para que se construya la sastrería.
+land	84	Dato interno: contador para que la funda del móvil de los vecinos pase a ser de tela normal.
+land	85	Tom Nook ya ofrece la opción de buscar parcelas en venta.
+land	86	Dato interno: contador para cambiar la música al principio del juego.
+land	96	Gulliver ya se ha despertado (también sirve para Gullivarrr).
+land	98	Los vecinos ya pueden fijarse y reaccionar a las cosas que ven.
+land	103	Alguien de la isla ha aceptado el encargo de Tom Nook de preparar la zona de acampada.
+land	104	Alguien ya ha colocado la parcela de la zona de acampada que pidió Tom Nook.
+land	106	Tom Nook ya pide que conozcas al primer visitante de la zona de acampada.
+land	107	Alguien ha aceptado el encargo de Tom Nook de conocer al primer visitante.
+land	108	Alguien ya ha oído al primer campista decir que quiere mudarse a la isla.
+land	109	Alguien ha aceptado el encargo de Tom Nook de colocar la parcela del primer campista.
+land	110	Alguien ya ha colocado la parcela de la casa del primer campista.
+land	114	Donaciones que faltan para que se construya el museo.
+land	115	El edificio de Servicios a residentes está en obras.
+land	116	Alguien de la isla ya ha hablado con Gulliver.
+land	118	Totakeke ya se ha ido de la isla.
+land	119	Ya pueden pasar volando globos con regalos por la isla.
+land	120	Ya se sabe cuál es la fruta autóctona de la isla.
+land	121	Nendo ha vuelto a la tienda de campaña de Tom Nook.
+land	122	Buh aparece hoy en la isla.
+land	123	Hoy se ha inaugurado la tienda de campaña del museo.
+land	124	Hoy se ha inaugurado la sastrería.
+land	125	La isla ha llegado a la fase 3 de desarrollo.
+land	126	Paso de la construcción del puente o la rampa encargada a Tom Nook.
+land	127	Número de traslados de edificios encargados a Tom Nook.
+land	128	Dato interno: visita de Tili que sirve para decidir los artículos de la sastrería.
+land	131	Alguien ha encargado a Tom Nook quitar un puente o una rampa.
+land	133	Lo que se está construyendo ahora es una rampa (si no, es un puente).
+land	134	Se ha rechazado un encargo de Tom Nook para dar vida a la isla.
+land	135	Ya pueden llegar botellas con mensaje a la playa.
+land	136	Ya se ha recibido el kit de la parcela A para nuevos vecinos.
+land	137	Ya se ha recibido el kit de la parcela B para nuevos vecinos.
+land	138	Ya se ha recibido el kit de la parcela C para nuevos vecinos.
+land	139	Ya se ha colocado la parcela A para nuevos vecinos.
+land	140	Ya se ha colocado la parcela B para nuevos vecinos.
+land	141	Ya se ha colocado la parcela C para nuevos vecinos.
+land	142	Ya se ha donado el primer mueble de interior para la casa A de nuevos vecinos.
+land	143	Ya se ha donado el primer mueble de interior para la casa B de nuevos vecinos.
+land	144	Ya se ha donado el primer mueble de interior para la casa C de nuevos vecinos.
+land	145	Ya se ha donado el segundo mueble de interior para la casa A de nuevos vecinos.
+land	146	Ya se ha donado el segundo mueble de interior para la casa B de nuevos vecinos.
+land	147	Ya se ha donado el segundo mueble de interior para la casa C de nuevos vecinos.
+land	148	Ya se ha donado el tercer mueble de interior para la casa A de nuevos vecinos.
+land	149	Ya se ha donado el tercer mueble de interior para la casa B de nuevos vecinos.
+land	150	Ya se ha donado el tercer mueble de interior para la casa C de nuevos vecinos.
+land	151	Ya se ha colocado el primer mueble de exterior de la casa A de nuevos vecinos.
+land	152	Ya se ha colocado el primer mueble de exterior de la casa B de nuevos vecinos.
+land	153	Ya se ha colocado el primer mueble de exterior de la casa C de nuevos vecinos.
+land	154	Ya se ha colocado el segundo mueble de exterior de la casa A de nuevos vecinos.
+land	155	Ya se ha colocado el segundo mueble de exterior de la casa B de nuevos vecinos.
+land	156	Ya se ha colocado el segundo mueble de exterior de la casa C de nuevos vecinos.
+land	157	Ya se ha colocado el tercer mueble de exterior de la casa A de nuevos vecinos.
+land	158	Ya se ha colocado el tercer mueble de exterior de la casa B de nuevos vecinos.
+land	159	Ya se ha colocado el tercer mueble de exterior de la casa C de nuevos vecinos.
+land	160	Se han completado todos los pasos de la casa A de nuevos vecinos.
+land	161	Se han completado todos los pasos de la casa B de nuevos vecinos.
+land	162	Se han completado todos los pasos de la casa C de nuevos vecinos.
+land	163	Ya se ha invitado al nuevo vecino A a mudarse a la isla.
+land	164	Ya se ha invitado al nuevo vecino B a mudarse a la isla.
+land	165	Ya se ha invitado al nuevo vecino C a mudarse a la isla.
+land	166	Tom Nook ya puede pedir que prepares parcelas para nuevos vecinos.
+land	167	La tarea de preparar parcelas para nuevos vecinos está en marcha.
+land	168	Se ha completado la tarea de preparar parcelas para nuevos vecinos.
+land	169	Piezas del comunicador que necesita Gulliver.
+land	170	Se acaba de donar un mueble de interior para la casa A de nuevos vecinos.
+land	171	Se acaba de donar un mueble de interior para la casa B de nuevos vecinos.
+land	172	Se acaba de donar un mueble de interior para la casa C de nuevos vecinos.
+land	173	Lo que se va a quitar ahora es una rampa (si no, es un puente).
+land	174	Coordenada X de la rampa que se va a inaugurar con ceremonia.
+land	175	Coordenada Z de la rampa que se va a inaugurar con ceremonia.
+land	176	Tom Nook ya puede anunciar la construcción del edificio de Servicios a residentes.
+land	177	Se ha construido la zona de acampada.
+land	178	Se ha borrado al jugador que colocó la parcela del puente o la rampa.
+land	179	Veces que los visitantes han pedido deseos a las estrellas fugaces hoy en la isla.
+land	180	Hoy se ha usado un amiibo para invitar a alguien a la zona de acampada.
+land	181	Durante la tarea de parcelas ya se ha colocado la parcela del puente.
+land	182	Está en marcha el encargo de muebles para la zona de acampada.
+land	183	Se ha completado el encargo de muebles para la zona de acampada.
+land	185	La música de cada hora ya es la de después de construir Servicios a residentes.
+land	186	Coordenada X del puente que se va a inaugurar con ceremonia.
+land	187	Coordenada Z del puente que se va a inaugurar con ceremonia.
+land	188	Ya se puede celebrar la ceremonia de inauguración de la zona de acampada.
+land	189	Dato interno: sin uso (antigua ceremonia de la sastrería).
+land	190	Ya se puede celebrar la ceremonia de inauguración de un puente.
+land	191	Ya se puede celebrar la ceremonia de inauguración de una rampa.
+land	192	Está en marcha el encargo de Tom Nook para desarrollar la isla.
+land	193	Se ha completado el encargo de Tom Nook para desarrollar la isla.
+land	194	Días que lleva abierta la sastrería.
+land	195	Días que lleva abierto el museo.
+land	196	Días que lleva abierto el Comercio Nook pequeño.
+land	197	Días que lleva abierto el Comercio Nook ampliado.
+land	198	Días que lleva abierto el edificio de Servicios a residentes.
+land	199	Días que quedan para que se pueda comentar el primer puente de la isla.
+land	200	Días que quedan para que se pueda comentar la primera rampa de la isla.
+land	201	Canela ya ha empezado a valorar la isla.
+land	202	La valoración de la isla ya llega a lo necesario para el concierto de Totakeke.
+land	203	Número de kits de parcela que tienen los habitantes de la isla.
+land	204	Ya se ha construido algún puente.
+land	205	Ya se ha construido alguna rampa.
+land	206	Tamaño del pez que pide CJ en su encargo.
+land	207	Se han desbloqueado las funciones de amiibo del Nookcajero.
+land	216	Fauno aparece en la isla.
+land	217	Ya se han quitado los muebles de la plaza del principio del juego.
+land	218	Ya se ha colocado la hoguera de la fiesta del principio del juego.
+land	219	Dato interno: modelo de muebles de exterior de la casa A de nuevos vecinos (A o B).
+land	220	Dato interno: modelo de muebles de exterior de la casa B de nuevos vecinos (A o B).
+land	221	Dato interno: modelo de muebles de exterior de la casa C de nuevos vecinos (A o B).
+land	222	Hoy es el día del primer concierto de Totakeke.
+land	223	Dato interno: última variante del aviso en el tablón cuando cumplen años dos a la vez.
+land	224	Los vecinos ya pueden reunirse en grupo en la plaza.
+land	225	Ya se puede desbloquear en el Nookcajero invitar campistas con amiibo.
+land	226	Ya se ha recogido la primera botella con mensaje.
+land	227	Veces que un vecino te ha dado un objeto para animarte a mejorar la isla.
+land	228	Dato interno: contador que decide si salen lirios de los valles.
+land	229	Ya han salido lirios de los valles en la isla alguna vez.
+land	230	El primer campista está de visita en la zona de acampada.
+land	231	Ya se ha entregado a Tendo la madera para la tienda.
+land	232	Ya se ha entregado a Tendo la madera dura para la tienda.
+land	233	Ya se ha entregado a Tendo la madera blanda para la tienda.
+land	234	Ya se han entregado a Tendo las pepitas de hierro para la tienda.
+land	235	Ya se han reunido todos los materiales para la tienda de Tendo.
+land	236	Hoy las tareas de Millas Nook+ dan cinco veces más millas.
+land	237	Ya se ha avisado al primer campista de que su parcela está colocada.
+land	238	Ya ha pasado la primera charla de Tom Nook y Tendo sobre los materiales de la tienda.
+land	239	Ya ha pasado la primera llamada en directo durante el anuncio de la mañana.
+land	241	Ya se ha anunciado por primera vez una ceremonia en el anuncio de la mañana.
+land	242	Hoy se ha anunciado por primera vez una ceremonia en el anuncio de la mañana.
+land	243	Hoy se ha construido la zona de acampada.
+land	244	Días que lleva abierta la zona de acampada.
+land	245	La fruta autóctona de la isla son las manzanas.
+land	246	La fruta autóctona de la isla son las naranjas.
+land	247	La fruta autóctona de la isla son las peras.
+land	248	La fruta autóctona de la isla son los melocotones.
+land	249	La fruta autóctona de la isla son las cerezas.
+land	250	En su visita de hoy, alguien de la isla le ha comprado algo a Pili.
+land	251	Ya se ha anunciado por megafonía el plan de traer a Totakeke.
+land	252	Ya se ha oído el anuncio de la mañana de un evento que ha empezado.
+land	253	Puntos de habitabilidad de la última valoración de la isla de Canela.
+land	254	Puntos de naturaleza de la última valoración de la isla de Canela.
+land	255	Peces que llevaba pescados el anfitrión al empezar el juego en línea.
+land	256	Elementos de desarrollo de la última valoración de la isla de Canela.
+land	257	Hoy ya se ha actualizado la valoración de la isla.
+land	258	Ha subido la habitabilidad de la isla desde el último anuncio de la mañana.
+land	259	Ha subido la naturaleza de la isla desde el último anuncio de la mañana.
+land	260	Han aumentado los elementos de desarrollo desde el último anuncio de la mañana.
+land	261	El primer vecino inicial ya ha dado la bienvenida a los recién llegados.
+land	262	El segundo vecino inicial ya ha dado la bienvenida a los recién llegados.
+land	263	Los demás jugadores también pueden ver el primer concierto de Totakeke.
+land	264	Dato interno: control del funcionamiento de la radio portátil.
+land	265	El Comercio Nook se ha ampliado.
+land	266	Sócrates ya ha dado a alguien las recetas de la pértiga y la pala.
+land	267	Hoy son las obras del museo.
+land	268	La tienda ya vende el hacha endeble.
+land	269	Se cumplieron las condiciones del museo el mismo día que llegó Sócrates.
+land	270	Dato interno: probabilidad de que salgan setas.
+land	271	Dato interno: ajuste de la probabilidad de que un vecino compre una parcela.
+land	272	Ya se ha desbloqueado el primer concierto de Totakeke.
+land	273	Ya ha pasado un día desde que se completó la tarea de preparar parcelas.
+land	274	Al empezar el día de hoy aún no estaba completa la tarea de preparar parcelas.
+land	275	Ya se ha decidido el horario de bricolaje de los vecinos.
+land	276	Hoy ha sonado el anuncio de la mañana en la isla.
+land	277	El aeródromo ya está abierto.
+land	279	Ya ha pasado algún evento de temporada común a todo el mundo.
+land	280	Alguien de la isla ha encontrado un objeto perdido.
+land	281	La sala de fósiles del museo está completa.
+land	282	Hoy se ha invitado a alguien a mudarse en una isla misteriosa.
+land	283	La luz de la tienda de campaña del primer jugador está encendida.
+land	284	Año en que vino Coti de visita.
+land	285	Coti viene hoy de visita a la isla.
+land	286	Total de bichos atrapados entre todos en el torneo de bichos.
+land	287	Total de peces pescados entre todos en el torneo de pesca.
+land	288	Hoy alguien de la isla ha ayudado a Gulliver (también sirve para Gullivarrr).
+land	289	Número del vecino elegido al azar para irse por un campista (0 = ninguno).
+land	290	Dato interno: se da por retirada la hoguera de la plaza.
+land	291	Se ha desbloqueado el archipiélago de Happy Home Paradise.
+land	293	Se ha desbloqueado el Día del Huevo con datos de Internet.
+land	294	Paso de las obras para añadir la galería de arte al museo.
+land	295	Se cumplen las condiciones para añadir la galería de arte al museo.
+land	304	Ha empezado el encargo de Sócrates de conseguir cuadros.
+land	305	Número del vecino que se irá para dejar sitio a un campista (0 = ninguno).
+land	306	Se ha terminado la galería de arte del museo.
+land	307	Hoy se ha terminado la galería de arte del museo.
+land	308	Días que lleva abierta la galería de arte del museo.
+land	309	Hoy son las obras de la galería de arte del museo.
+land	310	Ya se han aplicado a la isla los cambios de la versión 1.1.
+land	311	Ya se han aplicado a la isla los cambios de la versión 1.2.
+land	312	Ya se han aplicado a la isla los cambios de la versión 1.3.
+land	313	Ya se han aplicado a la isla los cambios de la versión 1.4.
+land	314	Ya se han aplicado a la isla los cambios de la versión 2.0.
+land	315	Ya se ha programado la primera visita de Gandulio por el Día de la Tierra.
+land	316	Alguien ya le ha enseñado una criatura marina a Sócrates.
+land	317	En su visita de hoy, alguien de la isla le ha comprado algo a Gandulio.
+land	318	Ladino viene hoy de visita previa a la isla.
+land	319	Ya se ha construido alguna vez la casa de algún jugador.
+land	320	Día Internacional de los Museos: sitio del primer sello de peces.
+land	321	Día Internacional de los Museos: sitio del segundo sello de peces.
+land	322	Día Internacional de los Museos: sitio del tercer sello de peces.
+land	323	Día Internacional de los Museos: sitio del primer sello de bichos.
+land	324	Día Internacional de los Museos: sitio del segundo sello de bichos.
+land	325	Día Internacional de los Museos: sitio del tercer sello de bichos.
+land	326	Día Internacional de los Museos: sitio del primer sello de fósiles.
+land	327	Día Internacional de los Museos: sitio del segundo sello de fósiles.
+land	328	Día Internacional de los Museos: sitio del tercer sello de fósiles.
+land	329	Dato que se sincroniza con la app de Nintendo Switch Online (Compass).
+land	330	Ya se ha recibido el regalo por suscribirse a Nintendo Switch Online.
+land	332	Ladino tiene programada una visita previa para mañana.
+land	333	En su visita, Ladino ha pasado de la isla a su barco.
+land	334	Está programada la visita de Ladino con su barco y en la isla.
+land	335	Se ha desbloqueado el Día Internacional de los Museos.
+land	336	Se ha desbloqueado el Día de Acción de Gracias.
+land	337	Se ha desbloqueado el evento del 1 de mayo.
+land	338	Se han desbloqueado las bodas de junio.
+land	343	Hoy es la primera visita previa de Ladino.
+land	344	Hoy es la segunda visita previa de Ladino.
+land	345	Hoy es la primera visita de Gandulio por el Día de la Tierra.
+land	346	Hay una cama para soñar con Alakama.
+land	347	Por el avance del juego, ya se pueden celebrar las bodas de junio.
+land	348	Dato interno: clave aleatoria 1 de la isla.
+land	349	Dato interno: clave aleatoria 2 de la isla.
+land	350	Dato interno: clave aleatoria 3 de la isla.
+land	351	Dato interno: clave aleatoria 4 de la isla.
+land	352	Hoy alguien le ha comprado una obra de arte a Ladino en su visita previa.
+land	353	Ya se ha corregido el fallo del kit de traslado de edificios.
+land	354	Se ha desbloqueado la función de sueños de Alakama.
+land	357	Se cumplen las condiciones para que venga Gullivarrr.
+land	358	Tipo de cambio de los pokis.
+land	359	Año en que se anunciaron en el tablón los fuegos artificiales de agosto.
+land	362	Ahora mismo se comparte el sueño de tu isla con Alakama.
+land	363	Gulliver no se ve ahora mismo.
+land	364	Quien actualizó el sueño por última vez tiene ID de creador de diseños personalizados.
+land	365	Criaturas marinas que llevaba atrapadas el anfitrión al empezar el juego en línea.
+land	366	Año en que se programó la primera visita de Gandulio por Halloween.
+land	367	Hoy viene Gandulio por Halloween.
+land	369	Ya se han aplicado a la isla los cambios de la versión 1.5.
+land	370	Hay que actualizar la contraseña tras restaurar los datos de guardado.
+land	371	Faltan tres días o menos para Halloween.
+land	372	Ya se han aplicado a la isla los cambios de la versión 1.6.
+land	373	Esta isla se creó al trasladar solo a un jugador desde otra consola.
+land	374	Dato interno: objeto de evento 0.
+land	377	Número de platos terminados para Guindo en el Día de Acción de Gracias (en toda la isla).
+land	378	En la isla del jugador trasladado ya se pueden reunir materiales para la tienda.
+land	379	Hace falta un segundo anuncio de la mañana.
+land	380	Ya ha pasado el Día de Acción de Gracias (periodo posterior).
+land	381	Una búsqueda del tesoro terminó al deshacerse la partida por un fallo de conexión.
+land	382	Alguien de la isla ha entregado el ingrediente secreto de la crema de almejas.
+land	383	Alguien de la isla ha entregado el ingrediente secreto de la tarta de calabaza.
+land	384	Alguien de la isla ha entregado el ingrediente secreto del gratinado.
+land	385	Alguien de la isla ha entregado el ingrediente secreto del pescado a la meunière.
+land	386	Ahora mismo el sueño de tu isla se comparte al azar con otros jugadores.
+land	387	Día de Acción de Gracias: ingrediente 2-2 que pide Guindo.
+land	388	Día de Acción de Gracias: ingrediente 3-1 que pide Guindo.
+land	389	Día de Acción de Gracias: ingrediente 3-2 que pide Guindo.
+land	390	Día de Acción de Gracias: ingrediente 4-2 que pide Guindo.
+land	391	Día de Acción de Gracias: ingrediente secreto 2-1 que pide Guindo.
+land	392	Día de Acción de Gracias: ingrediente secreto 2-2 que pide Guindo.
+land	393	Valoración actual del sueño de tu isla.
+land	396	Año de la última Navidad en la que jugaste.
+land	397	Hoy ya se han sorteado los juguetes de Navidad de la tienda.
+land	398	Al compartir al azar el sueño de tu isla no se hizo la primera actualización.
+land	399	Está en marcha el primer concierto de Totakeke.
+land	400	Ya han salido a la venta todos los juguetes de Navidad al menos una vez.
+land	401	Año en que se anunció en el tablón el Día de Acción de Gracias.
+land	402	Ya se han aplicado a la isla los cambios de la versión 1.7.
+land	403	Año en que se anunció en el tablón la Nochebuena.
+land	404	Se han desbloqueado los preparativos de Navidad.
+land	405	Dato interno: clave aleatoria 5 de la isla.
+land	406	Ya ha salido a la venta en la tienda el calcetín de pared.
+land	407	Color de la caja de bombones de corazón que ha salido en la tienda.
+land	408	Color del ramo de rosas de corazón que ha salido en la tienda.
+land	409	Dato interno: clave aleatoria 6 de la isla.
+land	410	Dato interno: clave aleatoria 7 de la isla.
+land	411	Dato interno: clave aleatoria 8 de la isla.
+land	412	Se ha desbloqueado la Nochebuena.
+land	413	Se han desbloqueado el Carnaval y San Valentín.
+land	414	Se han desbloqueado los objetos de Super Mario.
+land	415	Ya se han aplicado a la isla los cambios de la versión 1.8.
+land	416	Ya se han aplicado a la isla los cambios de la versión 1.9.
+land	417	Dato interno: clave aleatoria 9 de la isla.
+land	418	Se han desbloqueado los preparativos del Día del Huevo del segundo año.
+land	419	Año en que se anunció en el tablón San Valentín.
+land	420	Año en que se anunció en el tablón el Carnaval.
+land	421	Carnaval: ya se ha decidido de qué color quieren las plumas los vecinos.
+land	422	Carnaval: los vecinos de la plaza pueden pasearse por la isla.
+land	429	Se ha desbloqueado el Día del Huevo del segundo año.
+land	430	Dato interno: clave aleatoria 10 de la isla.
+land	437	Ya se ha recibido el regalo de Nintendo Switch Online de la versión 1.9.0.
+land	438	Se han desbloqueado las bodas de junio del segundo año.
+land	439	Dato interno: clave aleatoria 11 de la isla.
+land	440	Día Internacional de los Museos: sitio del primer sello de obras de arte.
+land	441	Día Internacional de los Museos: sitio del segundo sello de obras de arte.
+land	442	Día Internacional de los Museos: sitio del tercer sello de obras de arte.
+land	443	Se ha desbloqueado la normativa de la isla.
+land	444	Está en vigor la normativa de isla bonita.
+land	445	Está en vigor la normativa de isla madrugadora.
+land	446	Está en vigor la normativa de isla noctámbula.
+land	447	Está en vigor la normativa de isla próspera (más bayas).
+land	448	Normativa de la isla pedida que entrará en vigor.
+land	449	Normativa de la isla que se ha cambiado hoy.
+land	450	Se ha decidido añadir la cafetería al museo (las obras empiezan mañana).
+land	451	Un giroide benéfico ha alcanzado la cantidad que pedía.
+land	452	Giroide benéfico que hoy ha alcanzado la cantidad que pedía.
+land	453	Hay algún giroide benéfico que ya ha alcanzado la cantidad que pedía.
+land	454	Número de malas hierbas que hay en toda la isla.
+land	455	Hoy el museo está en obras para añadir la cafetería.
+land	456	Estado de la colecta para traer a Gandulio a la isla de Fauno.
+land	457	Estado de la colecta para traer a Alcatifa a la isla de Fauno.
+land	458	Estado de la colecta para traer a Ladino a la isla de Fauno.
+land	459	Estado de la colecta para traer a Katrina a la isla de Fauno.
+land	460	Estado de la colecta para traer a Betunio a la isla de Fauno.
+land	461	Estado de la colecta para traer a Paca y Al a la isla de Fauno.
+land	462	Hoy se inaugura la cafetería del museo.
+land	463	La cafetería del museo ya está abierta.
+land	464	Días que lleva abierta la cafetería del museo (el primero cuenta como 1).
+land	465	Está programada la inauguración del puesto de Gandulio en la isla de Fauno.
+land	466	Dato interno: objeto de evento 1.
+land	467	Dato interno: objeto de evento 2.
+land	468	Paso de las obras para añadir la cafetería al museo.
+land	469	La isla de Fauno se ha ampliado.
+land	470	Está programada la inauguración del puesto de Alcatifa en la isla de Fauno.
+land	471	Está programada la inauguración del puesto de Ladino en la isla de Fauno.
+land	472	Está programada la inauguración del puesto de Katrina en la isla de Fauno.
+land	473	Está programada la inauguración del puesto de Betunio en la isla de Fauno.
+land	474	Está programada la inauguración del puesto de Paca y Al en la isla de Fauno.
+land	475	Dato interno: vecino invitado con amiibo a la cafetería El Alpiste.
+land	476	Hoy se ha pedido a Gandulio el servicio de quitar malas hierbas.
+land	477	Ya se han aplicado a la isla los cambios de la versión 1.10.
+land	478	Ya se han aplicado a la isla los cambios de la versión 1.11.
+land	479	Estado del aviso de la gimnasia matutina en el tablón.
+land	480	Se ha desbloqueado Halloween del segundo año.
+land	481	Dato interno: clave aleatoria 12 de la isla.
+land	482	Alguien ya ha visto el evento de la ampliación de la isla de Fauno.
+land	483	Año en que se anunció en el tablón el evento del 1 de mayo.
+land	484	Dato interno: franja horaria en que se eligieron los vecinos que van a El Alpiste.
+land	485	Estado de las visitas al azar de Mili a la cafetería El Alpiste.
+land	486	Estado de las visitas al azar de Pili a la cafetería El Alpiste.
+land	487	Estado de las visitas al azar de Rodri a la cafetería El Alpiste.
+land	488	Estado de las visitas al azar de Juliana a la cafetería El Alpiste.
+land	489	Estado de las visitas al azar de Rese T. a la cafetería El Alpiste.
+land	490	Estado de las visitas al azar de Forma T. a la cafetería El Alpiste.
+land	491	Estado de las visitas al azar de Totakeke a la cafetería El Alpiste.
+land	492	Estado de las visitas al azar de Betunio a la cafetería El Alpiste.
+land	493	Estado de las visitas al azar de Alcatifa a la cafetería El Alpiste.
+land	494	Estado de las visitas al azar de Tili a la cafetería El Alpiste.
+land	495	Estado de las visitas al azar de Gandulio a la cafetería El Alpiste.
+land	496	Estado de las visitas al azar de Estela a la cafetería El Alpiste.
+land	497	Estado de las visitas al azar de Kamilo a la cafetería El Alpiste.
+land	498	Estado de las visitas al azar de CJ a la cafetería El Alpiste.
+land	499	Se han desbloqueado las ofertas de Acción de Gracias y Black Friday.
+land	500	Dato interno: clave aleatoria 13 de la isla.
+land	501	Estado de la colecta para traer a Tórtimer a la isla de Fauno.
+land	502	Está programada la inauguración del puesto de Tórtimer en la isla de Fauno.
+land	503	Ya pueden aparecer giroides enterrados por la isla.
+land	504	Dato interno: objeto de evento 3.
+land	505	Año en que se anunció en el tablón Halloween.
+land	506	El museo pasó a tener galería de arte sin pasar por el edificio básico.
+land	507	Está programada la visita de Ladino con su barco y en la isla (versión 2.0).
+land	508	Había una normativa en vigor justo antes del último cambio de normativa.
+land	509	En el cambio de día había al menos un árbol con luces en la isla.
+land	510	En el cambio de día había cerezos en la isla.
+land	511	En el cambio de día había bambú adulto en la isla.
+land	512	Al cambiar de día había en la isla al menos un árbol de hoja ancha ya crecido.
+land	513	Al cambiar de día había en la isla al menos un cedro ya crecido.
+land	514	Número de obras de arte compradas a Ladino en la isla de Fauno.
+land	515	Se ha colocado la radio para hacer los estiramientos en grupo.
+land	516	Probabilidad (en %) de que Ladino ponga obras de arte auténticas en la isla de Fauno.
+land	517	Veces que Ladino ha puesto obras de arte auténticas a la venta en la isla de Fauno.
+land	518	Veces seguidas que no ha tocado un artículo grande en el catálogo de Nook Shopping.
+land	520	Alguien de la isla ya puede pedir café para llevar en El Alpiste.
+land	521	Ya se puede comprar el póster por completar la colección de bichos del museo.
+land	522	Ya se puede comprar el póster por completar la colección de peces del museo.
+land	523	Ya se puede comprar el póster por completar la colección de fósiles del museo.
+land	524	Ya se puede comprar el póster por completar la colección de obras de arte del museo.
+land	525	Ya se puede comprar el póster por completar la colección de criaturas marinas del museo.
+land	526	Hoy Sócrates ha enviado el póster por completar la colección de bichos del museo.
+land	527	Hoy Sócrates ha enviado el póster por completar la colección de peces del museo.
+land	528	Hoy Sócrates ha enviado el póster por completar la colección de fósiles del museo.
+land	529	Hoy Sócrates ha enviado el póster por completar la colección de obras de arte del museo.
+land	530	Hoy Sócrates ha enviado el póster por completar la colección de criaturas marinas del museo.
+land	531	Alguien ha cambiado con Canela el diseño de la bandera de la isla.
+land	532	Número de obras de arte falsas compradas en toda la isla.
+land	533	Gulliver ha visitado la isla.
+land	534	Por el avance de la partida ya se puede celebrar el Black Friday.
+land	535	El anuncio de la mañana ya ha avisado de que empiezan las excursiones en barca con Capitán.
+land	536	Hoy es el día en que se anunció por primera vez que empiezan las excursiones con Capitán.
+land	537	Tom Nook ya permite construir dos puentes o rampas más de lo normal.
+land	538	Se ha desbloqueado la música de la isla de Fauno ampliada.
+land	539	Esta semana Ladino ha puesto obras de arte auténticas en su puesto de la isla de Fauno.
+land	540	Hoy es el día en que Gandulio ha abierto su puesto en la isla de Fauno.
+land	541	La tienda ya puede vender la receta de la semilla trampa.
+land	542	Número de fragmentos de gyroide que han crecido hasta convertirse en gyroides.
+land	543	Ya se puede pedir a Canela que restaure la casa de un vecino (al desbloquear la decoración de casas).
+land	544	Hoy el Nookcajero no avisa del premio por conectarse (días de obras y Nochevieja).
+land	545	El edificio del hotel ya está construido (aunque quizá aún no haya abierto).
+land	546	El hotel está en obras.
+land	547	Hoy es el día en que se ha terminado de construir el hotel.
+land	548	El hotel ya ha abierto (hay al menos una habitación preparada y huéspedes).
+land	549	Hoy es el día en que ha abierto el hotel (se preparó la primera habitación).
+land	550	Días desde que se terminó el edificio del hotel (el primer día cuenta como 1).
+land	551	La isla ya ha cambiado de día con la actualización 3.0 instalada.
+land	552	Días desde que abrió el hotel (el primer día cuenta como 1).
+land	553	Alguien de la isla ha terminado el tutorial para decorar la suite VIP del hotel.
+land	554	Puntos de progreso del hotel para desbloquear nuevos artículos a la venta.
+land	555	Alguien de la isla ha terminado el tutorial para decorar las habitaciones del hotel.
+land	556	Rese T. tiene programada una visita a la isla.
+land	557	Tras el tutorial de habitaciones, la tienda del hotel ya ha renovado sus artículos otro día.
+land	558	Habitaciones normales del hotel desbloqueadas (4 = hasta la habitación 4).
+land	559	Habitaciones normales del hotel que se desbloquearán al cambiar de día (4 = hasta la 4).
+land	560	La suite VIP del hotel está desbloqueada.
+land	561	La suite VIP del hotel se desbloqueará al cambiar de día.
+land	562	Hoy alguien de la isla ha hecho limpieza con Rese T.
+land	563	Motivo por el que el visitante sin alojamiento no ha reservado en el hotel (0 = sin definir).
+land	564	Rese T. viene hoy de visita a la isla.
+land	565	Se ha llamado a Rese T. para que venga.
+land	566	Ya se puede llamar a Rese T. cuando haga falta.
+land	567	Dato interno: control de las visitas periódicas de Rese T.
+land	568	Alguien de la isla ha terminado el tutorial de los maniquíes del hotel.
+land	569	Hoy es el día en que se ha desbloqueado la opción de llamar a Rese T.
+land	570	Ya están terminadas todas las habitaciones del hotel, de la 1 a la 8.
+land	571	Dato interno: tipo de visita de Rese T.
+land	572	Alguien de la isla ha oído por megafonía que el hotel está en obras.
+land	573	Hay en la isla alguna escalera de enredadera o escalera fija para acantilados.
+land	574	Nivel alcanzado en el hotel para desbloquear nuevos artículos a la venta.
+land	575	Algún jugador de la isla ya ha recibido la primera explicación de la tienda de recuerdos del hotel.
+land	576	Hoy algún jugador de la isla ha visitado el hotel.
+land	577	La tienda de recuerdos del hotel solo muestra artículos ya desbloqueados.
+land	578	Hoy se han desbloqueado artículos nuevos y la tienda del hotel debe renovar su género.
+land	579	Se ha cambiado alguna vez el conjunto del primer maniquí del hotel.
+land	580	Se ha cambiado alguna vez el conjunto del segundo maniquí del hotel.
+land	581	El último cambio de la bandera de la isla con Canela fue para restablecerla.
+land	582	Melodía inicial a la que se restableció la melodía de la isla la última vez (0 = ninguna, 1-4).
+land	583	El último cambio de la melodía de la isla fue una melodía original propuesta (versión 3.0 o posterior).
+land	584	Con todas las habitaciones terminadas, el hotel se ha llenado de huéspedes.
+land	585	Alguien de la isla ha terminado el tutorial de la tienda de recuerdos del hotel.
+player	2	Número de consejos de los vecinos que has oído al principio del juego.
+player	3	Veces que has escuchado un concierto de Totakeke.
+player	8	Has empezado a ayudar a Gulliver a buscar las piezas de su comunicador.
+player	9	Has terminado de ayudar a Gulliver a recuperar las piezas de su comunicador.
+player	10	Veces que has hablado con Gulliver mientras dormía en la playa (también como pirata).
+player	11	Has hecho alguna vez la búsqueda del tesoro.
+player	13	Canela te ha explicado lo de la melodía de la isla.
+player	14	Canela te ha explicado lo de la bandera de la isla.
+player	15	Canela te ha explicado la opción para hablarle de los vecinos.
+player	17	Has hablado alguna vez con Sócrates mientras dormía.
+player	18	Sócrates te ha felicitado por completar el museo.
+player	19	Hoy has hablado con Sócrates dentro del museo.
+player	20	Sócrates te ha explicado alguna pieza que le has enseñado.
+player	21	Sócrates te ha dicho que ya se puede construir el museo.
+player	22	Hoy es el día en que se han cumplido las condiciones para construir el museo.
+player	23	Hoy ya has hablado con Juliana.
+player	24	Has hablado alguna vez con Juliana.
+player	25	Hoy has comprado nabos a Juliana.
+player	26	Has hablado alguna vez con Pili.
+player	27	Hoy ya has hablado con Pili durante su visita a la isla.
+player	29	Has hablado alguna vez con Betunio.
+player	31	Has hablado alguna vez con Gandulio (ya os conocéis).
+player	33	Hoy ya has hablado con Alcatifa.
+player	34	Alfombras grandes que has comprado hoy a Alcatifa.
+player	35	Alfombras medianas que has comprado hoy a Alcatifa.
+player	36	Alfombras pequeñas que has comprado hoy a Alcatifa.
+player	37	Has hablado alguna vez con Tendo dentro de la tienda.
+player	38	Tendo te ha pedido que elijas dónde poner la tienda.
+player	39	Te has negado alguna vez a elegir el sitio de la tienda que te pidió Tendo.
+player	40	Has terminado de crear tu personaje.
+player	41	Hoy Tendo te ha explicado que no puede comprarte nabos.
+player	44	Los datos de guardado de este jugador están activados.
+player	45	Eres el representante de la isla.
+player	46	Como primer jugador, has terminado la primera charla en la plaza.
+player	47	Has jugado alguna vez al minijuego de mayor o menor.
+player	48	Has superado la misión 1 de la Academia de Interiorismo Feliz.
+player	51	Ha aparecido alguna vez la roca que da bayas al golpearla.
+player	52	Has superado la misión 2 de la Academia de Interiorismo Feliz.
+player	53	Te has negado alguna vez a darle una vieira a Pascal.
+player	54	Has superado la misión 3 de la Academia de Interiorismo Feliz.
+player	59	Puntos del torneo de pesca que tienes guardados.
+player	60	Puntos del torneo de bichos que tienes guardados.
+player	61	Ya puedes abrir el inventario.
+player	62	Ya puedes usar el NookPhone.
+player	63	Has hablado con Tom Nook después de montar tu tienda de campaña.
+player	64	Has preguntado a Tom Nook qué deberías hacer.
+player	66	Has hablado con Sócrates antes de montar la carpa del museo.
+player	67	Has recibido la carpa de Sócrates para montarla.
+player	68	Has hablado con Sócrates después de montar su carpa.
+player	69	Has hablado con Tendo antes de montar la tienda.
+player	70	Has recibido el cartel de obras de la tienda de Tendo.
+player	71	Has hablado con Tendo después de colocar el cartel de obras de la tienda.
+player	72	Has hablado con el vecino inicial (el chico) antes de colocar su tienda de campaña.
+player	73	Has recibido la tienda de campaña del vecino inicial (el chico) para colocarla.
+player	74	Has hablado con el vecino inicial (el chico) después de colocar su tienda de campaña.
+player	75	Has hablado con la vecina inicial (la chica) antes de colocar su tienda de campaña.
+player	76	Has recibido la tienda de campaña de la vecina inicial (la chica) para colocarla.
+player	77	Has hablado con la vecina inicial (la chica) después de colocar su tienda de campaña.
+player	78	En el cumpleaños de un vecino, le has dado un regalo.
+player	79	En tu cumpleaños, has soplado las velas.
+player	80	En tu cumpleaños, te has quedado sin regalo.
+player	82	Has cuidado alguna vez a un vecino enfermo hasta que se curó.
+player	83	Has hablado alguna vez con Totakeke.
+player	84	Has hablado alguna vez con Gulliver (sin contar al Gulliver pirata).
+player	85	Has hablado alguna vez con Tili.
+player	86	Has hablado alguna vez con Alcatifa.
+player	88	Has hablado alguna vez con Ladino.
+player	89	Nivel de amistad con Tili.
+player	90	Has aceptado un encargo de Tili.
+player	91	Has completado el encargo de Tili.
+player	92	Te has negado alguna vez a un encargo de Tili.
+player	93	Ya tienes en el NookPhone la app de la enciclopedia de criaturas.
+player	94	Ya tienes en el NookPhone la app del mapa.
+player	95	Ya tienes en el NookPhone la app de diseños personalizados.
+player	96	Ya tienes en el NookPhone la app del banco.
+player	97	Como primer jugador, hablaste con Tendo en su tienda de campaña el primer día.
+player	98	Has superado la misión 4 de la Academia de Interiorismo Feliz.
+player	99	Tom Nook te ha explicado qué materiales hacen falta para el taller de bricolaje.
+player	100	Has hablado alguna vez con Canela en Servicios a residentes.
+player	101	Has superado la misión 5 de la Academia de Interiorismo Feliz.
+player	102	Has superado la misión 6 de la Academia de Interiorismo Feliz.
+player	107	Rafa te ha explicado por primera vez cómo viajar a otras islas desde el aeródromo.
+player	108	Rafa te ha explicado por primera vez cómo viajar con código Dodo.
+player	110	Tom Nook te ha dado la ropa de trabajo.
+player	111	Tom Nook te ha explicado tu primer encargo.
+player	112	Tom Nook te ha explicado tu segundo encargo.
+player	113	Has terminado de fabricar el hacha del tutorial.
+player	114	Has hablado por primera vez con Rafa sobre viajar.
+player	115	Rafa te ha explicado por primera vez cómo abrir la puerta para recibir visitas.
+player	126	Canela te ha dado su primera receta de bricolaje.
+player	127	Sócrates te ha dado su primera receta de bricolaje.
+player	128	Has oído alguna vez el anuncio de la mañana.
+player	131	Has hablado con el gyroide que recoge donativos en la plaza.
+player	132	Estás pagando un préstamo.
+player	133	Has terminado de pagar tu primer préstamo.
+player	134	Tom Nook te ha propuesto ampliar tu casa.
+player	135	Has golpeado alguna vez la roca que da bayas.
+player	136	Ya te has presentado a Sócrates.
+player	137	Has hablado con Sócrates mientras se construía el edificio del museo.
+player	138	Has donado algo a Sócrates en el museo (o en su carpa).
+player	139	Has hablado con Sócrates tras terminarse el edificio del museo.
+player	140	Ya puedes usar las reacciones.
+player	141	Has fabricado algo por tu cuenta en el banco de trabajo de la tienda de Tom Nook.
+player	142	Hoy has pedido a Tom Nook que te construya la casa.
+player	143	Tendo te ha avisado de que la tienda va a reformarse.
+player	144	Tendo te ha anunciado la inauguración del Comercio Nook (tienda pequeña).
+player	145	Tendo te ha anunciado la reapertura del Comercio Nook ampliado.
+player	150	Kamilo te ha explicado por primera vez las reglas del torneo de bichos.
+player	151	Hay resultados del torneo de bichos de Kamilo pendientes de anunciarte.
+player	153	Antes del torneo, Kamilo te ha invitado a canjear tus puntos.
+player	154	Hoy has participado en el torneo de bichos de Kamilo.
+player	155	Has tenido la primera charla con Kamilo tras cerrarse las inscripciones del torneo.
+player	156	Hoy Tom Nook te ha dado flores como premio por entregarle bichos y peces.
+player	159	Has oído el anuncio de la inauguración de Servicios a residentes (con Canela).
+player	160	Has oído el anuncio de la inauguración del Comercio Nook (tienda pequeña).
+player	161	Has oído el anuncio de la reapertura del Comercio Nook ampliado.
+player	163	Has oído el anuncio de que se ha construido el edificio del museo.
+player	165	Has oído el anuncio de la apertura de la cafetería El Alpiste en el museo.
+player	166	Hoy te has asustado al ver una cucaracha.
+player	167	Has hablado alguna vez con Buh.
+player	168	Estás buscando los trozos de espíritu de Buh.
+player	169	Hoy has encontrado todos los trozos de espíritu de Buh.
+player	170	Saliste del juego mientras buscabas los trozos de espíritu de Buh.
+player	171	Ya tienes en el NookPhone la app de recetas de bricolaje.
+player	172	Hoy ya has usado la caja de venta fuera de horario de la tienda.
+player	177	Has oído alguna vez el anuncio de la mañana del inicio de un evento.
+player	178	Tienes tarjetas nuevas en el buzón.
+player	180	Ya puedes colocar muebles al aire libre.
+player	181	Juliana ya visitaba la isla antes de que te mudaras.
+player	182	Canela te ha explicado lo de las actividades de la isla.
+player	183	Canela te ha explicado cómo mejorar la valoración de la isla.
+player	184	Tom Nook te ha explicado cómo preparar parcelas para nuevos vecinos.
+player	186	Le has dado alguna vez una vieira a Pascal.
+player	191	Hoy has hablado con Ladino en tu isla.
+player	192	Hoy has comprado algo en el barco de Ladino.
+player	193	Hoy has comprado una obra de arte en el barco de Ladino.
+player	194	Has oído el anuncio de que la plaza de la isla ya está terminada.
+player	195	Al principio dijiste que no conocías a Totakeke.
+player	196	Tom Nook tiene pendiente darte explicaciones tras ampliar tu casa.
+player	198	Canela te ha explicado que empiezan las obras de Servicios a residentes.
+player	199	Hoy ya has hablado con Fígaro.
+player	200	Hoy Fígaro ya te ha dado un objeto.
+player	201	Grado de cliente habitual de Fígaro en El Alpiste.
+player	202	Hoy, por San Valentín, te has tomado un café con Fígaro.
+player	203	Hoy has tenido una charla especial con Fígaro (cumpleaños u otro evento).
+player	205	Tom Nook te ha explicado cómo comprar vallas.
+player	206	Ya conoces a Tórtimer.
+player	207	Nivel de tus permisos de construcción para diseñar la isla.
+player	208	Hoy has conseguido un permiso de construcción avanzado.
+player	209	Has terminado de pagar todos los préstamos de la casa.
+player	210	Hoy has pedido un café o un chocolate caliente en El Alpiste.
+player	211	Tom Nook te ha dado el regalo por estrenar casa.
+player	212	Tenías los bolsillos llenos cuando Tom Nook iba a darte el regalo por la casa nueva.
+player	215	Ya puedes comer fruta y otros alimentos.
+player	216	Te ha picado una avispa.
+player	217	Hoy ya has aprendido una reacción.
+player	218	CJ te ha explicado por primera vez las reglas del torneo de pesca.
+player	219	Hay resultados del torneo de pesca de CJ pendientes de anunciarte.
+player	221	Antes del torneo, CJ te ha invitado a canjear tus puntos.
+player	222	Hoy has participado en el torneo de pesca de CJ.
+player	223	Has tenido la primera charla con CJ tras cerrarse las inscripciones del torneo.
+player	233	Ha pasado al menos un día desde que terminó la introducción del juego.
+player	234	Has conseguido alguna vez una varita mágica.
+player	235	Este año te han regalado la mesa de cumpleaños.
+player	236	Este año te han regalado la vela de cumpleaños.
+player	237	Este año te han regalado el sombrero de cumpleaños.
+player	238	Este año te han regalado el panel de cumpleaños.
+player	239	Este año te han regalado las gafas de sol de cumpleaños.
+player	246	Se muestra el reloj en pantalla.
+player	247	Has terminado la charla en la plaza tras montar las tiendas de campaña al principio.
+player	248	Tom Nook te ha contado que hay que reunir materiales para la hoguera (parte 1).
+player	249	Ya puedes recoger objetos del suelo.
+player	250	Hablaste con Tom Nook con la fruta de la isla reunida para la hoguera.
+player	251	Tom Nook te ha contado que hay que reunir materiales para la hoguera (parte 2).
+player	252	Has hablado con Canela antes de las campanadas de Nochevieja.
+player	253	Has hablado con Canela después de las campanadas de Nochevieja.
+player	254	Canela te ha dado una barra luminosa en Nochevieja.
+player	255	Tom Nook te ha dado un cañón de confeti en Nochevieja.
+player	256	Ha empezado la fiesta de la hoguera de la introducción.
+player	257	Ya puedes entrar en tu tienda de campaña (introducción).
+player	258	Hoy ya has hablado con Totakeke.
+player	259	Hoy has escuchado el concierto de Totakeke.
+player	260	Ha terminado la introducción y empieza el juego de verdad.
+player	261	Hoy Totakeke te ha dado una canción.
+player	262	Dato interno: veces que se ha saltado el proceso de mudanza de vecinos entre islas.
+player	263	Has hablado con Tom Nook por primera vez tras la introducción.
+player	264	Has hablado con Tendo por primera vez tras la introducción.
+player	265	Has cancelado alguna vez los consejos de Tom Nook sobre la tienda de campaña.
+player	266	Has preguntado por primera vez a Tom Nook sobre tu casa.
+player	267	Has derribado tu primer globo de regalo.
+player	268	Has terminado el sueño con Totakeke de la introducción.
+player	269	Has pagado a Tom Nook los gastos de la mudanza.
+player	270	Ya está disponible la opción del taller de bricolaje en la tienda de Tom Nook.
+player	271	Estás haciendo el taller de bricolaje de Tom Nook.
+player	272	Hablaste con Tom Nook con los materiales del taller de bricolaje ya reunidos.
+player	273	Has entregado alguna vez bichos o peces a Tom Nook.
+player	274	Te has negado alguna vez a entregar bichos o peces a Tom Nook.
+player	275	Se cumplen las condiciones para montar la carpa del museo.
+player	276	Tom Nook te ha pedido que elijas dónde montar la carpa del museo.
+player	277	Ya se ha decidido dónde va la carpa del museo.
+player	278	Te has negado alguna vez a elegir el sitio del museo que te pidió Tom Nook.
+player	284	Te has negado alguna vez a reunir materiales para construir la tienda que te pidió Tendo.
+player	285	Tendo te ha pedido reunir materiales para construir la tienda.
+player	286	Otro jugador terminó de ayudar a Gulliver después de que te lo encontraras.
+player	292	Has terminado de escuchar los consejos de los vecinos de la introducción.
+player	298	Nivel de amistad con Mili.
+player	299	Hoy ya has hablado con Mili.
+player	300	Días de juego sin que un vecino te enseñe una reacción.
+player	301	Hablar hoy con Mili puede aumentar vuestra amistad.
+player	303	Ya tienes en el NookPhone la app de llamar a residentes.
+player	304	Te han explicado el Servicio de rescate.
+player	306	La Academia de Interiorismo Feliz tiene pendiente enviarte la carta con la valoración de tu casa.
+player	307	Las notificaciones del NookPhone están activadas.
+player	308	Tienes un premio extra del torneo de pesca por llegar a la puntuación objetivo.
+player	309	Tienes un premio extra del torneo de pesca por jugar con otros jugadores.
+player	310	Tienes un premio extra del torneo de bichos por llegar a la puntuación objetivo.
+player	311	Tienes un premio extra del torneo de bichos por jugar con otros jugadores.
+player	312	Has visto a un vecino de visita en casa de otro vecino.
+player	313	Ya tienes en el NookPhone la app de mejores amigos.
+player	314	Está activada la lista de mejores amigos.
+player	315	Hoy ya has recibido el premio del muñeco de nieve (día 1).
+player	316	Hoy ya has recibido el premio del muñeco de nieve (día 2).
+player	317	Hoy ya has recibido el premio del muñeco de nieve (día 3).
+player	318	Hoy ya has recibido el premio del muñeco de nieve (día 4).
+player	319	Ya tienes en el NookPhone la app de Nook Shopping.
+player	320	Ya tienes en el NookPhone la app de millas Nook+.
+player	321	Ya tienes en el NookPhone la app de millas Nook (logros).
+player	323	Has hecho alguna vez un muñeco de nieve.
+player	324	Hoy ya has hecho un muñeco de nieve.
+player	326	Has usado alguna vez el Nookcajero.
+player	328	Dato interno: actividad en grupo de los vecinos programada para la mañana.
+player	329	Dato interno: actividad en grupo de los vecinos programada para el mediodía.
+player	330	Dato interno: actividad en grupo de los vecinos programada para la tarde.
+player	331	Dato interno: actividad en grupo de los vecinos programada para la noche.
+player	333	Has pedido a Tom Nook trasladar tu casa.
+player	334	Has pedido a Tom Nook cambiar el exterior de tu casa.
+player	335	Has pedido a Tom Nook trasladar la casa de un vecino o un edificio.
+player	337	Ya cuentan tus progresos en las millas Nook+.
+player	338	Has pedido a Tom Nook trasladar la tienda.
+player	339	Has pedido a Tom Nook trasladar el museo.
+player	340	Has pedido a Tom Nook trasladar la sastrería de las Hermanas Manitas.
+player	341	Ya conoces a Kamilo (por sus torneos o visitas).
+player	343	Ya conoces a CJ (por sus torneos o visitas).
+player	344	CJ te ha felicitado por completar su encargo de pesca durante su visita.
+player	345	Has mirado alguna vez la caja de objetos perdidos.
+player	346	Has abierto alguna vez la app de cámara del NookPhone.
+player	347	Has abierto alguna vez la app de millas Nook del NookPhone.
+player	348	Has abierto alguna vez la app de millas Nook+ del NookPhone.
+player	349	Has abierto alguna vez la enciclopedia de criaturas del NookPhone.
+player	350	Has abierto alguna vez la app de recetas de bricolaje del NookPhone.
+player	351	Has abierto alguna vez la app de Nook Shopping del NookPhone.
+player	353	Has abierto alguna vez la app de diseños personalizados del NookPhone.
+player	354	Has abierto alguna vez la app de llamar a residentes del NookPhone.
+player	355	Has abierto alguna vez la app de mejores amigos del NookPhone.
+player	356	Has abierto alguna vez la app del pasaporte del NookPhone.
+player	357	Has abierto alguna vez la app del mapa del NookPhone.
+player	359	Has abierto alguna vez la app del Servicio de rescate del NookPhone.
+player	360	Has hablado con Nendo desde que se activó el guardado automático.
+player	361	Veces que has oído el anuncio de la mañana.
+player	362	Canela te ha explicado los permisos de construcción en Servicios a residentes.
+player	363	Has completado el recado de Canela de entregar flores.
+player	364	Tom Nook te ha explicado cómo construir puentes.
+player	365	Tom Nook te ha explicado cómo construir rampas.
+player	366	Tom Nook te ha explicado cómo quitar puentes y rampas.
+player	367	Hoy has encargado la construcción de un puente.
+player	368	Hoy has encargado la construcción de una rampa.
+player	369	Hoy has encargado quitar un puente.
+player	370	Hoy has encargado quitar una rampa.
+player	371	Has enseñado a Sócrates un fósil que has encontrado.
+player	372	Has enseñado madera dura a Tendo.
+player	373	Tom Nook tiene pendiente hablar contigo tras elegir el sitio de la carpa del museo.
+player	374	Has recogido alguna vez madera dura.
+player	375	Al principio intentaste vender a Tendo los artículos de acampada que te dieron.
+player	376	Has usado el Nookcajero después de activar las millas Nook+.
+player	377	Número de explicaciones de herramientas desbloqueadas.
+player	378	Tom Nook te ha dado las gracias por montar la carpa de Sócrates.
+player	380	Has oído el anuncio de la llegada de Sócrates a la isla.
+player	381	Has examinado el armario de la tienda y Tendo te lo ha explicado.
+player	382	Dato interno: fase de la charla en la tienda de Tom Nook (0 bricolaje, 1 criaturas, 2 ninguna).
+player	383	Hoy ya has recibido el premio por conectarte en el Nookcajero.
+player	384	Días seguidos que has recogido el premio diario del Nookcajero.
+player	385	Dato interno: comprobación de los días seguidos de conexión al Nookcajero.
+player	386	Te han explicado en el Nookcajero que ya puedes canjear millas Nook.
+player	387	Piezas del comunicador que le has dado a Gulliver (sin contar al Gulliver pirata).
+player	388	Veces que has pescado peces del tamaño que pedía CJ.
+player	389	Hoy un vecino te ha comentado lo que hace un jugador de la isla.
+player	390	Hoy un vecino te ha comentado los gustos de un jugador de la isla.
+player	392	Ya está desbloqueada la explicación del acceso rápido a herramientas.
+player	393	Te han explicado en el Nookcajero los billetes de avión con millas Nook.
+player	394	Rafa te ha explicado las excursiones a islas misteriosas.
+player	398	Hoy has recogido una botella con mensaje.
+player	399	Hablaste con Rafa por primera vez después de activar las millas Nook+.
+player	400	Tom Nook te ha dado por primera vez un kit de parcela.
+player	401	Tom Nook te ha explicado por primera vez la tarea de preparar parcelas para nuevos vecinos.
+player	402	Estás haciendo la tarea de preparar parcelas para nuevos vecinos.
+player	403	Has usado la primera excursión gratis a una isla misteriosa.
+player	404	Hoy has usado el Servicio de rescate.
+player	405	La última vez que usaste el Servicio de rescate no pagaste las millas Nook.
+player	406	Has colocado tú mismo la parcela A de la tarea de nuevos vecinos.
+player	407	Has colocado tú mismo la parcela B de la tarea de nuevos vecinos.
+player	408	Has colocado tú mismo la parcela C de la tarea de nuevos vecinos.
+player	409	Has colocado tú mismo los muebles de exterior de la parcela A.
+player	410	Has colocado tú mismo los muebles de exterior de la parcela B.
+player	411	Has colocado tú mismo los muebles de exterior de la parcela C.
+player	412	Tom Nook te ha anunciado que se construirá el edificio de Servicios a residentes.
+player	415	Has hablado con Tom Nook antes de las campanadas de Nochevieja.
+player	416	Has hablado con Tom Nook después de las campanadas de Nochevieja.
+player	417	Has hablado con Kamilo durante su visita actual.
+player	418	Dato interno (sin uso): ventas a Kamilo durante su visita.
+player	419	Hoy has vendido algo a Kamilo.
+player	422	Tu isla se ha registrado en el servidor online del juego.
+player	423	Hay una actualización pendiente de la lista de mejores amigos.
+player	424	Aviso de novedades en el icono de mejores amigos del NookPhone.
+player	425	Peces seguidos que has pescado sin que se escape ninguno.
+player	426	Ya puedes enviar tarjetas a tus amigos.
+player	428	Has hablado con CJ durante su visita actual.
+player	430	Deseos que has pedido hoy a las estrellas fugaces.
+player	431	Dato interno: contador para que aparezcan fragmentos de estrella.
+player	432	Has aceptado el encargo de pesca de CJ.
+player	433	Has mirado alguna vez los diseños personalizados de la sastrería de Pili.
+player	435	Mili te ha dado alguna vez un patrón de tela.
+player	436	Madera dura que has entregado a Tendo para construir la tienda.
+player	438	Hoy has hablado con todos los vecinos.
+player	439	Has usado alguna vez el teléfono amiibo+ (para invitar personajes con amiibo).
+player	440	Te han explicado en el Nookcajero que ya se venden pósteres.
+player	441	Pósteres de vecinos que has impreso hoy.
+player	442	Has hablado alguna vez con Pili en la sastrería.
+player	443	Hoy Pili ya te ha saludado al entrar en la sastrería.
+player	444	Hoy Pili ya te ha despedido al salir de la sastrería.
+player	445	Puntos acumulados en total en los torneos de bichos de Kamilo.
+player	446	Puntos acumulados en total en los torneos de pesca de CJ.
+player	447	Kamilo te ha dado el trofeo de oro del torneo de bichos.
+player	448	Kamilo te ha dado el trofeo de plata del torneo de bichos.
+player	449	Kamilo te ha dado el trofeo de bronce del torneo de bichos.
+player	450	CJ te ha dado el trofeo de oro del torneo de pesca.
+player	451	CJ te ha dado el trofeo de plata del torneo de pesca.
+player	452	CJ te ha dado el trofeo de bronce del torneo de pesca.
+player	453	Has mirado alguna vez la caja de venta fuera de horario de tu isla.
+player	454	Has encargado a CJ una maqueta de pez.
+player	455	Has encargado a Kamilo una maqueta de bicho.
+player	456	CJ te ha explicado por primera vez cómo encargar maquetas de peces.
+player	457	Kamilo te ha explicado por primera vez cómo encargar maquetas de bichos.
+player	459	Fuiste tú quien eligió dónde poner la sastrería de las Hermanas Manitas.
+player	460	En tu cumpleaños, un vecino te ha avisado de tu fiesta.
+player	461	Hoy un vecino te ha hablado de algún personaje especial de visita.
+player	462	Hoy Tendo ya te ha saludado al entrar en la tienda.
+player	463	Hoy Tendo ya te ha despedido al salir de la tienda.
+player	464	Te has encontrado con Pili en el Comercio Nook.
+player	465	Tenías los bolsillos llenos cuando Tom Nook iba a darte el kit de parcela.
+player	466	Hay un anuncio de la mañana pendiente de oír.
+player	467	CJ te ha explicado su encargo de pesca por primera vez.
+player	468	Tom Nook te ha dicho que la parcela A ya está lista para el nuevo vecino.
+player	469	Tom Nook te ha dicho que la parcela B ya está lista para el nuevo vecino.
+player	470	Tom Nook te ha dicho que la parcela C ya está lista para el nuevo vecino.
+player	471	Tom Nook tiene pendiente avisarte de alguna parcela ya terminada para nuevos vecinos.
+player	472	Hoy ya has completado un paso de la tarea de preparar parcelas para nuevos vecinos.
+player	473	Hablaste con Tom Nook llevando el kit del puente de troncos.
+player	474	Tom Nook tiene pendiente darte las gracias por colocar el puente de troncos.
+player	475	Colocaste tú mismo el kit del puente de troncos.
+player	476	Has hablado con Tom Nook después de terminarse el puente de troncos.
+player	477	Tom Nook te ha hablado de la recompensa por preparar las parcelas.
+player	478	Has recibido la recompensa por preparar las parcelas para nuevos vecinos.
+player	479	Kamilo te ha anunciado el próximo torneo de bichos.
+player	480	CJ te ha anunciado el próximo torneo de pesca.
+player	481	Has invitado a alguien a la zona de acampada.
+player	482	Has tenido la primera charla con un visitante de la zona de acampada.
+player	483	Has aceptado el encargo de muebles de un visitante de la zona de acampada.
+player	484	No pudiste recibir la receta que te ofrecía un campista con su encargo de un mueble.
+player	485	Has rechazado el encargo de un mueble que te pidió un campista.
+player	486	Has ganado un objeto raro en un juego con un campista.
+player	488	No has conseguido convencer a un campista para que se mude a la isla.
+player	490	El campista no pudo mudarse porque ya vive en la isla alguien con su mismo nombre.
+player	491	El campista no pudo mudarse porque ya hay alguien con su mismo nombre a punto de mudarse.
+player	492	El campista no pudo mudarse porque la isla ya tiene el máximo de vecinos.
+player	493	El campista no pudo mudarse porque no había ninguna parcela libre.
+player	494	Hoy ya se ha contado el logro de millas Nook del evento del calendario.
+player	495	Hoy has canjeado un papel de pared con Alcatifa.
+player	496	Hoy has canjeado un suelo con Alcatifa.
+player	503	Hoy Tom Nook te ha dado fruta mientras preparas parcelas para nuevos vecinos.
+player	504	Hoy Tom Nook te ha dado un kit de personalización mientras preparas parcelas para nuevos vecinos.
+player	505	Has fabricado el kit de puente en la tienda de campaña de Tom Nook.
+player	506	Le has enseñado a Tom Nook el kit de la zona de acampada.
+player	507	Has fabricado el kit de la zona de acampada en Servicios a residentes.
+player	508	Has hablado con Tom Nook después de colocar el kit de la zona de acampada.
+player	509	Has colocado tú mismo el kit de la zona de acampada.
+player	511	Tom Nook te ha dado la receta del kit de la zona de acampada.
+player	512	El primer campista te ha consultado a ti sobre mudarse a la isla.
+player	513	Se ha desbloqueado en el NookPhone la app de permisos de construcción.
+player	514	Es el primer día de juego desde que se terminó el edificio de Servicios a residentes.
+player	515	Es el primer día de juego desde que se terminó el Comercio Nook.
+player	516	Es el primer día de juego desde que se amplió el Comercio Nook.
+player	517	Es el primer día de juego desde que se montó la tienda de campaña de Sócrates.
+player	518	Es el primer día de juego desde que se terminó el museo.
+player	519	Es el primer día de juego desde que se terminó la sastrería de las Hermanas Manitas.
+player	520	Hoy Canela te ha dicho la valoración de la isla.
+player	521	Has sido tú quien ha desbloqueado la valoración de la isla de Canela.
+player	522	Canela te ha explicado cómo funciona la valoración de la isla.
+player	523	Has visto la explicación de los permisos de construcción.
+player	524	Hoy has jugado.
+player	525	Dato interno: hoy ya has tenido con algún vecino cierta charla sobre regalos.
+player	526	Has hablado con Tom Nook después de terminarse la zona de acampada.
+player	527	Tom Nook te ha encargado a ti ir a ver al primer campista.
+player	528	Tom Nook te ha dado el kit de vivienda para el primer campista.
+player	529	No pudiste recoger el kit de vivienda del primer campista porque llevabas los bolsillos llenos.
+player	530	Has colocado tú mismo el kit de vivienda del primer campista.
+player	532	Número de bichos que le has vendido a Kamilo en su visita actual.
+player	534	Has visto la explicación de cómo jugar varias personas en la misma consola.
+player	535	Fauno te ha invitado a su isla.
+player	536	Has estado alguna vez en la isla de Fauno.
+player	538	Has hablado con Kamilo de tu trofeo de oro del torneo de bichos.
+player	539	Has hablado con Kamilo de tu trofeo de plata del torneo de bichos.
+player	540	Has hablado con Kamilo de tu trofeo de bronce del torneo de bichos.
+player	541	Has hablado con CJ de tu trofeo de oro del torneo de pesca.
+player	542	Has hablado con CJ de tu trofeo de plata del torneo de pesca.
+player	543	Has hablado con CJ de tu trofeo de bronce del torneo de pesca.
+player	544	Has hablado por primera vez con Fauno en su isla.
+player	546	Hoy has llamado al Servicio de rescate.
+player	547	Tili te ha dado una prenda de muestra.
+player	548	Tili te ha dado alguna vez un vale de canje.
+player	549	Ya conoces a Estela.
+player	550	Hoy has hablado con Estela.
+player	554	Estela te ha dado su primera receta.
+player	555	Fauno te ha explicado cómo funciona el estudio de fotos.
+player	556	Este año te han regalado la tarta de cumpleaños.
+player	557	Este año te han regalado el suelo de fiesta por tu cumpleaños.
+player	558	Este año te han regalado el papel de pared de fiesta por tu cumpleaños.
+player	559	Has desbloqueado los peinados de estilo pop.
+player	560	Has desbloqueado los peinados de estilo cool.
+player	561	Has desbloqueado el peinado de recién levantado.
+player	562	Se ha desbloqueado en el Nookcajero la opción de conseguir pósteres con amiibo.
+player	563	Has desbloqueado en el Nookcajero los colores de pelo extra.
+player	564	Se ha desbloqueado la personalización de objetos en el banco de trabajo.
+player	565	Has conseguido el permiso de construcción del camino de piedra.
+player	566	Has conseguido el permiso de construcción del camino de ladrillo.
+player	567	Has conseguido el permiso de construcción del camino de tierra oscura.
+player	568	Has conseguido el permiso de construcción del camino de piedra en abanico.
+player	569	Has conseguido el permiso de construcción del camino de arena.
+player	570	Has conseguido el permiso de construcción del camino de baldosas de terracota.
+player	571	Has conseguido el permiso de construcción del camino de madera.
+player	572	Has conseguido el permiso para hacer obras en el río.
+player	573	Has conseguido el permiso para hacer obras en los acantilados.
+player	574	Tienes puesto el casco de obras del diseño de la isla.
+player	576	Hoy Estela te ha dado una receta (o materiales).
+player	577	Este mes Estela te ha dado la receta del signo del zodiaco.
+player	578	Signo del zodiaco del último día que jugaste (para las recetas de Estela).
+player	579	Ya se ha enviado a Nintendo el informe de juego de la cuenta atrás de Año Nuevo.
+player	580	Hoy has hablado con Nendo fuera de la tienda y te ha dado un consejo.
+player	581	Has decidido dónde se construirá el Comercio Nook.
+player	582	En la tienda te han dado el consejo de que puedes comer.
+player	584	Pili te ha explicado alguna vez cómo funciona el probador.
+player	585	Has visto la explicación de las funciones de tu casa.
+player	586	Has oído en el anuncio de la mañana que habrá un taller de personalización.
+player	587	Tom Nook ya te ofrece la opción del taller de personalización.
+player	588	Estás en mitad del taller de personalización de Tom Nook.
+player	589	Has hablado con Tom Nook llevando el mueble necesario para el taller de personalización.
+player	591	Tom Nook tiene pendiente invitarte al taller de personalización.
+player	592	Tom Nook irá a tu casa cuando termines de preparar las parcelas para nuevos vecinos.
+player	593	Tipo de gorro que te regaló uno de los vecinos iniciales (solo el representante de la isla).
+player	595	Rafa te ha explicado el billete de millas Nook que le dejó Tom Nook.
+player	597	Rodri te ha dado explicaciones al llegar por primera vez a una isla misteriosa.
+player	598	Veces que has ganado un juego con un campista.
+player	599	Nendo te ha dado las gracias por ayudar a reunir materiales.
+player	600	Nendo te ha dado las gracias al terminar de reunir los materiales.
+player	601	Nendo te ha dado las gracias por elegir el sitio de la tienda.
+player	602	Tom Nook ha terminado de darte consejos.
+player	603	Días desde que un vecino te contó un rumor sobre los gustos de un jugador.
+player	604	En el anuncio de la mañana te han explicado lo de las ceremonias de inauguración.
+player	605	Has oído en el anuncio de la mañana que ha abierto la sastrería de las Hermanas Manitas.
+player	606	Nendo te ha felicitado por tu nueva casa.
+player	607	Has oído en el anuncio de la mañana que ha abierto la zona de acampada.
+player	608	Has oído en el anuncio de la mañana que se va a reformar Servicios a residentes.
+player	609	Has tenido la primera charla con Tom Nook en el nuevo edificio de Servicios a residentes.
+player	610	Se ha desbloqueado la rueda de herramientas.
+player	611	Tom Nook te ha explicado qué se hace en Servicios a residentes.
+player	612	Tendo y Nendo te han explicado el precio de los nabos y los objetos que compran más caros.
+player	613	Has asistido a la inauguración del Comercio Nook (tienda pequeña).
+player	614	Has asistido a la inauguración del Comercio Nook ampliado.
+player	615	Has asistido a la inauguración de Servicios a residentes.
+player	616	Has asistido a la inauguración del museo.
+player	617	Has asistido a la inauguración de la sastrería de las Hermanas Manitas.
+player	618	Has asistido a la inauguración de la zona de acampada.
+player	619	Has asistido a la inauguración de un puente.
+player	620	Has asistido a la inauguración de una cuesta.
+player	621	Le has comprado algo a Pili en su visita de hoy.
+player	622	Hoy le has comprado a Alcatifa un papel de pared misterioso.
+player	623	Hoy le has comprado a Alcatifa un suelo misterioso.
+player	624	Tom Nook te ha explicado cómo trasladar edificios.
+player	625	Has intentado usar por primera vez un kit de vivienda para nuevos vecinos.
+player	626	Tom Nook te ha explicado por teléfono lo de la escalera.
+player	627	Has recibido la primera llamada de Tom Nook tras colocar las parcelas para nuevos vecinos.
+player	628	Canela te ha contado que la isla ya supera los 8 habitantes.
+player	629	Le has encargado a Tom Nook trasladar la zona de acampada.
+player	630	Le has comprado algo a Betunio en su visita de hoy.
+player	631	Hoy has hablado con Betunio.
+player	632	Has asistido al primer concierto de Totakeke.
+player	633	Hoy es el día en que se creó este jugador.
+player	634	Tom Nook ya te ha contado cómo va la preparación de parcelas para nuevos vecinos.
+player	635	Hoy Rafa ya te ha dado las millas Nook por viajar.
+player	636	Hoy has oído en el anuncio de la mañana el aviso del taller de personalización.
+player	637	Pili te ha dado a ti el kit de la parcela de la sastrería.
+player	638	Canela te ha contado que la isla ya supera las 8 casas (contando parcelas).
+player	639	Pili te ha pedido que busques un sitio para la sastrería.
+player	640	Ya se ha resuelto lo de buscar sitio para la sastrería de Pili.
+player	641	En Servicios a residentes te han presentado directamente a Canela.
+player	642	Ha sonado en el anuncio de la mañana el adelanto del proyecto para traer a Totakeke.
+player	643	Tom Nook te ha hablado del proyecto para traer a Totakeke.
+player	644	Has conseguido el permiso de construcción de caminos con diseños personalizados.
+player	645	Hoy Tom Nook te ha hablado del primer campista y te ha pedido que lo invites.
+player	646	Has oído la charla de Tom Nook antes de empezar la valoración de la isla.
+player	647	Tom Nook te ha explicado los detalles de la valoración de la isla.
+player	648	Tom Nook te ha pedido que le escuches porque tiene un encargo para ti.
+player	649	Canela te ha explicado con detalle la valoración de la isla.
+player	650	Hoy has sacado una pepita de oro de una roca.
+player	651	Has hablado con CJ el día del torneo de pesca.
+player	652	Rescates de emergencia que cuentan para que aparezca Forma T.
+player	653	Hoy el turno del Servicio de rescate le toca a Forma T.
+player	654	Un vecino te ha dado la receta de la medicina.
+player	655	Has pagado una tarjeta de mensaje.
+player	656	Dato interno: escena de despertarse medio dormido.
+player	657	Has hablado con Kamilo el día del torneo de bichos.
+player	658	Al ampliar tu casa hubo que quitar muebles de la pared.
+player	659	Se ha desbloqueado la descarga de diseños personalizados de la 3DS.
+player	660	Dato interno: has pescado una segunda locha.
+player	661	Dato interno: informe de juego diario enviado a Nintendo.
+player	662	Has usado alguna vez el armario.
+player	663	En el taller de personalización te avisaron de que llevabas los bolsillos llenos.
+player	665	Has visto la escena al completar la preparación de parcelas para nuevos vecinos.
+player	666	Le has pedido alguna vez a Rafa ir a la isla de Fauno.
+player	667	Hoy Fauno te ha invitado a su isla hablando contigo en tu isla.
+player	668	Hoy has hablado con Fauno en su isla.
+player	669	Tus bolsillos se han ampliado a 30 huecos.
+player	670	Tus bolsillos se han ampliado a 40 huecos.
+player	671	Número de denuncias por contenido inapropiado.
+player	672	La tienda pondrá a la venta la ampliación de bolsillos a 40 huecos.
+player	673	Has visto la escena del premio al cumplir el reto de CJ en su visita.
+player	674	Se ha desbloqueado la pestaña «Otros» en las recetas de bricolaje.
+player	675	Eres tú quien ha encargado ahora la construcción de un puente o una cuesta.
+player	676	Eres tú quien ha encargado ahora retirar un puente o una cuesta.
+player	677	Tom Nook te ha explicado cómo construir puentes y cuestas.
+player	678	Tom Nook te ha explicado el giroide para recaudar donaciones de las obras.
+player	679	Dato interno: controla qué consejos salen en el anuncio de la mañana.
+player	680	Ya puedes recoger cosas con el botón Y, pero todavía no has recogido nada.
+player	681	Tienes pendiente una llamada al empezar a jugar.
+player	682	Tienes pendiente la llamada sobre el servicio de impresión de pósteres.
+player	683	Tienes pendiente la llamada que desbloquea jugar varias personas en la misma consola.
+player	684	Tienes pendiente la llamada del pago por lo que dejaste en el buzón de venta.
+player	685	Veces que hoy has oído a un vecino hablar del título de un jugador de tu isla.
+player	686	Veces que hoy has oído a un vecino hablar del título de un jugador de otra isla.
+player	687	Veces que hoy has oído a un vecino hablar del título del jugador de la isla que visitas.
+player	688	Le has encargado a Tom Nook trasladar algún edificio.
+player	689	Tu casa ya está construida.
+player	690	Has colocado el kit de vivienda para trasladar un edificio.
+player	692	La isla ha conseguido por primera vez 5 estrellas en la valoración de Canela.
+player	693	Has despertado alguna vez a Gulliver en la playa.
+player	694	Has tenido la primera charla con el primer campista.
+player	695	Dato interno: permite sumar una compra de nabos a Juana.
+player	696	Veces que le has comprado nabos a Juana.
+player	697	Cantidad de nabos que le has comprado a Juana.
+player	701	Número del último vecino que te enseñó una reacción.
+player	702	Se ha desbloqueado en el NookPhone el editor de diseños PRO.
+player	703	Dato interno: jugadores que han oído los rumores sobre lo que has hecho esta vez.
+player	704	Dato interno: jugadores que han oído los rumores sobre lo que hiciste la vez anterior.
+player	705	Vuelos desde el aeródromo que cuentan para los regalos de Rafa.
+player	706	Vuelos de hoy que cuentan para los regalos del aeródromo.
+player	707	Hoy has ido a una isla misteriosa o a la isla de Fauno.
+player	708	Número de regalos del aeródromo que has recibido.
+player	709	Código del personaje especial que te mandó un mensaje de cumpleaños (1).
+player	710	Código del personaje especial que te mandó un mensaje de cumpleaños (2).
+player	711	Código del vecino que te mandó un mensaje de cumpleaños (1).
+player	712	Código del vecino que te mandó un mensaje de cumpleaños (2).
+player	713	Dato interno: número aleatorio que decide el texto de los mensajes de cumpleaños.
+player	714	Se ha desbloqueado en el NookPhone la pestaña de diseños PRO.
+player	725	Globos que has derribado hoy.
+player	726	Has contribuido a construir un puente o una cuesta.
+player	727	Has contribuido al puente o la cuesta que se inaugura hoy.
+player	728	Ya has abierto la app de diseños personalizados tras desbloquear los diseños PRO.
+player	729	Totakeke te ha mandado un mensaje de cumpleaños.
+player	730	Has hablado con el primer campista después de colocar su kit de vivienda.
+player	731	Has hablado con el primer campista después de que te pidieran colocar su kit de vivienda.
+player	732	Hoy un vecino se te ha acercado para hablar de la reputación de la isla.
+player	733	Veces que Canela ha tenido un despiste en el anuncio de la mañana.
+player	735	Canela te ha contado alguna vez lo que opina Buh del entorno de la isla.
+player	736	Hoy Canela te ha dicho cómo está el entorno de la isla.
+player	740	Hoy hay una tarea de millas Nook+ que da el quíntuple de millas.
+player	741	Ya has usado la primera tarea de millas Nook+ con el quíntuple de millas.
+player	742	Veces que no te ha tocado una tarea de millas Nook+ con el quíntuple de millas.
+player	743	Dato interno: código de la tarea de millas Nook+ que da el quíntuple de millas.
+player	744	Hoy se ha elegido la primera tarea de millas Nook+ con el quíntuple de millas.
+player	745	Ya se ha sorteado si hoy hay tarea de millas Nook+ con el quíntuple de millas.
+player	746	Un vecino ya te ha hablado de dar la bienvenida a los recién llegados.
+player	747	Peces que pescaste en el torneo de pesca (para dar los resultados).
+player	748	Bichos que atrapaste en el torneo de bichos (para dar los resultados).
+player	749	Tili te ha hablado alguna vez de Kate.
+player	750	Puntos que conseguiste en el torneo de pesca (para dar los resultados).
+player	751	Puntos que conseguiste en el torneo de bichos (para dar los resultados).
+player	752	Has recibido alguna vez la llamada de Tendo.
+player	753	Has recibido alguna vez la llamada de Nendo.
+player	754	Este jugador se creó cuando Servicios a residentes aún era una tienda de campaña.
+player	755	Se ha desbloqueado en el Nookcajero la opción de invitar campistas con amiibo.
+player	756	Tom Nook te ha explicado por primera vez el Nookcajero.
+player	757	Sócrates te ha explicado alguna vez un bicho al donarlo.
+player	758	Has donado alguna vez un bicho al museo.
+player	759	Este jugador se creó después de montarse la tienda de campaña de Sócrates.
+player	760	Sócrates te ha dado una receta de bricolaje en su tienda de campaña.
+player	761	Tom Nook te ha dicho que ya puedes trasladar tu casa.
+player	762	En el anuncio de la llegada de Sócrates se habló de las donaciones que completaste.
+player	763	Has oído a Tom Nook anunciar por megafonía la ampliación del Comercio Nook.
+player	764	Has oído a Canela anunciar por megafonía la ampliación del Comercio Nook.
+player	765	Has visto el aviso al entrar tras conseguir el permiso de obras en el río.
+player	766	Has visto el aviso al entrar tras conseguir el permiso de obras en los acantilados.
+player	767	Has elegido por primera vez en el aeródromo viajar a una isla por Internet.
+player	768	Dato interno: hoy ya se ha subido tu perfil de jugador al servidor.
+player	769	Globos que cuentan para que aparezca uno dorado.
+player	770	Hachas que cuentan para que se te ocurra la receta del hacha de oro.
+player	771	Último permiso de construcción que has usado en el diseño de la isla.
+player	772	Ya te han mandado por carta la receta de la caña de oro.
+player	773	Ya te han mandado por carta la receta de la red de oro.
+player	774	Has completado la colección de peces.
+player	775	Has completado la colección de bichos.
+player	776	Has oído alguna vez una valoración de la isla de 3 estrellas o menos.
+player	777	Veces que has pescado basura.
+player	778	Veces que has pescado una lata vacía.
+player	779	Veces que has pescado un neumático.
+player	780	Veces que has ayudado a Gulliver (sin contar a Gullivarrr).
+player	781	Se guarda lo que hay en la caja de bichos o peces del torneo.
+player	782	Has ganado una búsqueda del tesoro.
+player	783	Has oído en el anuncio de la mañana el aviso de las conchas de verano.
+player	784	Has oído en el anuncio de la mañana el aviso de las bellotas y piñas.
+player	785	Tu perfil de jugador subido se ha marcado como inapropiado.
+player	786	Has oído en el anuncio de la mañana el aviso de las setas.
+player	787	Has oído en el anuncio de la mañana el aviso de los copos de nieve.
+player	788	Has oído en el anuncio de la mañana el aviso de los muñecos de nieve.
+player	789	Has oído en el anuncio de la mañana el aviso de los adornos navideños.
+player	790	No puedes empezar a preparar parcelas para nuevos vecinos porque aún no sabes hacer bricolaje.
+player	791	Has oído en el anuncio de la mañana el aviso de las hojas de arce.
+player	792	Has oído en el anuncio de la mañana el aviso de los pétalos de cerezo.
+player	793	Has oído en el anuncio de la mañana el aviso de los brotes de bambú.
+player	794	Tom Nook te ha invitado al taller de personalización.
+player	796	Pili te ha explicado alguna vez los diseños PRO.
+player	797	Has visto la explicación al elegir personalizar con un diseño en el banco de trabajo.
+player	798	Dato interno: código de la última isla misteriosa elegida.
+player	799	Sócrates te ha explicado cómo identificar varias cosas a la vez.
+player	800	Tienes pendiente la llamada que desbloquea la app de diseño de la isla.
+player	801	Días que han pasado desde la última vez que jugaste.
+player	802	La partida terminó con un tesoro sin recoger.
+player	803	Hoy has visitado la isla misteriosa n.º 11.
+player	804	Hoy has visitado la isla misteriosa n.º 12.
+player	805	Hoy has visitado la isla misteriosa n.º 13.
+player	806	Hoy has visitado la isla misteriosa n.º 14.
+player	807	Hoy has visitado la isla misteriosa n.º 16.
+player	808	Hoy has visitado la isla misteriosa n.º 17.
+player	809	Hoy has visitado la isla misteriosa n.º 19.
+player	810	Hoy has visitado la isla misteriosa n.º 21.
+player	811	Hoy has visitado la isla misteriosa n.º 24.
+player	812	Has visto cuánto tiempo guarda el servidor las tarjetas de mensaje.
+player	813	Tom Nook irá a tu casa después del primer concierto de Totakeke.
+player	814	Hoy has hablado con Fauno en tu isla cuando aún no tenías casa.
+player	815	Dato interno: hoy ya se ha procesado el cambio de día para ti.
+player	816	Veces que has superado los retos de moda de Tili.
+player	817	En el estudio de fotos has usado un amiibo que no se puede llamar.
+player	818	Has encargado a Kamilo la 1.ª maqueta de esta visita.
+player	819	Has encargado a Kamilo la 2.ª maqueta de esta visita.
+player	820	Has encargado a Kamilo la 3.ª maqueta de esta visita.
+player	821	Has encargado a CJ la 1.ª maqueta de esta visita.
+player	822	Has encargado a CJ la 2.ª maqueta de esta visita.
+player	823	Has encargado a CJ la 3.ª maqueta de esta visita.
+player	824	Has oído la 1.ª charla de CJ después de encargarle una maqueta.
+player	825	Has oído la 2.ª charla de CJ después de encargarle una maqueta.
+player	826	Has oído la 3.ª charla de CJ después de encargarle una maqueta.
+player	827	Un campista te ha dado una receta al encargarte un mueble.
+player	828	Has abierto por primera vez la app de diseño de la isla.
+player	829	Has visto en el armario la explicación de la varita mágica.
+player	830	Hoy has escuchado el primer concierto de Totakeke.
+player	831	Te han explicado el servicio de limpieza de la app de diseño de la isla.
+player	832	Ha abierto la tienda de tu isla.
+player	833	Has abierto la app de diseños tras guardar un diseño que no se puede editar.
+player	834	Rafa te ha quitado alguna vez a la fuerza el modo de diseño de la isla.
+player	835	Estrellas de la última valoración de la isla que te dio Canela (1 a 5).
+player	836	Dato interno: hoy ya se ha preparado el anuncio de la mañana.
+player	837	Se ha corregido tu perfil de jugador que estaba marcado como inapropiado.
+player	838	Puedes invitar a un vecino de otra isla que está a punto de mudarse.
+player	840	Dato interno: hoy ya se ha procesado el cambio de día contigo como jugador principal.
+player	841	Hoy has hablado con Canela en Servicios a residentes.
+player	842	Se ha desbloqueado en el NookPhone el historial del chat.
+player	843	Has abierto por primera vez el historial del chat en el NookPhone.
+player	844	Se ha activado la conexión con NookLink (app Nintendo Switch Online).
+player	845	Has usado por primera vez el portal de diseños personalizados.
+player	846	Has publicado alguna vez un diseño en el portal de diseños personalizados.
+player	847	Te han explicado que, si se corta la conexión, se pierde lo último que hiciste en línea.
+player	848	Has hablado por primera vez con Canela fuera de Servicios a residentes.
+player	849	Has hablado con el primer campista mientras jugabas con otras personas.
+player	850	Recetas del Día del Huevo que han aparecido hoy al azar.
+player	851	Tom Nook te ha hablado en el Nookcajero de la receta de la valla (solo otros jugadores).
+player	852	Probabilidad de que te toque una receta del huevo terrestre.
+player	853	Probabilidad de que te toque una receta del huevo pétreo.
+player	854	Probabilidad de que te toque una receta del huevo vegetal.
+player	855	Probabilidad de que te toque una receta del huevo leñoso.
+player	856	Probabilidad de que te toque una receta del huevo celeste.
+player	857	Probabilidad de que te toque una receta del huevo acuático.
+player	858	Globos con forma de huevo y receta que has derribado hoy.
+player	859	Veces que se ha sorteado una receta extra del Día del Huevo.
+player	860	Has hablado alguna vez con Coti.
+player	861	Hoy le has hablado a Coti por la espalda.
+player	862	Has hablado con Coti antes del Día del Huevo.
+player	863	Has hablado con Coti el Día del Huevo.
+player	864	Coti tiene un objeto para ti que no pudiste recoger.
+player	865	Coti te ha explicado el intercambio de huevos.
+player	866	Coti te ha explicado las recetas que se te ocurren a ti.
+player	867	Coti te ha dado pistas sobre las recetas que te dan los vecinos.
+player	868	Ya has recibido una receta en tu primera charla con Coti el Día del Huevo.
+player	869	Ya tienes la receta del último reto del Día del Huevo.
+player	870	Has completado el reto de bricolaje del Día del Huevo.
+player	871	Ya tienes la cesta de huevos.
+player	872	Coti te ha dicho qué día es el Día del Huevo.
+player	873	Hoy ya ha aparecido en la playa la botella con mensaje del Día del Huevo.
+player	874	Hoy ya se han colocado huevos vegetales en los árboles.
+player	875	Hoy ya se han enterrado huevos terrestres.
+player	876	Hoy has recogido la botella con mensaje del Día del Huevo.
+player	877	Veces que ha salido el huevo arrastrado a la orilla.
+player	878	Veces que no ha salido el huevo arrastrado a la orilla.
+player	879	Recetas del Día del Huevo que te han dado los vecinos.
+player	880	Número del último vecino que te habló del Día del Huevo.
+player	881	Se ha desbloqueado la pestaña «De temporada» en las recetas de bricolaje.
+player	882	Año del último Día del Huevo en el que jugaste.
+player	883	Has recibido por carta una receta del Día del Huevo que no pudiste recoger.
+player	884	Has recibido una receta en los días previos al Día del Huevo.
+player	886	Se te ha ocurrido una receta relacionada con los huevos del Día del Huevo.
+player	887	El muñeco de nieve ya te ha mandado su receta por carta.
+player	888	Veces que has completado este año las bodas de junio con Paca.
+player	889	Hay una receta del Día del Huevo de un vecino que no pudiste recoger.
+player	890	Has empezado la sesión de fotos de las bodas de junio con Paca.
+player	891	Hoy has completado la sesión de fotos de las bodas de junio.
+player	892	Estás participando en la ruta de sellos del Día Internacional de los Museos.
+player	893	Has puesto el 1.er sello de bichos en la ruta de sellos del museo.
+player	894	Has puesto el 2.º sello de bichos en la ruta de sellos del museo.
+player	895	Has puesto el 3.er sello de bichos en la ruta de sellos del museo.
+player	896	Has puesto el 1.er sello de peces en la ruta de sellos del museo.
+player	897	Has puesto el 2.º sello de peces en la ruta de sellos del museo.
+player	898	Has puesto el 3.er sello de peces en la ruta de sellos del museo.
+player	899	Has puesto el 1.er sello de fósiles en la ruta de sellos del museo.
+player	900	Has puesto el 2.º sello de fósiles en la ruta de sellos del museo.
+player	901	Has puesto el 3.er sello de fósiles en la ruta de sellos del museo.
+player	902	Hoy has hecho un intercambio con Al en las bodas de junio.
+player	903	Ya se ha desbloqueado el tema de personalización de las bodas de junio.
+player	904	Versión del juego de la última carta de agradecimiento por actualizar que te han mandado.
+player	905	Ya te han mandado la carta de agradecimiento por comprar el pack con la consola.
+player	907	Tienes el billete de viaje del 1 de mayo.
+player	908	Has ido alguna vez al archipiélago de Happy Home Paradise.
+player	909	Has oído en el anuncio de la mañana el aviso de los preparativos del Día del Huevo.
+player	912	Globos de huevo que has derribado cuando ya no quedaban recetas por salir.
+player	913	Tom Nook te ha anunciado el Día de la Naturaleza en Servicios a residentes.
+player	914	Tom Nook te ha dado el seto durante el Día de la Naturaleza.
+player	915	Gandulio te ha hablado alguna vez del seto.
+player	916	Veces que le has comprado algo a Gandulio en su puesto.
+player	919	Hoy has oído a un vecino un rumor sobre los gustos de otro jugador de tu isla.
+player	920	Has completado alguna vez el Día del Huevo hasta el final.
+player	921	La llamada que desbloquea los pósteres se ha aplazado a la próxima vez que juegues.
+player	922	Has completado alguna vez las dos tareas especiales del Día de la Naturaleza.
+player	923	Huevos terrestres que has conseguido durante el Día del Huevo.
+player	924	Huevos pétreos que has conseguido durante el Día del Huevo.
+player	925	Huevos vegetales que has conseguido durante el Día del Huevo.
+player	926	Huevos leñosos que has conseguido durante el Día del Huevo.
+player	927	Huevos celestes que has conseguido durante el Día del Huevo.
+player	928	Huevos acuáticos que has conseguido durante el Día del Huevo.
+player	929	Rafa te ha explicado el billete del 1 de mayo que le dejó Tom Nook.
+player	930	Has usado el billete de viaje del 1 de mayo.
+player	934	Has sido tú quien ha cumplido el encargo de Sócrates de la obra de arte.
+player	935	Sócrates te ha saludado tras ampliarse el museo.
+player	936	Sócrates te ha explicado su encargo de la obra de arte.
+player	937	Sócrates te ha dicho que ya se puede ampliar el museo.
+player	938	Has asistido a la inauguración de la ampliación del museo.
+player	939	Tareas especiales del Día de la Naturaleza que has completado hoy.
+player	940	Le enseñaste una obra de arte a Sócrates antes de su encargo.
+player	941	Alguna vez te has negado a donar una obra de arte en el encargo de Sócrates.
+player	942	Número del último vecino que te habló de mejorar la reputación de la isla.
+player	944	Dato interno: la partida no coincide con el identificador de esta consola.
+player	945	Has resuelto el laberinto del 1 de mayo.
+player	946	Días de juego sin que un vecino te anime a mejorar la reputación de la isla.
+player	947	Dato interno: se ha borrado la decoración de la sesión de fotos de las bodas de junio.
+player	948	Gandulio te ha dado el seto.
+player	949	Fran te ha dado su premio del 1 de mayo.
+player	950	Este año has hablado con Fauno después de completar las bodas de junio.
+player	951	Ya conoces a Paca.
+player	952	Ya conoces a Al.
+player	953	Este año has hablado con Fauno durante las bodas de junio.
+player	954	Año en que Coti vino de visita.
+player	955	Hoy Coti viene de visita a la isla.
+player	956	Este año has participado en la ruta de sellos del museo.
+player	959	Llevabas los bolsillos llenos al recoger un premio de la ruta de sellos.
+player	960	Hoy has recibido el premio de bichos de la ruta de sellos.
+player	961	Hoy has recibido el premio de peces de la ruta de sellos.
+player	962	Hoy has recibido el premio de fósiles de la ruta de sellos.
+player	981	Rodri te ha explicado el servicio de envío y venta de objetos.
+player	982	Dato interno: hoy ya has oído a algún vecino cierto tipo de rumor.
+player	983	Has oído en el anuncio de la mañana que se ha ampliado el museo.
+player	988	Pili te ha explicado alguna vez el portal de diseños personalizados.
+player	989	Hoy has puesto el sello de Sócrates de los bichos.
+player	990	Hoy has puesto el sello de Sócrates de los peces.
+player	991	Hoy has puesto el sello de Sócrates de los fósiles.
+player	992	Has terminado todo el evento del 1 de mayo.
+player	993	Último día de las bodas de junio que has completado.
+player	994	Has oído el anuncio de la mañana del primer día del Día de la Naturaleza.
+player	995	Has visto la explicación del chat.
+player	996	Tom Nook te ha avisado de que se está preparando el Día de la Naturaleza.
+player	997	Le has comprado una obra de arte a Ladino en su primera visita.
+player	998	Ladino está intentando venderte una obra de arte en su primera visita.
+player	999	Hoy has hablado con Gandulio.
+player	1003	Temática actual de la sesión de fotos de las bodas de junio (mona, elegante o de jardín).
+player	1004	Temática de la sesión de fotos de las bodas de junio anteriores.
+player	1005	Este año has elegido la temática mona en las bodas de junio.
+player	1006	Este año has elegido la temática elegante en las bodas de junio.
+player	1007	Este año has elegido la temática de jardín en las bodas de junio.
+player	1010	Último año en que has jugado a las bodas de junio.
+player	1011	Ya has hablado con Ladino dentro de su barco.
+player	1012	Ladino ya te ha llevado a su barco.
+player	1013	Has visto la explicación de personalizar la funda del NookPhone en el banco de trabajo.
+player	1014	Bodas de junio: Paca te ha pedido que también hagas fotos.
+player	1015	Hoy Sócrates te ha recordado que le lleves obras de arte.
+player	1016	Sócrates te ha contado que se han descubierto criaturas marinas.
+player	1017	Has usado el servicio de Rodri para venderle objetos.
+player	1018	Hoy has usado el buzón de venta.
+player	1019	Hoy Ladino te ha hablado al entrar en su tienda.
+player	1020	Hoy Ladino te ha hablado al salir de su tienda.
+player	1022	Año en que aceptaste la tarea de coger flores para hacer una guirnalda (Día de la Naturaleza).
+player	1023	Año en que aceptaste la tarea de coger flores para hacer una corona (Día de la Naturaleza).
+player	1024	Sócrates te ha explicado que el premio de la ruta de sellos no se puede conseguir dos veces.
+player	1025	Estás usando el Servicio de rescate en el laberinto del 1 de mayo.
+player	1026	Primer día de juego tras ampliar el museo a su segunda fase.
+player	1028	Veces que has completado este año la sesión de fotos de Paca en las bodas de junio.
+player	1029	Gandulio ya te ha hablado por primera vez de las malas hierbas.
+player	1030	Bodas de junio: este año Fauno ya te ha dado la valla.
+player	1031	Bodas de junio: hoy Fauno no ha podido darte la valla.
+player	1032	Este año ya se ha desbloqueado la música de las bodas de junio.
+player	1034	Ya conoces a Fran, el gato del laberinto del 1 de mayo.
+player	1035	Este año has oído el anuncio de las bodas de junio al entrar por primera vez.
+player	1036	Este año Fauno ya te ha llamado para avisarte de las bodas de junio.
+player	1037	Bodas de junio: este año Al ya te ha dado la varita.
+player	1039	Número del último vecino que se te acercó a hablar.
+player	1040	Tienes pendiente la llamada que anuncia las bodas de junio.
+player	1042	Sócrates te ha explicado más sobre las criaturas marinas tras completar la colección.
+player	1044	Bodas de junio: Paca te ha invitado a la fiesta.
+player	1045	Bodas de junio: Paca te ha despedido el último día.
+player	1046	Has conseguido las millas Nook por visitar otra isla.
+player	1047	Dato interno: estado de los globos de Paca durante las bodas de junio.
+player	1049	Buh ya te ha dado un objeto valioso.
+player	1050	Tu ID de creador se muestra en el portal de diseños personalizados.
+player	1051	Tu dirección de sueño es pública en el servicio de Alakama.
+player	1052	Ya puedes usar los bolsillos en la isla de Fauno.
+player	1053	Veces que has ido a una isla misteriosa con Rafa.
+player	1054	Ya puedes ir a una isla misteriosa rara con Rafa.
+player	1055	Hoy has visitado la isla misteriosa n.º 20.
+player	1056	Este año has oído el anuncio del Día Internacional de los Museos al entrar por primera vez.
+player	1057	Durante su visita previa has comprado 2 obras de arte a Ladino.
+player	1060	Año en que completaste la tarea de coger flores para hacer una guirnalda (Día de la Naturaleza).
+player	1061	Año en que completaste la tarea de coger flores para hacer una corona (Día de la Naturaleza).
+player	1062	Has empezado a buscar las piezas del comunicador de Gullivarrr.
+player	1063	Has terminado de buscar las piezas del comunicador de Gullivarrr.
+player	1064	Ya has hablado alguna vez con Gullivarrr.
+player	1065	Otro jugador ha ayudado a Gullivarrr después de que tú lo encontraras.
+player	1066	Número de piezas del comunicador que le has dado a Gullivarrr.
+player	1067	Ya has despertado alguna vez a Gullivarrr.
+player	1068	Número de vecinos que has invitado a mudarse a tu isla estando de viaje.
+player	1069	Hoy un vecino ya te ha hablado del evento de temporada en curso.
+player	1070	Día en que completaste la tarea de millas x5 del Día de la Naturaleza.
+player	1071	Hoy ya has completado la tarea diaria de saludar a los vecinos.
+player	1072	Aún no te ha salido la tarea de millas x5 del Día de la Naturaleza (control del juego).
+player	1073	Aún no te ha salido la tarea de millas x5 del Día de la Naturaleza (para los diálogos).
+player	1074	Hoy ya le has dado una vieira a Pascal.
+player	1075	Te han enviado la carta que presenta el Día de la Naturaleza.
+player	1076	Has oído el anuncio del 1 de mayo al entrar por primera vez.
+player	1077	Has leído la primera explicación de Alakama sobre visitar sueños.
+player	1078	Ya has tenido la primera conversación con Alakama.
+player	1079	Veces que has ayudado a Gullivarrr.
+player	1080	Has conseguido el objeto de la búsqueda de Gullivarrr.
+player	1081	Has conseguido alguna vez un traje de buceo.
+player	1082	Ya conoces a Pascal.
+player	1085	Hoy un vecino ya te ha contado lo que ha hecho otro jugador de tu isla.
+player	1086	Fuegos artificiales: hoy has hablado con Canela (de 5:00 a 19:00).
+player	1087	Fuegos artificiales: hoy has hablado con Canela (de 19:00 a 24:00).
+player	1088	Fuegos artificiales: hoy Canela te ha dado un accesorio luminoso.
+player	1091	Fuegos artificiales: un vecino ya se te ha acercado para la charla especial.
+player	1092	Fuegos artificiales: número del vecino que se te acercará para la charla especial.
+player	1093	Fuegos artificiales: un vecino te ha regalado fuegos artificiales.
+player	1094	Hoy has visitado a Alakama en su cuarto de los sueños.
+player	1095	Has leído la primera explicación de Alakama sobre subir tu sueño.
+player	1097	Hoy has subido el sueño de tu isla.
+player	1098	Hoy has borrado el sueño de tu isla.
+player	1099	Ya conoces a Soponcio (Halloween).
+player	1100	Halloween: hoy has hablado con Soponcio.
+player	1101	Halloween: veces que le has dado caramelos a Soponcio.
+player	1102	Halloween: Soponcio te ha dado la carroza de calabaza.
+player	1103	Halloween: Soponcio te ha dado su foto.
+player	1104	Halloween: Soponcio te ha dado la receta de la carroza de calabaza.
+player	1105	Sócrates ya te ha explicado cómo funcionan las criaturas marinas.
+player	1106	Has oído el primer anuncio de Canela sobre los fuegos artificiales.
+player	1108	Halloween: hoy has comprado caramelos a Tendo.
+player	1110	Happy Home Paradise: has desbloqueado las paredes decorativas.
+player	1111	Ya has hablado con Ladino durante los fuegos artificiales.
+player	1112	Has creado tu personaje después de la actualización de verano de 2020.
+player	1113	Ya te han avisado de que se puede nadar (con el anuncio de la mañana o por carta).
+player	1114	No oíste el anuncio de que ya se puede nadar y has recibido una carta.
+player	1115	Has oído el primer anuncio de que ya se puede nadar.
+player	1116	Has oído el anuncio del segundo día de que ya se puede nadar.
+player	1117	Tendo te ha explicado el traje de buceo.
+player	1118	Tras la actualización de verano, has visto el aviso de criaturas marinas en la Enciclopedia.
+player	1119	Te han explicado las novedades del portal de diseños (segunda actualización de verano).
+player	1120	Te han explicado que el portal de diseños ya admite diseños normales.
+player	1121	Hoy se ha terminado tu casa (tu tienda de campaña ha pasado a ser casa).
+player	1122	Has recibido la carta de Alakama con una cama de regalo.
+player	1123	Solo has hablado con Ladino en su puesto, nunca en su barco.
+player	1124	Halloween: hoy un vecino te ha dado caramelos.
+player	1125	Has donado tu primera criatura marina.
+player	1126	Mañana te llegará la carta de Alakama dándote las gracias por subir tu sueño.
+player	1127	Veces que has recogido pepitas de oro nunca recogidas antes (desde la versión 1.4.0).
+player	1128	Fuegos artificiales: un vecino no ha podido darte un objeto.
+player	1131	Cuenta para que un vecino te haga una visita sorpresa en casa.
+player	1132	Algún vecino te ha hecho alguna vez una visita sorpresa.
+player	1133	Halloween: un vecino te ha dado la alfombra.
+player	1134	Halloween: un vecino te ha dado el papel pintado.
+player	1135	Halloween: un vecino te ha dado el suelo.
+player	1136	Halloween: Soponcio te ha dado la receta de la varita.
+player	1137	Halloween: un vecino te ha dado la guirnalda.
+player	1139	Halloween: un vecino te ha dado la mesa decorada.
+player	1141	Este año te han dado las alas de Halloween.
+player	1142	Se han desbloqueado más colores de piel en el Nookcajero.
+player	1143	Se han desbloqueado más colores de ojos en el Nookcajero.
+player	1144	Se han desbloqueado más colores de colorete en el Nookcajero.
+player	1145	Al restaurar la partida se ha detectado un fallo en los ajustes.
+player	1146	Alakama te ha explicado el escaparate de diseños personalizados.
+player	1147	Halloween: hoy un vecino te ha gastado una broma.
+player	1148	Has entrado alguna vez en un sueño.
+player	1149	Has usado alguna vez el escaparate de diseños dentro de un sueño.
+player	1151	Te has puesto un maquillaje especial.
+player	1152	Hoy algún vecino te ha comentado tu maquillaje.
+player	1153	Halloween: este año Tendo te ha explicado lo de los caramelos.
+player	1154	Halloween: hoy Tendo te ha explicado los plantones de calabaza.
+player	1155	Fuegos artificiales: hoy le has entregado a Canela tu diseño para los fuegos.
+player	1156	Este año has oído el anuncio de Halloween al entrar por primera vez.
+player	1158	Halloween: este año te han explicado los colores de las calabazas.
+player	1159	Halloween: hoy Gandulio te ha explicado el precio especial de los plantones de calabaza.
+player	1160	Dato interno: ya se han calculado los días transcurridos desde la última partida.
+player	1161	Este jugador llegó mudándose desde otra isla.
+player	1162	Fuegos artificiales: último año en que un vecino se te acercó para la charla especial.
+player	1163	Tras mudarte desde otra isla, Tom Nook te ha hablado de tus pertenencias.
+player	1164	Tras mudarte desde otra isla, Tendo y Nendo te han hablado de tus pertenencias.
+player	1165	Halloween: hoy Gandulio te ha explicado que vende plantones de calabaza.
+player	1166	Al mudarte desde otra isla, lo que llevabas en los bolsillos fue al contenedor de reciclaje.
+player	1167	Al mudarte desde otra isla, lo que había en tu tienda de campaña fue al contenedor de reciclaje.
+player	1170	Halloween: la última vez que hablaste con Soponcio no llevabas caramelos.
+player	1171	Cumples los requisitos para desbloquear el editor de diseños PRO+.
+player	1172	Ya tienes el editor de diseños PRO+.
+player	1173	Te han explicado el editor de diseños PRO+ después de conseguirlo.
+player	1174	Te han avisado de que el editor de diseños PRO+ ya está a la venta en el Nookcajero.
+player	1177	Te mudaste desde otra isla y aún no has elegido dónde poner tu casa.
+player	1178	Fiesta de la Cosecha: número de platos que has terminado con Guindo.
+player	1179	Halloween: veces que le has dado piruletas a Soponcio.
+player	1180	Has preguntado alguna vez a Alakama «¿Dónde estoy?».
+player	1181	Halloween: la última vez que hablaste con Soponcio no te dio nada.
+player	1182	Halloween: lo último que le diste a Soponcio fue un caramelo.
+player	1183	Halloween: ya tienes todos los premios de Soponcio por darle caramelos.
+player	1184	Halloween: ya tienes todos los premios de Soponcio por darle piruletas.
+player	1185	Halloween: Soponcio te ha comentado que llevas su disfraz.
+player	1186	Has abierto la cámara del NookPhone tras añadirse la opción de ocultar la guía de botones.
+player	1187	Halloween: Soponcio te ha dado la túnica.
+player	1188	Halloween: Soponcio te ha dado la máscara.
+player	1189	Halloween: este año Soponcio te ha enviado una carta.
+player	1190	Te mudaste desde otra isla sin traer pertenencias.
+player	1191	Halloween: veces que un vecino te ha dado algo a cambio de caramelos.
+player	1192	Halloween: un vecino te ha dado la receta de la guirnalda.
+player	1193	Halloween: un vecino te ha dado la receta de la mesa decorada.
+player	1194	Halloween: has hablado con algún vecino durante el evento.
+player	1195	Ya tienes el menú de reacciones, pero aún no te han enseñado ninguna reacción nueva.
+player	1196	Al llegar desde otra isla, aún puedes recibir el billete de millas Nook de regalo.
+player	1197	Te mudaste desde otra isla el mismo día que encargaste construir o ampliar tu casa.
+player	1198	Te mudaste desde otra isla el mismo día que encargaste cambiar la fachada de tu casa.
+player	1199	Te mudaste desde otra isla el mismo día que encargaste trasladar tu casa.
+player	1200	Te mudaste desde otra isla con la charla de Tom Nook tras ampliar tu casa aún pendiente.
+player	1201	Te mudaste desde otra isla con la charla de Tom Nook por pagar la hipoteca aún pendiente.
+player	1202	Alakama ha desbloqueado la opción de volver a un sueño que ya visitaste.
+player	1203	Último año en que has jugado a Halloween.
+player	1205	Tu casa ya tenía sótano cuando te mudaste desde otra isla.
+player	1206	Puedes mudarte a otra isla (tu casa ya está terminada).
+player	1207	Personalizaste objetos en Servicios a residentes antes del taller de personalización.
+player	1208	Personalizaste objetos en la tienda de campaña de Tom Nook antes del taller de personalización.
+player	1209	Se te desbloqueó el diseño de islas al mudarte desde otra isla.
+player	1210	Se ha anunciado Halloween por megafonía (para el segundo aviso).
+player	1211	Fiesta de la Cosecha: hoy se ha anunciado por megafonía (para el segundo aviso).
+player	1214	Gandulio te ha dado la receta de la cesta de verduras.
+player	1215	Halloween: te han enviado la carta de los nuevos colores de piel y ojos del Nookcajero.
+player	1216	Halloween: hoy un vecino te ha dado un espejo.
+player	1217	Halloween: hoy un vecino te ha dado caramelos para que no te quedes sin ellos.
+player	1218	Te mudaste desde otra isla con las reacciones ya desbloqueadas.
+player	1219	Se ha desbloqueado la colección de peinados de moda.
+player	1223	Halloween: premio que te va a dar Soponcio.
+player	1225	1 de mayo: Fran te ha dado el premio en la isla donde vives ahora.
+player	1226	Fiesta de la Cosecha: has entregado el ingrediente secreto de la crema de almejas.
+player	1227	Fiesta de la Cosecha: has entregado el ingrediente secreto de la tarta de calabaza.
+player	1228	Fiesta de la Cosecha: has entregado el ingrediente secreto del gratinado.
+player	1229	Fiesta de la Cosecha: has entregado el ingrediente secreto del pescado a la meunière.
+player	1230	Ya conoces a Guindo (Fiesta de la Cosecha).
+player	1231	Fiesta de la Cosecha: veces que Guindo te ha hablado del siguiente plato.
+player	1232	Alakama ha desbloqueado la opción de sueño al azar.
+player	1233	Fiesta de la Cosecha: tipo de premio que te va a dar Guindo.
+player	1234	Has retrasado la fecha de la consola.
+player	1235	Fiesta de la Cosecha: has hablado con Guindo antes de que empezara la fiesta.
+player	1236	Fiesta de la Cosecha: has hablado con Guindo después de que terminara la fiesta.
+player	1237	Fiesta de la Cosecha: se ha anunciado por megafonía entre 5 y 2 días antes.
+player	1238	Dato interno: la contraseña guardada es antigua y no se puede usar el POP ID.
+player	1239	Fiesta de la Cosecha: veces que un trueque con un vecino te ha salido mal.
+player	1240	Ya conoces a Renato (Navidad).
+player	1241	Navidad: Renato te ha dado el calcetín decorativo.
+player	1242	Navidad: Renato te ha dado la receta del montón de regalos.
+player	1243	Navidad: Renato te ha dado el trineo navideño.
+player	1244	Navidad: Renato te ha encargado envolver regalos con bricolaje.
+player	1245	Navidad: Renato te ha encargado repartir regalos.
+player	1247	Navidad: has completado el encargo de bricolaje de Renato.
+player	1248	Navidad: se ha anunciado por megafonía en los días previos.
+player	1250	Happy Home Paradise: has visto la primera explicación del trapo de limpieza.
+player	1251	Navidad: número del primer vecino que te devolverá un regalo en el reparto.
+player	1252	Navidad: número del segundo vecino que te devolverá un regalo en el reparto.
+player	1253	Navidad: número del tercer vecino que te devolverá un regalo en el reparto.
+player	1254	Has recibido la carta de Alakama sobre la opción de sueño al azar.
+player	1255	Navidad: Tendo te ha explicado que vende muebles de juguete.
+player	1256	Carnaval: hoy ya has hablado con Conga.
+player	1257	Navidad: año en que un vecino te dio la corona navideña.
+player	1258	Fiesta de la Cosecha: premio sorteado por el ingrediente secreto de Guindo.
+player	1260	Happy Home Paradise: has desbloqueado la app del planificador.
+player	1261	Happy Home Paradise: has desbloqueado la app de lecciones de diseño.
+player	1262	Tu primera conversación con Alakama fue a partir de la versión 1.6.0.
+player	1263	Navidad: Canela te ha dado adornos navideños.
+player	1265	Fiesta de la Cosecha: has mirado los muebles de la fiesta en la tienda.
+player	1266	Navidad: año en que encontraste el regalo en tu casa.
+player	1267	Dato interno: contador que frena que los vecinos te pidan escribir algo (apodos, frases).
+player	1268	Carnaval: Conga te ha comentado que llevas ropa de carnaval.
+player	1269	Fiesta de la Cosecha: en el primer plato no aceptaste ayudar a Guindo.
+player	1270	Navidad: la primera vez que intercambiaste regalos te dieron papel de regalo.
+player	1272	Fiesta de la Cosecha: te negaste a dar el ingrediente secreto de la crema de almejas.
+player	1273	Fiesta de la Cosecha: te negaste a dar el ingrediente secreto de la tarta de calabaza.
+player	1274	Fiesta de la Cosecha: te negaste a dar el ingrediente secreto del gratinado.
+player	1275	Fiesta de la Cosecha: te negaste a dar el ingrediente secreto del pescado a la meunière.
+player	1276	Fiesta de la Cosecha: pistas oídas sobre el ingrediente secreto de la crema de almejas.
+player	1277	Fiesta de la Cosecha: pistas oídas sobre el ingrediente secreto de la tarta de calabaza.
+player	1278	Fiesta de la Cosecha: pistas oídas sobre el ingrediente secreto del gratinado.
+player	1279	Fiesta de la Cosecha: pistas oídas sobre el ingrediente secreto del pescado a la meunière.
+player	1280	Navidad: alguien ha intentado darte papel de regalo.
+player	1281	Carnaval: Conga te ha dado la receta de plumas arcoíris.
+player	1282	Has encargado a Tom Nook ampliar el almacén de tu casa.
+player	1283	Fase de ampliación del almacén de tu casa (actualización de invierno de 2020).
+player	1284	Te mudaste desde otra isla el mismo día que encargaste ampliar el almacén.
+player	1285	Ya se ha comprobado si enviarte la carta de Tom Nook sobre ampliar el almacén.
+player	1286	Tom Nook tiene pendiente hablarte de la ampliación del almacén.
+player	1287	Navidad: no pudiste recibir la corona navideña de este vecino.
+player	1288	Carnaval: premio que te va a dar Conga.
+player	1289	Happy Home Paradise: puedes redecorar las casas de los vecinos de tu isla.
+player	1290	Carnaval: Conga te ha dado la lámpara de carnaval.
+player	1291	Carnaval: Conga te ha dado el puesto de comida de carnaval.
+player	1292	Carnaval: Conga te ha dado el escenario de carnaval.
+player	1293	Carnaval: Conga te ha dado la máquina de confeti de carnaval.
+player	1294	Carnaval: Conga te ha dado la percusión de carnaval.
+player	1295	Carnaval: Conga te ha dado la lámpara globo de carnaval.
+player	1296	Carnaval: Conga te ha dado las sombrillas de carnaval.
+player	1297	Carnaval: Conga te ha dado los banderines de carnaval.
+player	1298	Carnaval: Conga te ha dado la guirnalda de carnaval.
+player	1299	Carnaval: Conga te ha dado la carroza de carnaval.
+player	1301	Carnaval: veces que Conga te ha dado muebles.
+player	1302	Happy Home Paradise: has desbloqueado compartir en línea en la app del planificador.
+player	1303	Happy Home Paradise: puedes volver a visitar casas desde la app del planificador.
+player	1304	Gandulio ya te ha explicado los plantones de calabaza.
+player	1305	Gandulio te ha explicado que ya vende plantones de calabaza.
+player	1307	Fiesta de la Cosecha: premio sorteado por el ingrediente secreto de Guindo (tercera vez).
+player	1308	Ya conoces a Conga (Carnaval).
+player	1309	Dato interno: hoy se ha enviado el informe de uso de las charlas con vecinos.
+player	1310	Se ha desbloqueado el escaparate de diseños en el NookPhone.
+player	1311	Navidad: tipo del último objeto que te ha dado un vecino.
+player	1312	San Valentín: te han enviado la carta.
+player	1314	Navidad: hoy se ha anunciado por megafonía (para el segundo aviso).
+player	1318	Carnaval: qué muebles de carnaval te ha dado Conga.
+player	1324	Último año en que has jugado a San Valentín.
+player	1325	Carnaval: has tenido la charla con Conga para recibir la receta de plumas arcoíris.
+player	1326	Has abierto la app de diseños tras añadirse el escaparate de diseños.
+player	1327	Te han explicado la app del escaparate de diseños en el portal de diseños.
+player	1328	Has comprado el libro de reacciones de Carnaval.
+player	1329	Carnaval: qué muebles de carnaval rojos te ha dado Conga.
+player	1330	Carnaval: qué muebles de carnaval azules te ha dado Conga.
+player	1331	Carnaval: qué muebles de carnaval verdes te ha dado Conga.
+player	1332	Carnaval: qué muebles de carnaval morados te ha dado Conga.
+player	1333	Carnaval: qué muebles de carnaval arcoíris te ha dado Conga.
+player	1334	Carnaval: Conga sortea los muebles de carnaval por colores.
+player	1335	Has mirado el libro de reacciones de Carnaval en la tienda.
+player	1336	Has mirado los muebles de Carnaval en Comercio Nook.
+player	1337	Carnaval: hoy se ha anunciado por megafonía (para el segundo aviso).
+player	1338	San Patricio: hoy has derribado el globo con la receta de la varita de trébol.
+player	1339	Te han enviado la carta del primer aniversario.
+player	1340	Dato que se sincroniza con la app: regalo por estar suscrito a Nintendo Switch Online (versión 1.9.0).
+player	1341	Se ha desbloqueado el póster del vecino de Sanrio de la tarjeta de Hello Kitty.
+player	1342	Se ha desbloqueado el póster del vecino de Sanrio de la tarjeta de Pompompurin.
+player	1343	Se ha desbloqueado el póster del vecino de Sanrio de la tarjeta de Little Twin Stars.
+player	1344	Se ha desbloqueado el póster del vecino de Sanrio de la tarjeta de Cinnamoroll.
+player	1345	Se ha desbloqueado el póster del vecino de Sanrio de la tarjeta de My Melody.
+player	1346	Se ha desbloqueado el póster del vecino de Sanrio de la tarjeta de Keroppi.
+player	1347	Día del Huevo 2021: hoy se ha anunciado por megafonía (para el segundo aviso).
+player	1348	Tom Nook te ha llamado alguna vez para hablarte de Happy Home Paradise.
+player	1349	Has oído a Tom Nook hablar con Nuria.
+player	1351	Ya has hablado con Gandulio en la isla de Fauno.
+player	1352	Gandulio te ha explicado los plantones de verduras.
+player	1353	Gandulio te ha explicado los esquejes de plumeria.
+player	1354	Gandulio te ha explicado su servicio de quitar malas hierbas.
+player	1355	Día del Huevo 2021: se ha anunciado por megafonía en los días previos (para el segundo aviso).
+player	1356	Bodas de junio 2021: hoy se ha anunciado por megafonía (para el segundo aviso).
+player	1357	Tienes pendiente la llamada de Nuria para venir de visita (Happy Home Paradise).
+player	1358	Día del Huevo: este año ya has recibido la carta.
+player	1363	Puedes viajar al archipiélago de Happy Home Paradise.
+player	1365	Día Internacional de los Museos: tienes el primer sello de la sala de arte.
+player	1366	Día Internacional de los Museos: tienes el segundo sello de la sala de arte.
+player	1367	Día Internacional de los Museos: tienes el tercer sello de la sala de arte.
+player	1368	Día Internacional de los Museos: hoy has recibido el premio de la sala de arte.
+player	1369	Día Internacional de los Museos: hoy has puesto el sello de Sócrates en la sala de arte.
+player	1370	Día Internacional de los Museos: la primera vez que participaste aún no tenías la sala de arte.
+player	1372	Happy Home Paradise: tu ID de diseñador es pública.
+player	1373	Se ha desbloqueado la colaboración con Sanrio de Hello Kitty.
+player	1374	Se ha desbloqueado la colaboración con Sanrio de Pompompurin.
+player	1375	Se ha desbloqueado la colaboración con Sanrio de Little Twin Stars.
+player	1376	Se ha desbloqueado la colaboración con Sanrio de Cinnamoroll.
+player	1377	Se ha desbloqueado la colaboración con Sanrio de My Melody.
+player	1378	Se ha desbloqueado la colaboración con Sanrio de Keroppi.
+player	1381	Día Internacional de los Museos: número de salas completadas.
+player	1382	Happy Home Paradise: ahora mismo tus diseños se muestran en destacados.
+player	1383	1 de mayo: Fran te ha dado el segundo premio.
+player	1384	Día Internacional de los Museos: este año has completado la ruta de sellos de peces.
+player	1385	Día Internacional de los Museos: este año has completado la ruta de sellos de bichos.
+player	1386	Día Internacional de los Museos: este año has completado la ruta de sellos de fósiles.
+player	1387	Día Internacional de los Museos: este año has completado la ruta de sellos de obras de arte.
+player	1388	Cafetería del museo: Sócrates te ha pedido ayuda para encontrar a Fígaro.
+player	1389	Cafetería del museo: has hablado con Fígaro en la isla de Fauno.
+player	1390	Cafetería del museo: Fígaro te ha prometido venir a tu isla.
+player	1391	Cafetería del museo: le has contado a Sócrates lo de Fígaro.
+player	1392	Sócrates te ha hablado de las obras de la cafetería.
+player	1393	Sócrates te ha contado que ya ha abierto la cafetería.
+player	1394	El representante de la isla ya ha hablado con Fígaro tras abrir la cafetería.
+player	1395	Tu fortuna de hoy según Katrina.
+player	1396	Fortuna que te ha leído Katrina y que aún no ha hecho efecto.
+player	1397	Has leído la primera explicación de los estiramientos en grupo.
+player	1398	Katrina te ha leído la fortuna alguna vez.
+player	1399	Hoy Katrina ya te ha leído la fortuna del día.
+player	1400	Hoy Katrina ya te ha leído la compatibilidad.
+player	1402	Fortuna anterior que te leyó Katrina.
+player	1403	Ya has hablado con Betunio en la isla de Fauno.
+player	1404	Bodas de junio: hoy Al no ha podido darte el cristal del amor.
+player	1405	Bodas de junio: este año Paca te ha explicado el límite de intercambios.
+player	1406	Último año en que has jugado al Día Internacional de los Museos.
+player	1407	Veces que has participado en los estiramientos en grupo.
+player	1408	Veces que te han dado premio por hacer estiramientos en grupo.
+player	1409	Canela te ha explicado las ordenanzas de la isla.
+player	1410	Se ha desbloqueado en el NookPhone la app de recetas+ (recetas de cocina, versión 2.0.0).
+player	1411	Has abierto la app de recetas de bricolaje+ por primera vez (versión 2.0.0).
+player	1412	Has leído la explicación de Alakama sobre buscar sueños por nombre de isla.
+player	1413	Has visto la primera explicación del teléfono de El Alpiste.
+player	1414	Ya has hablado con Al en la isla de Fauno.
+player	1417	Primer día de juego tras ampliar el museo a su tercera fase.
+player	1418	Está programada la ampliación de la isla de Fauno.
+player	1420	Ya se ha celebrado la apertura de la tienda de Gandulio en la isla de Fauno.
+player	1421	Ya se ha celebrado la apertura de la tienda de Alcatifa en la isla de Fauno.
+player	1422	Ya se ha celebrado la apertura de la tienda de Ladino en la isla de Fauno.
+player	1423	Ya se ha celebrado la apertura del puesto de Katrina en la isla de Fauno.
+player	1424	Ya se ha celebrado la apertura de la tienda de Betunio en la isla de Fauno.
+player	1425	Ya se ha celebrado la apertura de la tienda de Paca y Al en la isla de Fauno.
+player	1426	Marilín te ha hablado por primera vez de los peinados especiales.
+player	1427	Has rechazado un peinado especial de Marilín.
+player	1428	Hoy Marilín te ha hecho un peinado especial.
+player	1429	Después del peinado especial, Marilín te ha devuelto tu peinado de antes.
+player	1430	Marilín: has desbloqueado el peinado especial 1 (gracias a Gandulio).
+player	1431	Marilín: has desbloqueado el peinado especial 2 (gracias a Alcatifa).
+player	1432	Marilín: has desbloqueado el peinado especial 3 (gracias a Ladino).
+player	1433	Marilín: has desbloqueado el peinado especial 4 (gracias a Katrina).
+player	1434	Marilín: has desbloqueado el peinado especial 5 (gracias a Betunio).
+player	1435	Marilín: has desbloqueado el peinado especial 6 (gracias a Paca y Al).
+player	1436	Hoy Fauno ya te ha explicado su estudio fotográfico al entrar.
+player	1437	Tom Nook ya te ofrece la opción de redecorar casas de vecinos.
+player	1438	Número de objetos que te ha dado Fígaro.
+player	1439	Ya conoces a Fígaro.
+player	1440	Ya has hablado con Paca en la isla de Fauno.
+player	1442	Ya has hablado con Alcatifa en la isla de Fauno.
+player	1444	Hoy has comprado algo a Alcatifa en la isla de Fauno.
+player	1445	El Nookcajero ya vende la mejora de recetas de bricolaje+.
+player	1447	Has abierto la app de diseños tras añadirse más páginas de diseños.
+player	1448	Se han añadido más páginas para diseños personalizados.
+player	1449	Has abierto la cámara tras añadirse la vista en primera persona.
+player	1450	Se ha desbloqueado la vista en primera persona de la cámara.
+player	1452	Se han desbloqueado los muebles de techo en el modo decoración.
+player	1453	Se ha desbloqueado la personalización de vallas.
+player	1456	Conseguiste el billete del 1 de mayo antes de la versión 1.10.0.
+player	1457	Has escuchado un concierto de Totakeke tras la actualización 2.0.
+player	1458	Fases extra de ampliación del almacén de la versión 2.0.0 (de 0 a 3).
+player	1459	Ya se ha comprobado si enviarte la carta de Tom Nook sobre la nueva ampliación del almacén (2.0.0).
+player	1460	Tom Nook tiene pendiente avisarte de la nueva ampliación del almacén (2.0.0).
+player	1461	Tom Nook tiene pendiente hablarte tras ampliar el almacén (2.0.0).
+player	1462	Te mudaste desde otra isla con la charla de Tom Nook tras ampliar el almacén aún pendiente.
+player	1463	El Nookcajero ya vende la personalización de vallas.
+player	1464	Tom Nook te ha explicado el billete del 1 de mayo.
+player	1465	Fran te dio el premio del 1 de mayo antes de la versión 1.10.0.
+player	1467	Gandulio te ha dado explicaciones al comprarle verduras.
+player	1468	Desbloqueaste el servicio de quitar malas hierbas antes de llevar a Gandulio a la isla de Fauno.
+player	1469	No hablaste con Ladino en los fuegos artificiales de 2020.
+player	1470	Hoy Ladino te ha hablado del polo helado.
+player	1471	Hoy Ladino te ha hablado del té con perlas de tapioca.
+player	1472	Has oído la explicación del Capitán al llegar a la primera isla de su excursión.
+player	1473	Hoy has hecho una excursión en barca con el Capitán.
+player	1474	Ya conoces al Capitán.
+player	1475	Hoy has hecho una donación a Fauno.
+player	1476	Hoy Fauno te ha dado las gracias por tu donación.
+player	1477	Hoy se ha alcanzado la meta de donaciones para Fauno.
+player	1478	Bodas de junio: en la primera sesión de hoy aún no tenías la personalización desbloqueada.
+player	1479	Tom Nook te ha explicado los detalles de las obras de ampliación del almacén (2.0.0).
+player	1480	Se ha anunciado Halloween 2021 por megafonía (para el segundo aviso).
+player	1481	Has visto la explicación de los muebles de techo y paredes decorativas de tu casa (2.0.0).
+player	1482	Tom Nook te ha avisado de que ya puedes cambiar la forma de tu casa (2.0.0).
+player	1483	Has hablado con Gandulio en tu isla después de llevarlo a la isla de Fauno.
+player	1484	Hoy has participado en los estiramientos en grupo.
+player	1485	Has hablado con Gandulio en la inauguración de su tienda en la isla de Fauno.
+player	1486	Has hablado con Alcatifa en la inauguración de su tienda en la isla de Fauno.
+player	1487	Has hablado con Ladino en la inauguración de su tienda en la isla de Fauno.
+player	1488	Has hablado con Katrina en la inauguración de su puesto en la isla de Fauno.
+player	1489	Has hablado con Betunio en la inauguración de su tienda en la isla de Fauno.
+player	1490	Has hablado con Paca y Al en la inauguración de su tienda en la isla de Fauno.
+player	1491	Ya conoces a Katrina.
+player	1492	Fauno te ha enviado la carta sobre la ampliación de su isla.
+player	1493	Qué vecinos te han ofrecido ya chocolate (uno por cada vecino).
+player	1494	Fecha de la última vez que un vecino te ofreció chocolate.
+player	1495	Ya has hablado con Fígaro en la cafetería.
+player	1496	Se ha anunciado la Fiesta de la Cosecha 2021 por megafonía (para el segundo aviso).
+player	1497	El Alpiste: hoy has hablado con Mili, que estaba de visita en la cafetería.
+player	1498	El Alpiste: hoy has hablado con Pili, que estaba de visita en la cafetería.
+player	1499	El Alpiste: hoy has hablado con Rodri, que estaba de visita en la cafetería.
+player	1500	El Alpiste: hoy has hablado con Juliana, que estaba de visita en la cafetería.
+player	1501	El Alpiste: hoy has hablado con Rese T., que estaba de visita en la cafetería.
+player	1502	El Alpiste: hoy has hablado con Forma T., que estaba de visita en la cafetería.
+player	1503	El Alpiste: hoy has hablado con Totakeke, que estaba de visita en la cafetería.
+player	1504	El Alpiste: hoy has hablado con Betunio, que estaba de visita en la cafetería.
+player	1505	El Alpiste: hoy has hablado con Alcatifa, que estaba de visita en la cafetería.
+player	1506	El Alpiste: hoy has hablado con Tili, que estaba de visita en la cafetería.
+player	1507	El Alpiste: hoy has hablado con Gandulio, que estaba de visita en la cafetería.
+player	1508	El Alpiste: hoy has hablado con Estela, que estaba de visita en la cafetería.
+player	1509	El Alpiste: hoy has hablado con Kamilo, que estaba de visita en la cafetería.
+player	1510	El Alpiste: hoy has hablado con CJ, que estaba de visita en la cafetería.
+player	1511	El Alpiste: veces que te has encontrado a Mili de visita en la cafetería.
+player	1512	El Alpiste: veces que te has encontrado a Pili de visita en la cafetería.
+player	1513	El Alpiste: veces que te has encontrado a Rodri de visita en la cafetería.
+player	1514	Veces que has visto a Juliana dentro de la cafetería El Alpiste.
+player	1515	Veces que has visto a Rese T. dentro de la cafetería El Alpiste.
+player	1516	Veces que has visto a Forma T. dentro de la cafetería El Alpiste.
+player	1517	Veces que has visto a Totakeke dentro de la cafetería El Alpiste.
+player	1518	Veces que has visto a Betunio dentro de la cafetería El Alpiste.
+player	1519	Veces que has visto a Alcatifa dentro de la cafetería El Alpiste.
+player	1520	Veces que has visto a Tili dentro de la cafetería El Alpiste.
+player	1521	Veces que has visto a Gandulio dentro de la cafetería El Alpiste.
+player	1522	Veces que has visto a Estela dentro de la cafetería El Alpiste.
+player	1523	Veces que has visto a Kamilo dentro de la cafetería El Alpiste.
+player	1524	Veces que has visto a CJ dentro de la cafetería El Alpiste.
+player	1525	Ya ha tenido lugar la apertura de la tienda de Tórtimer en la plaza de la isla de Fauno.
+player	1526	Rafa te ha explicado la opción de «ir a trabajar» a Happy Home Paradise.
+player	1527	Un vecino ya se te ha acercado a hablar por el resultado de tu fortuna.
+player	1528	Has visto a un personaje especial pedir café para llevar en El Alpiste.
+player	1529	Último personaje especial que viste pedir café para llevar en El Alpiste.
+player	1530	Has visitado con Capitán la isla rara de los fragmentos de estrella.
+player	1531	Has visitado con Capitán la isla rara de los pétalos de cerezo.
+player	1532	Has visitado con Capitán la isla rara de los brotes de bambú.
+player	1533	Has visitado con Capitán la isla rara de las conchas de verano.
+player	1534	Has visitado con Capitán la isla rara de las setas.
+player	1535	Has visitado con Capitán la isla rara de las hojas de arce.
+player	1536	Has visitado con Capitán la isla rara de los copos de nieve.
+player	1537	Has llamado a Fran con un amiibo en El Alpiste y has hablado con él.
+player	1538	La app de consejos ya está disponible en el NookPhone.
+player	1539	Has abierto por primera vez la app de consejos del NookPhone.
+player	1540	Has visto la explicación del intercambio de diseños personalizados añadido en la versión 2.0.
+player	1541	Has hablado con Tórtimer en la apertura de su tienda en la plaza de la isla de Fauno.
+player	1542	Ladino te ha contado que ahora vende comida en los fuegos artificiales de agosto.
+player	1543	Ya has oído el segundo anuncio de la mañana sobre los preparativos de Halloween 2021.
+player	1544	La última vez le dijiste a Fígaro que prefieres el café templado.
+player	1546	Contador de Fígaro para preguntarte si quieres el café templado.
+player	1547	Conociste a Betunio en su tienda de la plaza de la isla de Fauno.
+player	1548	Hoy ya has hablado con Tórtimer.
+player	1549	Este año ya has hablado con Córnimer.
+player	1551	Conseguiste el billete del 1 de mayo antes de la versión 2.0.
+player	1552	Fran ya te ha dado su premio del 1 de mayo por tercera vez o más.
+player	1553	Hoy has hablado con Ladino en los fuegos artificiales de agosto.
+player	1554	Te mudaste solo tú a otra isla después de que Fauno te explicara el estudio de fotos.
+player	1555	Ya conoces a Marilín.
+player	1556	Hoy has hablado con Marilín.
+player	1557	Hoy has conocido a Marilín.
+player	1558	Marilín te ha desbloqueado el peinado especial n.º 7 (el de Tórtimer).
+player	1559	Has usado el terminal de diseños personalizados durante una visita en Happy Home Paradise.
+player	1560	Has oído en el anuncio de la mañana que ya puedes poner ordenanzas en la isla.
+player	1561	Hoy has completado la tarea de millas Nook+ de ir a la cafetería.
+player	1562	Veces que te ha salido la tarea de millas Nook+ de hacer los estiramientos.
+player	1563	Hoy Tórtimer te ha dado bellotas.
+player	1564	Se ha celebrado la inauguración de la cafetería del museo.
+player	1565	Tienes pendiente una llamada porque no se pudo invitar a un personaje.
+player	1566	Fígaro te ha hablado del café para llevar.
+player	1567	Has desbloqueado el peinado 37 (raya en medio).
+player	1568	Has desbloqueado el peinado 38 (corte desfilado tipo lobo).
+player	1569	Has desbloqueado el peinado 39 (todo hacia atrás).
+player	1570	Has desbloqueado el peinado 40 (corte tazón).
+player	1571	Has desbloqueado el peinado 41 (flequillo en M).
+player	1572	Has desbloqueado el peinado 42 (rapado con entradas).
+player	1573	Has desbloqueado el peinado 43 (semirrecogido).
+player	1574	Has desbloqueado el peinado 44 (trenza suelta).
+player	1575	Has desbloqueado el peinado 45 (coleta suelta).
+player	1576	Has desbloqueado el peinado 46 (recogido).
+player	1577	Has desbloqueado el peinado 47 (dos trenzas).
+player	1578	Tórtimer ha sido sustituido por Córnimer.
+player	1579	Dato interno: canciones nuevas que Totakeke todavía no te ha tocado.
+player	1580	Dato interno: número del último mensaje que te dio Fran al llamarlo con amiibo.
+player	1581	Año de los últimos fuegos artificiales de agosto en los que participaste.
+player	1582	Ya se te ha enviado el regalo por reservar o comprar el contenido descargable.
+player	1583	Hoy Ladino te ha explicado su tienda en la plaza de la isla de Fauno.
+player	1584	Hoy has hablado con Ladino en la apertura de su tienda en la plaza de la isla de Fauno.
+player	1585	Ladino te ha explicado su tienda de la plaza de la isla de Fauno.
+player	1586	Hoy has jugado al sorteo de Ladino en la plaza de la isla de Fauno.
+player	1588	Año del último 1 de mayo en el que participaste.
+player	1589	Ladino te ha explicado los helados.
+player	1590	Ladino te ha explicado las bebidas en lata.
+player	1591	Hoy has hablado con Ladino en la plaza de la isla de Fauno.
+player	1593	Has desbloqueado la iluminación personalizada en Happy Home Paradise.
+player	1594	Le enseñaste una criatura marina a Sócrates cuando el museo aún era una tienda de campaña.
+player	1595	Hoy has comprado una obra de arte a Ladino en la plaza de la isla de Fauno.
+player	1596	El Comercio Nook ya vende la receta del kit de escalera.
+player	1597	El Nookcajero ya vende la licencia de decoración profesional.
+player	1598	Hoy has hablado con Paca en la plaza de la isla de Fauno.
+player	1599	El Nookcajero ya vende el pack de reacciones de la versión 2.0.
+player	1600	El Nookcajero ya vende el pack de peinados de la versión 2.0.
+player	1601	Hoy ya han contado los estiramientos para tus logros.
+player	1602	El Nookcajero ya vende la app de consejos.
+player	1603	Dato interno: si te quedaste a punto de encontrar el tesoro.
+player	1604	Has usado alguna vez una pared de acento en Happy Home Paradise.
+player	1605	Has desbloqueado el trapo de limpieza en Happy Home Paradise (1).
+player	1606	Has desbloqueado el trapo de limpieza en Happy Home Paradise (2).
+player	1608	Has desbloqueado los sonidos ambientales en Happy Home Paradise (1).
+player	1609	Has desbloqueado los sonidos ambientales en Happy Home Paradise (2).
+player	1610	Has desbloqueado los sonidos ambientales en Happy Home Paradise (3).
+player	1612	Dato interno: desbloqueo pendiente de los sonidos ambientales (1) en Happy Home Paradise.
+player	1613	Dato interno: desbloqueo pendiente de los sonidos ambientales (2) en Happy Home Paradise.
+player	1614	Dato interno: desbloqueo pendiente de los sonidos ambientales (3) en Happy Home Paradise.
+player	1616	Has desbloqueado el cambio de tamaño de las habitaciones en Happy Home Paradise.
+player	1617	Sócrates te ha saludado tras terminarse la cafetería del museo.
+player	1618	Tendo te explicará el traje de buceo cuando lo compres.
+player	1619	Hoy ya has preguntado a alguien por la puntuación de la Academia Happy Home.
+player	1620	El Nookcajero ya vende el pack de reacciones de la versión 1.6.
+player	1621	El Nookcajero ya vende el pack «¡Más peinados! x6» de la versión 1.6.
+player	1622	El Nookcajero ya vende la licencia para construir más puentes y cuestas.
+player	1623	Sócrates te ha contado que va a preparar pósteres del museo.
+player	1624	Te sale la opción de comprarle pósteres del museo a Sócrates.
+player	1625	Has desbloqueado la compra del póster de bichos del museo.
+player	1626	Has desbloqueado la compra del póster de peces del museo.
+player	1627	Has desbloqueado la compra del póster de fósiles del museo.
+player	1628	Has desbloqueado la compra del póster de obras de arte del museo.
+player	1629	Has desbloqueado la compra del póster de criaturas marinas del museo.
+player	1630	Hoy has hablado con Tórtimer por primera vez.
+player	1631	Globos que has derribado en total (para la app de consejos).
+player	1632	Has comprado al menos 15 veces nabos a Juliana (para la app de consejos).
+player	1636	Has visto el primer aviso del modo decoración+ en tu casa o en el estudio de fotos.
+player	1637	Has visto el aviso de que el modo decoración+ ya permite ajustar la iluminación.
+player	1638	Has visto el primer aviso de que se han desbloqueado los sonidos ambientales.
+player	1639	Has visto el aviso de los sonidos ambientales añadidos (1).
+player	1640	Has visto el aviso de los sonidos ambientales añadidos (2).
+player	1641	Tom Nook ve que intentas construir un noveno puente o cuesta teniendo la licencia de ampliación.
+player	1642	Has visto el primer aviso del trapo de limpieza al entrar en tu casa o en el estudio de tu isla.
+player	1643	Has visto el aviso de las novedades del trapo de limpieza en Happy Home Paradise.
+player	1644	Has conseguido un inodoro (para la app de consejos).
+player	1645	Has conseguido un arbusto (para la app de consejos).
+player	1646	Has conseguido un tocador (para la app de consejos).
+player	1647	Excursiones seguidas con Capitán sin llegar a una isla rara.
+player	1648	Excursiones seguidas con Capitán sin llegar a la isla de los giroides.
+player	1649	Excursiones seguidas con Capitán sin llegar a la isla de las verduras.
+player	1650	Excursiones seguidas con Capitán sin llegar a la isla de Happy Home Paradise.
+player	1651	Has llegado al máximo de la bonificación diaria de millas del Nookcajero (para la app de consejos).
+player	1652	Millas Nook que te ha dado hoy la bonificación diaria del Nookcajero.
+player	1653	Hoy has pedido un café para tomar en El Alpiste.
+player	1654	Tendo te ha saludado por el Black Friday al entrar en la tienda.
+player	1655	Veces que has hecho bricolaje o has cocinado (para la app de consejos).
+player	1656	Has recibido todos los premios de los estiramientos, hasta el batido de proteínas.
+player	1657	Año en el que hablaste con Córnimer.
+player	1658	Tienes más de 100 cartas guardadas y alguna sin abrir (para la app de consejos).
+player	1659	Paso de las charlas de Matías sobre las casas que has visitado en Happy Home Paradise.
+player	1660	Días anteriores en los que no fuiste a los estiramientos (para la app de consejos).
+player	1661	Has visto la explicación al abrir la página de un miembro de la Red Happy Home.
+player	1662	Has visto la explicación al abrir tu propia página de la Red Happy Home.
+player	1663	Tras tus primeras bodas de junio pasaste directamente al evento de ampliación de la isla de Fauno.
+player	1664	Se te devolverán las millas Nook gastadas en la licencia de decoración profesional.
+player	1665	Es la primera vez que abres la app de Happy Home Paradise en el NookPhone.
+player	1666	Este año has llamado a Fran con un amiibo en El Alpiste y has hablado con él.
+player	1667	Marilín tiene pendiente comentar que has completado las bodas de junio.
+player	1668	Capitán te ha explicado las enredaderas durante una excursión.
+player	1669	Se ha guardado el recuerdo de estar en tu isla durante los fuegos artificiales de agosto.
+player	1670	Se ha guardado el recuerdo de tu primer salto al mar con el traje de buceo.
+player	1671	Has visto el primer aviso del modo decoración+ en Happy Home Paradise.
+player	1672	Has visto la explicación de las funciones en línea de la app de Happy Home Paradise.
+player	1673	El Nookcajero ya vende el cajero automático.
+player	1674	El Nookcajero ya vende el cobertizo y su receta.
+player	1676	Has visto el primer aviso del boceto de habitación.
+player	1677	Has visto la ampliación de la plaza de la isla de Fauno (o su primer evento).
+player	1678	Has oído el anuncio de la mañana sobre las excursiones de Capitán.
+player	1679	Tu personaje se creó después de que empezaran las excursiones de Capitán.
+player	1680	Se ha guardado el recuerdo de coger el primer pétalo de cerezo del día.
+player	1681	Se ha guardado el recuerdo de coger el primer copo de nieve del día.
+player	1682	Se ha guardado el recuerdo de coger la primera hoja de arce del día.
+player	1683	Se ha guardado el recuerdo de coger el primer brote de bambú del día.
+player	1684	Se ha guardado el recuerdo de coger la primera concha de verano del día.
+player	1685	Se ha guardado el recuerdo de coger la primera bellota del día.
+player	1686	Se ha guardado el recuerdo de coger la primera piña del día.
+player	1687	Has terminado de ver el primer aviso de la Red Happy Home.
+player	1688	Hoy has jugado a Happy Home Paradise.
+player	1689	La última vez que jugaste, jugaste a Happy Home Paradise.
+player	1690	Sócrates te ha dado el póster de bichos del museo.
+player	1691	Sócrates te ha dado el póster de peces del museo.
+player	1692	Sócrates te ha dado el póster de fósiles del museo.
+player	1693	Sócrates te ha dado el póster de obras de arte del museo.
+player	1694	Sócrates te ha dado el póster de criaturas marinas del museo.
+player	1695	Tom Nook te ha hablado en el aeródromo de la jornada de personalización de muebles.
+player	1696	Se ha guardado el recuerdo de coger la primera seta elegante del día.
+player	1697	Se ha guardado el recuerdo de coger la primera seta redonda del día.
+player	1698	Se ha guardado el recuerdo de coger la primera seta alargada del día.
+player	1699	Se ha guardado el recuerdo de coger la primera seta plana del día.
+player	1700	Se ha guardado el recuerdo de coger la primera seta rara del día.
+player	1701	Has elegido no recibir más consejos de la app de consejos.
+player	1702	El Nookcajero también vende el maillot de los estiramientos.
+player	1703	El Nookcajero también vende la esterilla de yoga de los estiramientos.
+player	1706	Rafa te explicó la opción de «ir a trabajar» junto con otras novedades.
+player	1707	Has visto el aviso de que llevas el trapo de limpieza con la puerta de embarque abierta.
+player	1709	Has visto en tu página de la Red Happy Home el aviso de elegir entre los ejemplos de casas.
+player	1710	Tom Nook te ha explicado por primera vez cómo redecorar las casas de los vecinos.
+player	1711	Veces que has redecorado hoy casas de vecinos.
+player	1712	Has oído en el anuncio de la mañana la pista sobre el traje de buceo.
+player	1713	Has visto la explicación de compartir en redes tras tu primera publicación en la Red Happy Home.
+player	1714	Veces que has plantado cocos en la arena.
+player	1715	Veces que has plantado brotes de bambú.
+player	1716	Te has comido algún plato al menos una vez.
+player	1717	Veces que has abierto la app de consejos.
+player	1718	Has usado alguna vez la varita mágica.
+player	1719	Has leído un amiibo en la cafetería El Alpiste.
+player	1720	Has leído un amiibo en el estudio de fotos de Fauno.
+player	1721	Le has pedido a Al que personalice un mueble.
+player	1722	Le has pedido a Al una personalización que solo él sabe hacer.
+player	1723	Has visto el primer consejo fijo de bienvenida (1).
+player	1724	Has visto el primer consejo fijo de bienvenida (2).
+player	1725	Has visto el primer consejo fijo tras desbloquear Happy Home Paradise.
+player	1726	Conociste a Gandulio en la plaza de la isla de Fauno.
+player	1727	Salmones que has pescado después de aprender tu primera receta de cocina.
+player	1728	Tom Nook te llamará para presentarte la redecoración de casas de vecinos.
+player	1729	Has oído la llamada de Tom Nook que desbloquea la redecoración de casas de vecinos.
+player	1730	Veces que le has comprado plantones de verduras a Gandulio.
+player	1731	Hoy le has comprado verduras a Gandulio.
+player	1732	Hoy le has comprado algo a Gandulio.
+player	1734	Has cancelado el aviso diario de compartir en redes tras publicar en la Red Happy Home.
+player	1736	Has hecho el segundo encargo de Happy Home Paradise (jardín: estación, hora y edición del jardín).
+player	1737	Has completado el primer encargo de Happy Home Paradise (se desbloquean los muebles de audio).
+player	1738	Le has pagado a Tom Nook algún traslado de edificio desde la versión 2.0.
+player	1739	Tom Nook te ha enviado la carta de la bajada de precio de los traslados.
+player	1740	Al mudarte solo tú, te devolvieron 8000 bayas por el traslado de tu casa.
+player	1741	Has completado el sexto encargo de Happy Home Paradise (banco de trabajo del piso de arriba).
+player	1742	Ha pasado un día desde que se desbloquearon las botellas con mensaje en el archipiélago.
+player	1743	Se ha terminado la escuela de Happy Home Paradise (se desbloquean el personal y las reformas).
+player	1744	Has completado la clase de Gandulio en la escuela (se desbloquean algunas flores híbridas).
+player	1745	Te ha llegado la carta que anuncia que se han terminado los Servicios a residentes.
+player	1746	Has visto un anuncio de Tom Nook por megafonía en la versión 2.0 o posterior.
+player	1747	Ya está terminada la cafetería o el restaurante de Happy Home Paradise.
+player	1748	Se ha desbloqueado el catálogo de los muebles de bricolaje que ya has fabricado.
+player	1749	Has leído un amiibo en el Nookcajero.
+player	1750	Se han desbloqueado las casas compartidas en Happy Home Paradise.
+player	1751	Se ha terminado la cafetería de Happy Home Paradise.
+player	1752	Se ha terminado el restaurante de Happy Home Paradise.
+player	1753	Se ha terminado el hospital de Happy Home Paradise.
+player	1754	Se ha terminado la tienda de ropa de Happy Home Paradise.
+player	1755	Se ha completado la recaudación de fondos para el hospital de Happy Home Paradise.
+player	1756	Aún falta por terminar la cafetería o el restaurante de Happy Home Paradise.
+player	1757	Has visto la escena que desbloquea el lector de amiibo en Happy Home Paradise.
+player	1758	Paso de la carta de Juliana al construirse el Comercio Nook.
+player	1759	Te han explicado que se ha desbloqueado el catálogo de Matías.
+player	1760	Se ha desbloqueado el cajero automático de la oficina de Happy Home Paradise.
+player	1761	Hoy has mirado el cajero automático de la plaza de la isla de Fauno.
+player	1762	Fauno te ha hablado del cajero automático.
+player	1763	Tom Nook anunciará la redecoración de casas de vecinos cuando se terminen los Servicios a residentes.
+player	1764	Oíste la llamada de Tom Nook pero te mudaste solo tú sin desbloquear la redecoración de casas.
+player	1765	Has visto la explicación de la función de visitas de la Red Happy Home.
+player	1766	Has oído el aviso del Carnaval en el anuncio de la mañana.
+player	1767	Has visto en tu isla actual la escena que desbloquea Happy Home Paradise.
+player	1768	Rodri te ha contado que ya hay vuelos directos a la isla de Fauno y a Happy Home Paradise.
+player	1769	Las bolsas de poki ya salen en el catálogo del estudio y de Happy Home Paradise.
+player	1770	Has oído el aviso del torneo de pesca de enero en el anuncio de la mañana.
+player	1771	Has oído el aviso del torneo de pesca de abril en el anuncio de la mañana.
+player	1772	Has oído el aviso del torneo de pesca de julio en el anuncio de la mañana.
+player	1773	Has oído el aviso del torneo de pesca de octubre en el anuncio de la mañana.
+player	1774	Has oído el aviso del torneo de bichos en el anuncio de la mañana (1).
+player	1775	Has oído el aviso del torneo de bichos en el anuncio de la mañana (2).
+player	1776	Has oído el aviso del torneo de bichos en el anuncio de la mañana (3).
+player	1777	Has oído el aviso del torneo de bichos en el anuncio de la mañana (4).
+player	1778	Has oído el aviso de los fuegos artificiales de agosto en el anuncio de la mañana.
+player	1779	Has oído el aviso de Nochevieja en el anuncio de la mañana.
+player	1780	Tienes pendiente la llamada que anuncia el evento del 1 de mayo.
+player	1783	Hoy has tomado café en El Alpiste (para los logros).
+player	1784	Has usado alguna vez el buzón de venta de la tienda (para la app de consejos).
+player	1785	Gandulio te explicará los arbustos aparte.
+player	1786	Gandulio te ha dicho el arbusto recomendado de esta semana en la plaza de la isla de Fauno.
+player	1787	Dato interno: bloquea el trapo de limpieza mientras te mudas solo tú a otra isla.
+player	1788	Se mostrará el consejo sobre la bonificación diaria del Nookcajero.
+player	1789	Año en que la partida se devolvió a una copia anterior.
+player	1790	Mes en que la partida se devolvió a una copia anterior.
+player	1791	Día en que la partida se devolvió a una copia anterior.
+player	1792	Ya se ha comprobado si mostrar el aviso del trapo de limpieza en tu casa y el estudio.
+player	1793	Hoy has oído el aviso de que hay Black Friday.
+player	1794	Has desbloqueado el intercambio de muebles de bricolaje en el hotel.
+player	1795	En este intercambio de muebles de bricolaje has ganado la bonificación por constancia.
+player	1796	En este intercambio de muebles de bricolaje has ganado la bonificación por personalización.
+player	1797	Has ganado la bonificación por constancia en un intercambio de bricolaje jugando en línea.
+player	1798	Has ganado la bonificación por personalización en un intercambio de bricolaje jugando en línea.
+player	1799	Vales extra que Capitán te dará la próxima vez que hables con él.
+player	1800	Otra persona ha borrado la habitación que dejaste a medias en el hotel.
+player	1802	Nivel del catálogo de muebles nuevos del hotel que ya has consultado.
+player	1804	Has abierto alguna vez el catálogo de muebles nuevos del hotel.
+player	1805	Ya has entrado en la isla en línea durante esta sesión.
+player	1807	Has terminado el tutorial de decorar habitaciones del hotel.
+player	1810	Te han dado las gracias por crear la habitación VIP del hotel.
+player	1811	Hoy ya has creado la habitación VIP del hotel.
+player	1812	Dato interno: tipo de invitación del cliente VIP del hotel.
+player	1813	Has visto el primer festival de Totakeke en Happy Home Paradise.
+player	1814	Has terminado el tutorial de presentación del hotel.
+player	1815	Has terminado el tutorial del intercambio de muebles del hotel.
+player	1817	Hoy has hablado con Marimar en el hotel.
+player	1818	Última habitación del hotel cuyo desbloqueo te han anunciado (4 = hasta la habitación 4).
+player	1819	Has terminado el tutorial de la habitación VIP del hotel.
+player	1820	Te han explicado cómo está montado el hotel antes de abrir.
+player	1821	Tienes pendiente el tutorial de los maniquíes del hotel.
+player	1822	Has terminado el tutorial de los maniquíes del hotel.
+player	1823	Ya conoces a Rese T.
+player	1824	Has oído en el anuncio de la mañana que se ha terminado el edificio del hotel.
+player	1825	Has oído en el anuncio de la mañana que el hotel ha abierto.
+player	1826	Dato interno: tipo de invitación de hoy del personaje que trae huéspedes al hotel.
+player	1832	Has visto el aviso de que puedes usar el almacén al hacer bricolaje o cocinar.
+player	1833	La isla ha cambiado de día después de instalar la versión 3.0.
+player	1835	Ya tenías desbloqueado el almacén antes de la versión 3.0.
+player	1836	Hoy ya has hablado con Rese T.
+player	1837	Hoy has hablado con Rese T. por primera vez.
+player	1838	Hoy has sido tú quien ha llamado a Rese T.
+player	1839	Se ha celebrado la inauguración del hotel.
+player	1840	Le has pedido alguna vez a Rese T. que recoja.
+player	1841	Hoy le has pedido a Rese T. que recoja.
+player	1842	Se ha desbloqueado la opción de la cama para ir a la isla en línea.
+player	1843	Ya te han explicado la isla en línea.
+player	1844	Has ido alguna vez a tu propia isla en línea.
+player	1845	Te han explicado cómo cargar la isla en línea.
+player	1846	Has visto el aviso de que puedes fabricar o cocinar varias unidades a la vez.
+player	1847	Has oído la primera conversación obligatoria de la isla en línea.
+player	1848	Te acostaste en el lado derecho de la cama para ir a la isla en línea.
+player	1849	Has visto el aviso de que puedes usar los kits de personalización del almacén.
+player	1850	Veces que has creado una habitación VIP para huéspedes de las habitaciones 1 a 8.
+player	1851	Veces que has creado una habitación VIP invitando a alguien con amiibo.
+player	1852	Veces que has creado una habitación VIP en el hotel.
+player	1853	Pascal no pudo darte una perla porque llevabas los bolsillos llenos.
+player	1854	Hoy le has pagado a Rese T. por recoger.
+player	1855	Veces que has hecho bricolaje o has cocinado desde la versión 3.0.
+player	1856	Veces que has fabricado o cocinado varias unidades a la vez.
+player	1857	La primera recogida de hoy con Rese T. ha sido gratis.
+player	1858	Te han adelantado que se va a desbloquear la habitación 4 del hotel.
+player	1859	Se ha desbloqueado la colaboración con The Legend of Zelda.
+player	1860	Se ha desbloqueado la colaboración con Splatoon.
+player	1861	Te han adelantado que se van a desbloquear las habitaciones VIP del hotel.
+player	1862	Te han adelantado que se va a desbloquear la habitación 6 del hotel.
+player	1863	Te han adelantado que se va a desbloquear la habitación 8 del hotel.
+player	1864	Fuiste tú quien terminó la habitación 1 del hotel.
+player	1865	Fuiste tú quien cumplió las condiciones para desbloquear las habitaciones VIP.
+player	1866	Has llamado alguna vez a un vecino con el megáfono.
+player	1867	Te han explicado el modo Nintendo Switch 2 Edition.
+player	1868	No has escuchado la explicación de cómo decorar las habitaciones del hotel.
+player	1869	Te saltaste el tutorial de decorar habitaciones del hotel.
+player	1870	Ya conoces a Marimar.
+player	1871	Ya conoces a Rosauria.
+player	1872	Ya conoces a Conchita.
+player	1873	Hoy has visitado a Alakama en el sueño para ir a la isla en línea.
+player	1874	Has elegido alguna vez la opción de la cama para ir a la isla en línea.
+player	1875	Gandulio te ha explicado su servicio de quitar malas hierbas tras la versión 3.0.
+player	1876	Gandulio te ha explicado el nuevo precio de su servicio de quitar malas hierbas.
+player	1877	Veces que has completado un intercambio de muebles de bricolaje.
+player	1878	Puntos de bonificación por precio alto en los intercambios de muebles de bricolaje.
+player	1879	Dato interno: copia de seguridad de los puntos de bonificación por precio alto.
+player	1880	Dato interno: receta del mueble con bonificación por precio alto en los intercambios.
+player	1881	Días que lleva activo el mueble con bonificación por precio alto.
+player	1882	Vales que da el mueble con bonificación por precio alto.
+player	1883	Vales que daría el próximo mueble candidato a bonificación por precio alto.
+player	1884	Dato interno: si hoy ha salido el evento de bonificación por precio alto.
+player	1885	Días que van contando hasta el siguiente evento de bonificación por precio alto.
+player	1886	Rafa te ha quitado alguna vez a la fuerza un conjunto prestado de un maniquí.
+player	1888	Has colocado enredaderas o escaleras fijas desde la versión 3.0.
+player	1889	Hablaste con Rosauria antes del tutorial de decorar habitaciones del hotel.
+player	1891	Has conseguido alguna vez una bonificación en los intercambios de muebles de bricolaje.
+player	1892	Paso de los avisos de Rosauria sobre muebles nuevos.
+player	1893	Rosauria te ha explicado en la tienda de recuerdos que habrá más muebles.
+player	1894	Hoy has hablado con Rosauria.
+player	1898	Has visto la explicación del uso del ratón en el modo decoración.
+player	1899	Has visto la explicación del uso del ratón en los diseños personalizados.
+player	1900	Has visto la explicación del uso del ratón en el tablón de anuncios.
+player	1901	Has comprado alguna vez en el catálogo del hotel.
+player	1902	Has abierto por primera vez la app de diseños personalizados en tu isla en línea.
+player	1903	Has abierto por primera vez la app de diseños personalizados en la isla en línea de otra persona.
+player	1904	Has examinado la Famicom (mueble).
+player	1905	Has examinado la NES (mueble).
+player	1906	Has examinado el Famicom Disk System (mueble).
+player	1907	Has examinado la Super Famicom (mueble).
+player	1908	Has examinado la Super Nintendo europea (mueble).
+player	1909	Has examinado la Super Nintendo americana (mueble).
+player	1910	Has examinado la Game Boy (mueble).
+player	1911	Has examinado alguno de los muebles de la consola Famicom/NES.
+player	1912	Has visto el aviso que presenta la función LiveFace (cámara).
+player	1913	Has visto la primera explicación de la función LiveFace (cámara).
+player	1914	Has editado y guardado alguna vez el conjunto de un maniquí del hotel.
+player	1915	Ya se ha comprobado si debías recibir la carta con el megáfono.
+player	1916	Tendo te ha explicado el megáfono.
+player	1917	La tienda ya vende el megáfono.
+player	1918	Paso de la ampliación del almacén de la versión 3.0 (de 0 a 2).
+player	1919	Ya se ha comprobado si enviarte la carta de la ampliación del almacén (versión 3.0).
+player	1920	Tom Nook tiene pendiente hablarte de la nueva ampliación del almacén (versión 3.0).
+player	1922	Conchita te ha dado alguna vez la bonificación por traer huéspedes al hotel.
+player	1923	Tienes reservado el tutorial de presentación del hotel.
+player	1924	Has usado alguna vez un maniquí del hotel.
+player	1925	Ya tenías el almacén ampliado al máximo (5000) antes de la versión 3.0.
+player	1926	Has oído a Marimar decir que el hotel ha abierto.
+player	1927	Has oído la primera frase de recepción del tutorial de decorar habitaciones del hotel.
+player	1928	Hoy has terminado de decorar una habitación del hotel.
+player	1929	Te han explicado la semilla trampa en la isla en línea.
+player	1930	Conociste a Capitán en el tutorial del hotel.
+player	1931	Te han dado pistas sobre los viajes con el billete de millas Nook.
+player	1932	Capitán te explicó sus excursiones en barca después de conocerte en el tutorial del hotel.
+player	1933	Veces que has jugado a la Famicom (mueble).
+player	1934	Veces que has jugado a la NES (mueble).
+player	1935	Veces que has jugado al Famicom Disk System (mueble).
+player	1936	Veces que has jugado a la Super Famicom (mueble).
+player	1937	Veces que has jugado a la Super Nintendo europea (mueble).
+player	1938	Veces que has jugado a la Super Nintendo americana (mueble).
+player	1939	Veces que has jugado a la Game Boy (mueble).
+player	1940	Veces que has usado el megáfono.
+player	1941	Hoy has recibido la recompensa por decorar en el hotel.
+player	1942	Veces que has recibido la bonificación por precio alto en los intercambios de bricolaje.
+player	1943	Veces que has usado la varita mágica.
+player	1944	Te han explicado la primera ronda de decoración del hotel.
+player	1945	Hoy Canela te ha aconsejado esperar a que crezcan las flores para mejorar la valoración de la isla.
+player	1946	Has terminado la primera ronda de decoración del hotel.
+player	1947	Ha llegado el primer cliente en el tutorial de decorar habitaciones del hotel.
+player	1948	Veces que has ganado la bonificación por constancia en los intercambios de bricolaje.
+player	1949	Veces que has ganado la bonificación por personalización en los intercambios de bricolaje.
+player	1951	En la recepción del hotel te han explicado que ya hay habitaciones VIP.
+player	1952	Te han explicado que retocar una habitación del hotel no da recompensa.
+player	1953	Capitán tiene pendiente darte tu primera bonificación de intercambio.
+player	1954	Has abierto el chat de la consola mientras jugabas en línea.
+player	1955	Estás en la primera ronda de decoración de habitaciones VIP.
+player	1956	Has oído la primera frase de Marimar en el tutorial de decorar habitaciones.
+player	1957	Has oído la primera frase de Marimar en el tutorial de decorar habitaciones, con el hotel ya abierto.
+player	1958	Te han pedido que hagas fotos de la habitación con la app de cámara.
+player	1959	Tienes pendiente la explicación de la segunda ronda de decoración del hotel y siguientes.
+player	1960	Hoy has oído el saludo de Marimar en el hotel.
+player	1961	Has hablado con Rosauria del tutorial de decorar habitaciones (antes de hacerlo).
+player	1962	Has hablado con Rosauria de los artículos de su tienda (antes del tutorial).
+player	1963	Hoy es el día del primer festival de Totakeke en Happy Home Paradise.
+player	1964	Has oído el saludo de mañana de Marimar.
+player	1965	Has oído el saludo de mediodía de Marimar.
+player	1966	Has oído el saludo de noche de Marimar.
+player	1967	Te han contado que el hotel ha abierto.
+player	1968	Tienes pendiente la explicación final del tutorial VIP (solo desde el segundo jugador).
+player	1969	Tienes pendiente el siguiente aviso de habitaciones del hotel que se van a desbloquear.
+player	1970	Tienes pendiente el mensaje final por crear una nueva habitación VIP.
+player	1971	Tienes pendiente el mensaje final por retocar una habitación del hotel.
+player	1972	Tienes pendiente el mensaje final por crear una nueva habitación normal del hotel.
+player	1973	Tienes pendiente el mensaje final por rehacer desde cero una habitación del hotel.
+player	1974	Has oído en el anuncio de la mañana que el hotel está en obras.
+player	1975	Te han dicho que hoy ya no puedes recibir más cupones del hotel.
+player	1976	Habitación que estabas decorando cuando otra persona borró tu trabajo a medias.
+player	1977	Has invitado alguna vez a Nuria como VIP al hotel.
+player	1978	Juliana te ha enviado alguna vez brotes de bambú.
+player	1979	Hoy has hecho la segunda excursión del día con Capitán.
+player	1980	Dato interno: hoy ya se han sumado puntos del hotel por decorar una habitación.
+player	1981	Te han explicado que puedes hacer dos excursiones al día con Capitán.
+player	1982	Tom Nook ha anunciado la inauguración del hotel a quien hizo la primera habitación.
+player	1983	Se ha activado el consejo sobre la segunda excursión diaria con Capitán.
+player	1985	Rosauria te ha hablado de los cupones del hotel.
+player	1989	Hoy has hablado con Conchita.
+player	1990	Veces que has completado un intercambio de muebles de bricolaje en tu isla actual.
+player	1991	Te mudaste solo tú a otra isla llevando cupones del hotel.
+player	1992	Alakama te avisará de que te has mudado solo tú (porque ya la conocías).
+player	1993	Has visto el truco de caminar sin girarte con los permisos de construcción.
+player	1994	Has alquilado algo en el hotel de la isla de otra persona.

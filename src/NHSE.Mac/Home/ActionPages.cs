@@ -198,17 +198,17 @@ public static class ActionPages
                 Card(CardHeader("Syabon", "Tour", null, Seed(main.TourWeatherSeed, v => main.TourWeatherSeed = v)))),
             Section("Flags"),
             Tiles(2,
-                ActionCard("Book", HomeStrings.PlayerFlags, null, async () =>
+                ActionCard("Book", HomeStrings.PlayerFlags, FlagStrings.PlayerHint, async () =>
                 {
                     var pers = ctx.Player.Personal;
                     var flags = pers.GetEventFlagsPlayer();
-                    if (await ctx.Edit(new FlagEditor(flags)))
+                    if (await ctx.Edit(new EventFlagsWindow(flags, false, string.Format(FlagStrings.PlayerTitle, pers.PlayerName))))
                         pers.SetEventFlagsPlayer(flags);
                 }),
-                ActionCard("Book", HomeStrings.IslandFlags, null, async () =>
+                ActionCard("Book", HomeStrings.IslandFlags, FlagStrings.IslandHint, async () =>
                 {
                     var edit = main.EventFlagLand.ToArray();
-                    if (await ctx.Edit(new LandFlagEditor(edit)))
+                    if (await ctx.Edit(new EventFlagsWindow(edit, true, FlagStrings.IslandTitle)))
                         edit.CopyTo(main.EventFlagLand);
                 }),
                 ActionCard("Book", HomeStrings.FieldGoods, null, async () =>

@@ -720,12 +720,16 @@ public sealed class HouseWindow : NhseWindow
         p.Children.Add(Labeled(MapStrings.HouseSize, size));
         // Chosen by their pictures, among the looks the game offers to the players (those of the finished house, «04»).
         // The "order" is what the house turns into the next day: set it too, so the change stays.
+        var preview = new HousePreview { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 2, 0, 4) };
+        void ShowPreview() => preview.Set(house.RoofUniqueID.ToString(), house.WallUniqueID.ToString(), house.DoorUniqueID.ToString());
+        ShowPreview();
+        p.Children.Insert(1, preview);
         var roof = new HousePartPicker<RoofType>(HouseStyleNames.Offered<RoofType>("HouseRoofP"), house.RoofUniqueID);
-        roof.Changed += v => { house.RoofUniqueID = v; house.OrderRoofUniqueID = v; };
+        roof.Changed += v => { house.RoofUniqueID = v; house.OrderRoofUniqueID = v; ShowPreview(); };
         var walls = new HousePartPicker<WallType>(HouseStyleNames.Offered<WallType>("HouseWallP"), house.WallUniqueID);
-        walls.Changed += v => { house.WallUniqueID = v; house.OrderWallUniqueID = v; };
+        walls.Changed += v => { house.WallUniqueID = v; house.OrderWallUniqueID = v; ShowPreview(); };
         var door = new DoorPicker(house.DoorUniqueID);
-        door.Changed += v => { house.DoorUniqueID = v; house.OrderDoorUniqueID = v; };
+        door.Changed += v => { house.DoorUniqueID = v; house.OrderDoorUniqueID = v; ShowPreview(); };
         p.Children.Add(Labeled(MapStrings.Roof, roof));
         p.Children.Add(Labeled(MapStrings.Walls, walls));
         p.Children.Add(Labeled(MapStrings.Door, door));

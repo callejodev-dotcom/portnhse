@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using NHSE.Core;
@@ -109,6 +110,57 @@ public static class ExteriorPictures
         return bmp;
     }
 
+    private static readonly ConcurrentDictionary<string, (Color Main, Color Second)?> Sidings = new();
+
+    /// <summary>
+    /// Main colour of the walls in a wall picture: the most common colour below its roof, leaving out the lit
+    /// doorway, windows and shadows. Null while the picture is not there.
+    /// </summary>
+    public static Color? SidingColor(string name) => SidingColors(name)?.Main;
+
+    /// <summary>
+    /// The two most common colours of the walls in a wall picture (e.g. the plaster and the beams of a timber frame);
+    /// the second one is a clearly different colour, or the first one again. Null while the picture is not there.
+    /// </summary>
+    public static (Color Main, Color Second)? SidingColors(string name)
+    {
+        if (Get(name) is not { } bmp)
+            return null;
+        return Sidings.GetOrAdd(name, _ =>
+        {
+            var (w, h) = (bmp.PixelSize.Width, bmp.PixelSize.Height);
+            using var copy = ImageUtil.Create(w, h);
+            using (var fb = copy.Lock())
+                bmp.CopyPixels(fb);
+            var pixels = copy.GetPixels();
+            var buckets = new Dictionary<int, (long R, long G, long B, int N)>();
+            for (int y = h * 3 / 10; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    var p = (uint)pixels[(y * w) + x];
+                    if (p >> 24 < 250)
+                        continue;
+                    int r = (int)((p >> 16) & 0xFF), g = (int)((p >> 8) & 0xFF), b = (int)(p & 0xFF);
+                    if (r + g + b < 150)
+                        continue; // windows, lamps, shadows
+                    if (r > 170 && g > 120 && b < 120 && r - b > 70)
+                        continue; // the lit doorway
+                    var key = ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
+                    var (sr, sg, sb, n) = buckets.GetValueOrDefault(key);
+                    buckets[key] = (sr + r, sg + g, sb + b, n + 1);
+                }
+            }
+            if (buckets.Count == 0)
+                return null;
+            var colors = buckets.Values.OrderByDescending(z => z.N)
+                .Select(z => Color.FromRgb((byte)(z.R / z.N), (byte)(z.G / z.N), (byte)(z.B / z.N))).ToList();
+            var main = colors[0];
+            var second = colors.Skip(1).Take(12).FirstOrDefault(c => Math.Abs(c.R - main.R) + Math.Abs(c.G - main.G) + Math.Abs(c.B - main.B) > 90, main);
+            return (main, second);
+        });
+    }
+
     /// <summary>
     /// Downloads the pictures not downloaded yet, once, in the background. Does nothing without network
     /// or when NHSE_OFFLINE is set (the tests).
@@ -149,6 +201,8 @@ public static class ExteriorPictures
             // Pictures that were missing before are now on disk: forget the empty answers.
             foreach (var key in Cache.Where(z => z.Value is null).Select(z => z.Key).ToList())
                 Cache.TryRemove(key, out _);
+            foreach (var key in Sidings.Where(z => z.Value is null).Select(z => z.Key).ToList())
+                Sidings.TryRemove(key, out _);
             Dispatcher.UIThread.Post(() => PicturesChanged?.Invoke());
         }
         if (done != missing.Count)

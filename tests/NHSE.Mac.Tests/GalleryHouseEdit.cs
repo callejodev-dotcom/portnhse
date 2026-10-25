@@ -147,4 +147,28 @@ public class GalleryHouseLooks
         Assert.Equal(square, picker.Value);
         Assert.True(ExteriorPictures.Has(square.ToString()));
     }
+
+    [AvaloniaFact]
+    public void Previews()
+    {
+        (string, string, string)[] looks =
+        [
+            ("HouseRoofPA04StandardA", "HouseWallPA04StandardA", "HouseDoorVerticalWindowGR"),
+            ("HouseRoofPA04StoneE", "HouseWallPB04BrickF", "HouseDoorStandardAR"),
+            ("HouseRoofPA04ThatchedD", "HouseWallPC04JapaneseA", "HouseDoorChineseHR"),
+            ("HouseRoofPA04WesterntileB", "HouseWallPD04SoilB", "HouseDoorSimpleBR"),
+            ("HouseRoofPA03StandardC", "HouseWallPA03StandardA", "HouseDoorVerticalWindowGR"),
+            ("HouseRoofNDStoneF", "HouseWallPB04LogD", "HouseDoorLatticeDR"),
+        ];
+        var grid = new Avalonia.Controls.WrapPanel { ItemSpacing = 10, LineSpacing = 10, Margin = new Avalonia.Thickness(10) };
+        foreach (var (roof, walls, door) in looks)
+        {
+            var p = new HousePreview();
+            p.Set(roof, walls, door);
+            grid.Children.Add(p);
+        }
+        Gallery.Capture(new Avalonia.Controls.Window { Width = 1020, Height = 510, Content = grid }, "66-house-previews");
+        Assert.Equal("Brick", HousePreview.Material("HouseWallPB04BrickF", "HouseWall"));
+        Assert.Equal("Stucco", HousePreview.Material("HouseWallNDStuccoD", "HouseWall"));
+    }
 }
