@@ -100,6 +100,17 @@
     <Style Selector="ListBox.nav > ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource NhSelectedBrush}" />
     </Style>
+    <Style Selector="ListBox.designs">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.designs > ListBoxItem">
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="6,8" />
+        <Setter Property="Margin" Value="2" />
+    </Style>
+    <Style Selector="ListBox.designs > ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource NhSelectedBrush}" />
+    </Style>
     <Style Selector="Button.card">
         <Setter Property="Background" Value="{DynamicResource NhCardBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource NhCardBorderBrush}" />

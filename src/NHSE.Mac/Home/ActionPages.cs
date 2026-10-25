@@ -103,38 +103,71 @@ public static class ActionPages
                     ctx.SAV.Main.Museum = museum;
                     summary.Refresh();
                 }, summary),
-                ActionCard("Book", HomeStrings.Catalog, HomeStrings.CatalogHint, () => ctx.Edit(new ItemReceivedEditor(ctx.Player)))));
+                ActionCard("Book", HomeStrings.Catalog, HomeStrings.CatalogHint, () => ctx.Edit(new CatalogWindow(ctx.Player)))));
     }
 
     public static Control Designs(HomeContext ctx)
     {
         var main = ctx.SAV.Main;
+        var me = ctx.Player.Personal;
+
+        // Each card shows how many slots are used and the first designs; it is rebuilt after saving.
+        Button DesignCard(string icon, string title, string hint, Func<DesignSlot[]> read, Func<DesignsWindow> open)
+        {
+            var summary = new StackPanel { Spacing = 4 };
+            void Refresh()
+            {
+                var slots = read();
+                summary.Children.Clear();
+                if (slots.Length > 1)
+                    summary.Children.Add(Text(string.Format(DesignStrings.SlotsUsed, slots.Count(z => !z.IsEmpty), slots.Length), "subtle"));
+                var strip = new WrapPanel { ItemSpacing = 4, LineSpacing = 4, Margin = new Thickness(0, 4, 0, 0) };
+                foreach (var d in slots.Where(z => !z.IsEmpty).Take(8))
+                {
+                    var img = new Image { Source = d.GetPicture(1), Width = 34, Height = 34 };
+                    ToolTip.SetTip(img, d.Name);
+                    strip.Children.Add(img);
+                }
+                summary.Children.Add(strip);
+            }
+            Refresh();
+            return ActionCard(icon, title, hint, async () =>
+            {
+                if (await ctx.Edit(open()))
+                    Refresh();
+            }, summary);
+        }
+
         return Page(HomeStrings.DesignsTitle, null,
             Tiles(2,
-                ActionCard("MyDesignPro", HomeStrings.Patterns, HomeStrings.PatternsHint, async () =>
-                {
-                    var patterns = main.GetDesigns();
-                    if (await ctx.Edit(new PatternEditor(patterns, ctx.Player)))
-                        main.SetDesigns(patterns);
-                }),
-                ActionCard("MyDesignPro", HomeStrings.ProDesigns, HomeStrings.ProDesignsHint, async () =>
-                {
-                    var patterns = main.GetDesignsPRO();
-                    if (await ctx.Edit(new PatternEditorPRO(patterns, ctx.Player)))
-                        main.SetDesignsPRO(patterns);
-                }),
-                ActionCard("Flowershower", HomeStrings.FlagDesign, HomeStrings.FlagDesignHint, async () =>
-                {
-                    var patterns = new[] { main.FlagMyDesign };
-                    if (await ctx.Edit(new PatternEditor(patterns, ctx.Player)))
-                        main.FlagMyDesign = patterns[0];
-                }),
-                ActionCard("TailorTicket", HomeStrings.TailorDesigns, HomeStrings.TailorDesignsHint, async () =>
-                {
-                    var patterns = main.GetDesignsTailor();
-                    if (await ctx.Edit(new PatternEditorPRO(patterns, ctx.Player)))
-                        main.SetDesignsTailor(patterns);
-                })));
+                DesignCard("MyDesignPro", HomeStrings.Patterns, DesignStrings.PatternsHint,
+                    () => [.. main.GetDesigns().Select(z => new NormalDesign(z))],
+                    () =>
+                    {
+                        var patterns = main.GetDesigns();
+                        return DesignsWindow.Normal(HomeStrings.Patterns, patterns, me, () => main.SetDesigns(patterns));
+                    }),
+                DesignCard("MyDesignPro", HomeStrings.ProDesigns, DesignStrings.ProHint,
+                    () => [.. main.GetDesignsPRO().Select(z => new ProDesign(z))],
+                    () =>
+                    {
+                        var patterns = main.GetDesignsPRO();
+                        return DesignsWindow.Pro(HomeStrings.ProDesigns, patterns, me, () => main.SetDesignsPRO(patterns));
+                    }),
+                DesignCard("Flowershower", HomeStrings.FlagDesign, DesignStrings.FlagHint,
+                    () => [new NormalDesign(main.FlagMyDesign)],
+                    () =>
+                    {
+                        var patterns = new[] { main.FlagMyDesign };
+                        return DesignsWindow.Normal(HomeStrings.FlagDesign, patterns, me, () => main.FlagMyDesign = patterns[0]);
+                    }),
+                DesignCard("TailorTicket", HomeStrings.TailorDesigns, DesignStrings.TailorHint,
+                    () => [.. main.GetDesignsTailor().Select(z => new ProDesign(z))],
+                    () =>
+                    {
+                        var patterns = main.GetDesignsTailor();
+                        return DesignsWindow.Pro(HomeStrings.TailorDesigns, patterns, me, () => main.SetDesignsTailor(patterns));
+                    })));
     }
 
     public static Control Advanced(HomeContext ctx, Func<Task> classicEditor)
