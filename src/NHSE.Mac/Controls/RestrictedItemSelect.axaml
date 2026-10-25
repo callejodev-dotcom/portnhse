@@ -1,0 +1,12 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="NHSE.Mac.RestrictedItemSelect"
+             MinWidth="180">
+    <StackPanel Spacing="3">
+        <ComboBox Name="CB_ItemID" HorizontalAlignment="Stretch" MaxDropDownHeight="400" SelectionChanged="CB_ItemID_SelectedValueChanged" />
+        <StackPanel Orientation="Horizontal" Spacing="6">
+            <CheckBox Name="CHK_CustomItem" Content="Custom" IsCheckedChanged="CHK_Custom_CheckedChanged" />
+            <NumericUpDown Name="NUD_CustomItem" Maximum="65535" Width="90" IsEnabled="False" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>
