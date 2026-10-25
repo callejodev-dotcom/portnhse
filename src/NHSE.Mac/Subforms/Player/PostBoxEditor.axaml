@@ -1,0 +1,142 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.PostBoxEditor"
+        Title="Post Box Editor"
+        Width="740" Height="720" MinWidth="700" MinHeight="600">
+    <nh:NhseWindow.Styles>
+        <Style Selector="TextBlock.count">
+            <Setter Property="Margin" Value="6,0,0,0" />
+            <Setter Property="MinWidth" Value="64" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="nh|GroupBox">
+            <Setter Property="Margin" Value="0,2" />
+        </Style>
+    </nh:NhseWindow.Styles>
+
+    <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto" Margin="12">
+        <!-- Left: slot and letter text -->
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+            <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="6">
+                <TextBlock Name="L_Post_UsedSlots" Text="Used Slots:" VerticalAlignment="Center" />
+                <TextBlock Name="L_Post_UsedSlots_Value" Text="unknown" VerticalAlignment="Center" FontWeight="SemiBold" />
+            </StackPanel>
+            <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
+                <TextBlock Name="L_Post_SelectedSlot" Text="Selected Slot:" VerticalAlignment="Center" />
+                <NumericUpDown Name="NUD_Post_Slots" Value="0" Width="90" ValueChanged="LoadMailItem" />
+                <Button Name="B_Post_DumpAll" Content="Dump All" Width="96" Margin="6,0,0,0" Click="B_Dump_Click" />
+            </StackPanel>
+
+            <TextBlock Name="L_Post_To" Grid.Row="2" Text="To Line:" Margin="0,12,0,4" />
+            <TextBox Name="TB_Post_ToLine" Grid.Row="3" TextChanged="UpdateMailCounters" />
+            <TextBlock Name="L_Post_CountTo" Grid.Row="3" Grid.Column="1" Classes="count" Text="count" />
+
+            <TextBlock Name="L_Post_Message" Grid.Row="4" Text="Message:" Margin="0,8,0,4" />
+            <TextBox Name="TB_Post_Message" Grid.Row="5" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="160"
+                     VerticalContentAlignment="Top" TextChanged="UpdateMailCounters" />
+            <TextBlock Name="L_Post_CountMsg" Grid.Row="5" Grid.Column="1" Classes="count" Text="count" VerticalAlignment="Top" Margin="6,6,0,0" />
+
+            <TextBlock Name="L_Post_From" Grid.Row="6" Text="From Line:" Margin="0,8,0,4" />
+            <TextBox Name="TB_Post_FromLine" Grid.Row="7" TextChanged="UpdateMailCounters" />
+            <TextBlock Name="L_Post_CountFrom" Grid.Row="7" Grid.Column="1" Classes="count" Text="count" />
+
+            <Grid Grid.Row="8" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+                <StackPanel Spacing="2">
+                    <CheckBox Name="CK_Post_Read" Content="Mark Read" />
+                    <CheckBox Name="CK_Post_Faved" Content="Favourited" />
+                    <TextBlock Name="L_Post_Language" Text="Language:" Margin="0,8,0,4" />
+                    <ComboBox Name="CB_Post_Language" Width="140" MaxDropDownHeight="400" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Bottom" Margin="12,0,0,0">
+                    <StackPanel.Styles>
+                        <Style Selector="Button">
+                            <Setter Property="Width" Value="120" />
+                        </Style>
+                    </StackPanel.Styles>
+                    <Button Name="B_Dump" Content="Dump Mail" Click="B_Dump_Click" />
+                    <Button Name="B_Import" Content="Import Mail" Click="B_Import_Click" />
+                    <Button Name="B_Delete" Content="Delete Mail" Margin="0,10,0,0" Click="B_Delete_Click" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- Right: sender/receiver details and the attachment -->
+        <TabControl Name="TC_Post_SR" Grid.Column="1" Width="350" Margin="16,0,0,0">
+            <TabItem Name="TP_Post_SR" Header="Details">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,6,0,0" Spacing="2">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,10">
+                                <TextBlock Name="L_SenderType" Text="Sender Type" Margin="0,0,0,4" />
+                                <ComboBox Name="CB_Post_SenderType" Width="120" SelectionChanged="UpdateSenderType" />
+                            </StackPanel>
+                            <nh:GroupBox Name="GB_Post_Player" Grid.Column="1" Header="Player" Margin="10,2,0,2">
+                                <TextBox Name="TB_Post_PlayerName" />
+                            </nh:GroupBox>
+                        </Grid>
+                        <nh:GroupBox Name="GB_Post_NPC" Header="NPC">
+                            <ComboBox Name="CB_Post_NPC" HorizontalAlignment="Stretch" MaxDropDownHeight="400" SelectionChanged="UpdateSenderNPC" />
+                        </nh:GroupBox>
+                        <nh:GroupBox Name="GB_Post_Villager" Header="Villager">
+                            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                                <Border Classes="slot" Width="114" Height="114" VerticalAlignment="Top">
+                                    <Image Name="PB_Villager" Stretch="Uniform" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="10,0,0,0" Spacing="4">
+                                    <TextBlock Name="L_Sender_Edit" Text="Edit Sender:" />
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <NumericUpDown Name="NUD_Species" Value="0" Maximum="400" Width="80" ValueChanged="ChangeVillager" />
+                                        <TextBlock Name="L_Species" Text="Species" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <NumericUpDown Name="NUD_Variant" Value="0" Maximum="255" Width="80" ValueChanged="ChangeVillager" />
+                                        <TextBlock Name="L_Variant" Text="Variant" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <TextBlock Name="L_Sender_ExternalName" Text="Sender Name:" Margin="0,4,0,0" />
+                                    <TextBlock Name="L_ExternalName" Text="unknown" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock Name="L_InternalName" Grid.Row="1" Grid.ColumnSpan="2" Text="unknown" FontFamily="Menlo" FontSize="11" Margin="0,4,0,0" />
+                            </Grid>
+                        </nh:GroupBox>
+                        <nh:GroupBox Name="GB_Post_Stationery" Header="Stationery Type">
+                            <ComboBox Name="CB_Post_Stationery" HorizontalAlignment="Stretch" MaxDropDownHeight="400" />
+                        </nh:GroupBox>
+                        <nh:GroupBox Name="GB_Post_ReceiverPlayer" Header="Receiver Player">
+                            <TextBox Name="TB_Post_ReceiverPlayer" />
+                        </nh:GroupBox>
+                        <nh:GroupBox Name="GB_Post_ReceiverIsland" Header="Receiver Island">
+                            <TextBox Name="TB_Post_ReceiverIsland" />
+                        </nh:GroupBox>
+                        <TextBlock Name="L_Post_TimeStamp" Text="Timestamp:" Margin="0,6,0,4" />
+                        <CalendarDatePicker Name="CAL_PostTimestamp" Width="233" HorizontalAlignment="Left" />
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Name="TP_Post_Items" Header="Attachments">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,6,0,0" Spacing="6">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Name="L_Post_MailType" Text="Mail Type:" VerticalAlignment="Center" />
+                            <ComboBox Name="CB_Post_MailType" Width="150" SelectionChanged="UpdateMailType" />
+                        </StackPanel>
+                        <nh:GroupBox Name="GB_Post_AttachedInfo" Header="Attachment Info">
+                            <StackPanel Spacing="4">
+                                <TextBlock Name="L_Post_AttachmentSkin" Text="Attachment Skin:" />
+                                <ComboBox Name="CB_Post_AttachmentSkin" HorizontalAlignment="Stretch" MaxDropDownHeight="400" />
+                                <Border Classes="slot" CornerRadius="4" Padding="8" Margin="0,6,0,0">
+                                    <nh:ItemEditor Name="ItemEditor" HorizontalAlignment="Left" />
+                                </Border>
+                            </StackPanel>
+                        </nh:GroupBox>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0,12,0,0">
+            <Button Name="B_Cancel" Content="Cancel" Width="100" IsCancel="True" Click="B_Cancel_Click" />
+            <Button Name="B_Save" Content="Save Slot" Width="100" Classes="accent" Click="B_Save_Click" />
+        </StackPanel>
+    </Grid>
+</nh:NhseWindow>
