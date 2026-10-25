@@ -1,0 +1,53 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.SysBotUI"
+        Title="SysBotUI"
+        SizeToContent="WidthAndHeight" CanResize="False"
+        CanMinimize="False" CanMaximize="False">
+    <StackPanel Margin="12" Spacing="10" Width="250">
+        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" RowSpacing="6" ColumnSpacing="6">
+            <TextBlock Name="L_IP" Classes="label" Margin="0" Text="IP:" />
+            <TextBox Name="TB_IP" Grid.Column="1" Grid.ColumnSpan="2" Text="111.111.111.111"
+                     FontFamily="Menlo, Courier New, monospace" />
+            <TextBlock Name="L_Port" Grid.Row="1" Classes="label" Margin="0" Text="Port:" />
+            <TextBox Name="TB_Port" Grid.Row="1" Grid.Column="1" Text="6000"
+                     FontFamily="Menlo, Courier New, monospace" />
+            <Button Name="B_Connect" Grid.Row="1" Grid.Column="2" Content="Connect" MinWidth="90"
+                    Click="B_Connect_Click" />
+        </Grid>
+
+        <nh:GroupBox Name="GB_Inject" Header="Injector" IsEnabled="False">
+            <StackPanel Spacing="6">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                    <TextBlock Name="L_Offset" Classes="label" Margin="0" Text="Offset:" />
+                    <TextBox Name="RamOffset" Grid.Column="1" Width="100" MaxLength="8" Text="B27BB758"
+                             FontFamily="Menlo, Courier New, monospace" />
+                </Grid>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                    <Button Name="B_ReadCurrent" Content="Read" HorizontalAlignment="Stretch" Click="B_ReadCurrent_Click" />
+                    <Button Name="B_WriteCurrent" Grid.Column="1" Content="Write" HorizontalAlignment="Stretch" Click="B_WriteCurrent_Click" />
+                </Grid>
+                <StackPanel Margin="4,2,0,0">
+                    <CheckBox Name="CHK_AutoWrite" Content="AutoWrite" />
+                    <CheckBox Name="CHK_AutoRead" Content="AutoRead" />
+                    <CheckBox Name="CHK_Validate" Content="Validate Data" IsChecked="True" />
+                </StackPanel>
+            </StackPanel>
+        </nh:GroupBox>
+
+        <nh:GroupBox Name="GB_USB" Header="USB">
+            <StackPanel Spacing="6">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                    <TextBlock Name="L_OffsetUSB" Classes="label" Margin="0" Text="Offset:" />
+                    <TextBox Name="RamOffsetUSB" Grid.Column="1" Width="100" MaxLength="8" Text="B27BB758"
+                             FontFamily="Menlo, Courier New, monospace" />
+                </Grid>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                    <Button Name="ReadUSB" Content="Read USB" HorizontalAlignment="Stretch" Click="ReadUSB_Click" />
+                    <Button Name="WriteUSB" Grid.Column="1" Content="Write USB" HorizontalAlignment="Stretch" Click="WriteUSB_Click" />
+                </Grid>
+            </StackPanel>
+        </nh:GroupBox>
+    </StackPanel>
+</nh:NhseWindow>

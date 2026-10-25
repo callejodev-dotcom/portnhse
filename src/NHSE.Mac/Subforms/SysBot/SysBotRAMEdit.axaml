@@ -1,0 +1,32 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.SysBotRAMEdit"
+        Title="SysBotUI"
+        SizeToContent="WidthAndHeight" CanResize="False"
+        CanMinimize="False" CanMaximize="False">
+    <StackPanel Margin="12" Spacing="10">
+        <Grid ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto,Auto" RowSpacing="6" ColumnSpacing="6">
+            <TextBlock Name="L_IP" Classes="label" Margin="0" Text="IP:" />
+            <TextBox Name="TB_IP" Grid.Column="1" Grid.ColumnSpan="2" Text="111.111.111.111"
+                     FontFamily="Menlo, Courier New, monospace" />
+            <TextBlock Name="L_Port" Grid.Row="1" Classes="label" Margin="0" Text="Port:" />
+            <TextBox Name="TB_Port" Grid.Row="1" Grid.Column="1" Width="70" Text="6000"
+                     FontFamily="Menlo, Courier New, monospace" />
+            <Button Name="B_Connect" Grid.Row="1" Grid.Column="2" Content="Connect" MinWidth="90"
+                    HorizontalAlignment="Stretch" Click="B_Connect_Click" />
+        </Grid>
+        <nh:GroupBox Name="GB_Inject" Header="Injector" IsEnabled="False">
+            <Grid ColumnDefinitions="Auto,100,Auto" RowDefinitions="Auto,Auto" RowSpacing="6" ColumnSpacing="6">
+                <TextBlock Name="L_Offset" Classes="label" Margin="0" Text="Offset:" />
+                <TextBox Name="RamOffset" Grid.Column="1" MaxLength="8" Text="B27BB758"
+                         FontFamily="Menlo, Courier New, monospace" />
+                <TextBlock Name="L_Length" Grid.Row="1" Classes="label" Margin="0" Text="Length:" />
+                <NumericUpDown Name="NUD_Offset" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="8192" Value="1024"
+                               TextAlignment="Right" />
+                <Button Name="B_Edit" Grid.Column="2" Grid.RowSpan="2" Content="Edit" Width="70"
+                        VerticalAlignment="Stretch" Click="B_Edit_Click" />
+            </Grid>
+        </nh:GroupBox>
+    </StackPanel>
+</nh:NhseWindow>

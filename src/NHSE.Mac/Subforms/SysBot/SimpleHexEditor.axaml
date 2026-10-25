@@ -1,0 +1,16 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.SimpleHexEditor"
+        Title="RAM Edit"
+        Width="440" Height="400" MinWidth="300" MinHeight="220"
+        CanMinimize="False" CanMaximize="False">
+    <Grid RowDefinitions="*,Auto" Margin="10">
+        <TextBox Name="RTB_RAM" AcceptsReturn="True" TextWrapping="Wrap" Padding="6,4,16,4"
+                 FontFamily="Menlo, Courier New, monospace" FontSize="12"
+                 VerticalContentAlignment="Top"
+                 ScrollViewer.VerticalScrollBarVisibility="Visible" />
+        <Button Name="B_Update" Grid.Row="1" Content="Update" Margin="0,8,0,0"
+                HorizontalAlignment="Stretch" Click="Update_Click" />
+    </Grid>
+</nh:NhseWindow>
