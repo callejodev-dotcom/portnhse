@@ -16,7 +16,7 @@ namespace NHSE.Mac;
 public sealed partial class HomeWindow : NhseWindow
 {
     private readonly HomeContext Ctx;
-    private bool Dirty;
+    internal bool Dirty { get; private set; }
     private bool CloseConfirmed;
     private DateTime? LastSaved;
 

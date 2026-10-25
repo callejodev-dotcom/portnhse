@@ -27,7 +27,8 @@ public static class ActionPages
             ctx.MarkDirty();
         };
 
-        var airport = new ComboBox { ItemsSource = Enum.GetNames<AirportColor>(), SelectedIndex = (int)main.AirportThemeColor, MinWidth = 160, Margin = new Thickness(0, 6, 0, 0) };
+        string[] airportColors = [HomeStrings.ColorBlue, HomeStrings.ColorYellow, HomeStrings.ColorOrange, HomeStrings.ColorGreen]; // AirportColor order
+        var airport = new ComboBox { ItemsSource = airportColors, SelectedIndex = (int)main.AirportThemeColor, MinWidth = 160, Margin = new Thickness(0, 6, 0, 0) };
         airport.SelectionChanged += (_, _) =>
         {
             if (airport.SelectedIndex < 0 || (int)main.AirportThemeColor == airport.SelectedIndex)

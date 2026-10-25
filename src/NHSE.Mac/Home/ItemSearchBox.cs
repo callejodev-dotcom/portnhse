@@ -64,7 +64,7 @@ public sealed class ItemSearchBox : UserControl
     {
         if (only is { } fixedCategory)
             Category = fixedCategory;
-        Search = new TextBox { PlaceholderText = HomeStrings.SearchItem };
+        Search = new TextBox { PlaceholderText = HomeStrings.SearchItemShort };
         Results = new ListBox
         {
             Height = height,
@@ -105,10 +105,15 @@ public sealed class ItemSearchBox : UserControl
             }
         };
 
-        var panel = new StackPanel();
+        var top = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 6 };
         if (only is null)
-            panel.Children.Add(Chips());
-        panel.Children.Add(Search);
+            top.Children.Add(CategoryPicker());
+        Grid.SetColumn(Search, only is null ? 1 : 0);
+        Grid.SetColumnSpan(Search, only is null ? 1 : 2);
+        top.Children.Add(Search);
+
+        var panel = new StackPanel();
+        panel.Children.Add(top);
         panel.Children.Add(Results);
         Content = panel;
         Filter();
@@ -122,25 +127,54 @@ public sealed class ItemSearchBox : UserControl
             ItemChosen?.Invoke(e.Id, e.Count);
     }
 
-    private WrapPanel Chips()
+    /// <summary>
+    /// Category as a popup button with the game's icons, next to the search box.
+    /// </summary>
+    private ComboBox CategoryPicker()
     {
-        var panel = new WrapPanel { ItemSpacing = 4, LineSpacing = 4, Margin = new Thickness(0, 0, 0, 8) };
-        var chips = new List<ToggleButton>();
-        foreach (var c in Enum.GetValues<ItemCategory>())
+        var cb = new ComboBox
         {
-            var chip = new ToggleButton { Content = GetName(c), IsChecked = c == Category, Classes = { "chip" } };
-            chip.Click += (_, _) =>
+            ItemsSource = Enum.GetValues<ItemCategory>(),
+            SelectedItem = Category,
+            Width = 170,
+            MaxDropDownHeight = 520,
+            ItemTemplate = new FuncDataTemplate<ItemCategory>((c, _) =>
+            {
+                var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+                row.Children.Add(HomeUi.Icon(GetIcon(c), 20));
+                row.Children.Add(new TextBlock { Text = GetName(c), VerticalAlignment = VerticalAlignment.Center });
+                return row;
+            }),
+        };
+        cb.SelectionChanged += (_, _) =>
+        {
+            if (cb.SelectedItem is ItemCategory c)
             {
                 Category = c;
-                foreach (var other in chips)
-                    other.IsChecked = other == chip;
                 Filter();
-            };
-            chips.Add(chip);
-            panel.Children.Add(chip);
-        }
-        return panel;
+            }
+        };
+        return cb;
     }
+
+    public static string GetIcon(ItemCategory c) => c switch
+    {
+        ItemCategory.All => "Leaf",
+        ItemCategory.Furniture => "Lantern",
+        ItemCategory.Walls => "Carpet",
+        ItemCategory.Clothes => "Onepiece",
+        ItemCategory.Tools => "Scoop",
+        ItemCategory.Materials => "DIYWoodNormal",
+        ItemCategory.Food => "Apple",
+        ItemCategory.Plants => "Seedling",
+        ItemCategory.Fish => "FishTai",
+        ItemCategory.Bugs => "InsMonshirocho",
+        ItemCategory.Sea => "Tako",
+        ItemCategory.Fossils => "FossilJ",
+        ItemCategory.Art => "Haniwa",
+        ItemCategory.Recipes => "PaperRecipe",
+        _ => "Present",
+    };
 
     public static string GetName(ItemCategory c) => c switch
     {

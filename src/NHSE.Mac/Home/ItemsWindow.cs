@@ -435,7 +435,13 @@ public sealed class ItemsWindow : NhseWindow
         // Gift wrap
         if (kind != ItemKind.Kind_MessageBottle && id < 60_000)
         {
-            var papers = Enum.GetNames<ItemWrappingPaper>();
+            string[] papers = // ItemWrappingPaper order
+            [
+                HomeStrings.ColorYellow, HomeStrings.ColorPink, HomeStrings.ColorOrange, HomeStrings.ColorLightGreen,
+                HomeStrings.ColorGreen, HomeStrings.ColorMint, HomeStrings.ColorLightBlue, HomeStrings.ColorPurple,
+                HomeStrings.ColorNavy, HomeStrings.ColorBlue, HomeStrings.ColorWhite, HomeStrings.ColorRed,
+                HomeStrings.ColorGold, HomeStrings.ColorBrown, HomeStrings.ColorGray, HomeStrings.ColorBlack,
+            ];
             var paper = new ComboBox { ItemsSource = papers, SelectedIndex = (int)item.WrappingPaper, MinWidth = 140, IsVisible = item.WrappingType != 0 };
             var gift = new CheckBox { Content = HomeStrings.Gift, IsChecked = item.WrappingType != 0 };
             void ApplyGift()

@@ -21,6 +21,11 @@ public partial class App : Application
     /// </summary>
     public static event Action<string>? LanguageChanged;
 
+    /// <summary>
+    /// Set while the app quits (⌘Q), when windows are closed in no particular order.
+    /// </summary>
+    public static bool ShuttingDown { get; internal set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -38,7 +43,12 @@ public partial class App : Application
             var main = new MainWindow();
             desktop.MainWindow = main;
             desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
-            desktop.ShutdownRequested += (_, _) => Program.SaveSettings();
+            desktop.ShutdownRequested += (_, e) =>
+            {
+                ShuttingDown = !e.Cancel;
+                Program.SaveSettings();
+            };
+            desktop.Exit += (_, _) => ShuttingDown = true;
             TranslateAppMenu();
             LanguageChanged += _ => TranslateAppMenu();
 

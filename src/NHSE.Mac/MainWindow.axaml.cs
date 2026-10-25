@@ -15,6 +15,11 @@ public partial class MainWindow : Window
 
     private readonly List<string> Pending = [];
 
+    /// <summary>
+    /// Editor windows opened from here.
+    /// </summary>
+    internal readonly List<HomeWindow> Editors = [];
+
     public MainWindow()
     {
         Instance = this;
@@ -144,23 +149,36 @@ public partial class MainWindow : Window
         Program.SaveSettings();
 
         var editor = new HomeWindow(sav);
+        Editors.Add(editor);
         editor.Closed += (_, _) =>
         {
-            if (!UiUtil.GetWindows().OfType<HomeWindow>().Any(z => z != editor))
-            {
-                LoadText();
-                Show();
-                Activate();
-            }
+            Editors.Remove(editor);
+            // When quitting, the launcher may already be closed: a closed window can't be shown again.
+            if (IsClosed || App.ShuttingDown || Editors.Count != 0)
+                return;
+            LoadText();
+            Show();
+            Activate();
         };
         editor.Show();
         Hide();
         return true;
     }
 
+    /// <summary>
+    /// True once the launcher has been closed (it can't be shown again).
+    /// </summary>
+    internal bool IsClosed { get; private set; }
+
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         Program.SaveSettings();
         base.OnClosing(e);
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        IsClosed = true;
+        base.OnClosed(e);
     }
 }
