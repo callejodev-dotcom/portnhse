@@ -1,0 +1,139 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.Editor"
+        Title="NHSE"
+        Width="600" Height="470" MinWidth="560" MinHeight="440"
+        WindowStartupLocation="CenterScreen"
+        Icon="/Assets/icon.png">
+    <TabControl Name="TC_Editors" Margin="8,4,8,8">
+        <TabItem Name="Tab_Players" Header="Players">
+            <Grid ColumnDefinitions="170,*" Margin="4,8,4,4">
+                <!-- Left: player selection, photo and the editors -->
+                <StackPanel Spacing="8">
+                    <ComboBox Name="CB_Players" HorizontalAlignment="Stretch" SelectionChanged="LoadPlayer" />
+                    <Border Classes="slot" Width="160" Height="150" HorizontalAlignment="Left">
+                        <Image Name="PB_Player" Stretch="Uniform">
+                            <Image.ContextMenu>
+                                <ContextMenu Name="CM_Picture">
+                                    <MenuItem Name="Menu_SavePNG" Header="Save .png" Click="Menu_SavePNG_Click" />
+                                </ContextMenu>
+                            </Image.ContextMenu>
+                        </Image>
+                    </Border>
+                    <Button Name="B_EditPlayerItems" Content="Edit Items" Height="40" HorizontalAlignment="Stretch" Click="B_EditPlayerItems_Click" />
+                    <Button Name="B_EditPlayer" Content="Edit Player..." Height="40" HorizontalAlignment="Stretch">
+                        <Button.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <MenuItem Name="B_EditPlayerStorage" Header="Edit Storage" Click="B_Storage_Click" />
+                                <MenuItem Name="B_EditPlayerReceivedItems" Header="Edit Received Items" Click="B_EditPlayerReceivedItems_Click" />
+                                <MenuItem Name="B_EditAchievements" Header="Edit Achievements" Click="B_EditAchievements_Click" />
+                                <MenuItem Name="B_EditPlayerRecipes" Header="Edit Recipes" Click="B_EditPlayerRecipes_Click" />
+                                <MenuItem Name="B_EditPlayerPostBox" Header="Edit Post Box" Click="B_EditPlayerPostBox_Click" />
+                                <MenuItem Name="B_EditPlayerFlags" Header="Edit Flags" Click="B_EditPlayerFlags_Click" />
+                                <MenuItem Name="B_EditPlayerReactions" Header="Edit Reactions" Click="B_EditPlayerReactions_Click" />
+                                <MenuItem Name="B_EditPlayerMisc" Header="Edit Misc" Click="B_EditPlayerMisc_Click" />
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
+
+                <!-- Right: values -->
+                <Grid Grid.Column="1" Margin="12,0,0,0" ColumnDefinitions="Auto,150,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                    <Grid.Styles>
+                        <Style Selector="Grid > :is(Control)">
+                            <Setter Property="Margin" Value="0,2" />
+                        </Style>
+                    </Grid.Styles>
+                    <TextBlock Name="L_PlayerName" Classes="label" Text="Player Name:" />
+                    <TextBox Name="TB_Name" Grid.Column="1" MaxLength="10" />
+                    <TextBlock Name="L_TownName" Grid.Row="1" Classes="label" Text="Town Name:" />
+                    <TextBox Name="TB_TownName" Grid.Row="1" Grid.Column="1" MaxLength="10" />
+
+                    <TextBlock Name="L_Wallet" Grid.Row="2" Classes="label" Text="Wallet:" />
+                    <NumericUpDown Name="NUD_Wallet" Grid.Row="2" Grid.Column="1" Maximum="2147483647" ValueChanged="NUD_Wallet_ValueChanged" />
+                    <TextBlock Name="L_BankBells" Grid.Row="3" Classes="label" Text="Bank Bells:" />
+                    <NumericUpDown Name="NUD_BankBells" Grid.Row="3" Grid.Column="1" Maximum="2147483647" />
+                    <TextBlock Name="L_NookMiles" Grid.Row="4" Classes="label" Text="Nook Miles:" />
+                    <NumericUpDown Name="NUD_NookMiles" Grid.Row="4" Grid.Column="1" Maximum="2147483647" />
+                    <TextBlock Name="L_EarnedMiles" Grid.Row="5" Classes="label" Text="Earned Miles:" />
+                    <NumericUpDown Name="NUD_TotalNookMiles" Grid.Row="5" Grid.Column="1" Maximum="2147483647" />
+
+                    <TextBlock Name="L_StorageCount" Grid.Row="6" Classes="label" Text="Storage Count" Margin="0,10,6,2" />
+                    <NumericUpDown Name="NUD_StorageCount" Grid.Row="6" Grid.Column="1" Maximum="2147483647" Margin="0,10,0,2" />
+                    <TextBlock Name="L_PocketCount1" Grid.Row="7" Classes="label" Text="Pocket Count 1" />
+                    <NumericUpDown Name="NUD_PocketCount1" Grid.Row="7" Grid.Column="1" Maximum="2147483647" ValueChanged="NUD_PocketCount_ValueChanged" />
+                    <TextBlock Name="L_PocketCount2" Grid.Row="8" Classes="label" Text="Pocket Count 2" />
+                    <NumericUpDown Name="NUD_PocketCount2" Grid.Row="8" Grid.Column="1" Maximum="2147483647" ValueChanged="NUD_PocketCount_ValueChanged" />
+
+                    <TextBlock Name="L_Poki" Grid.Row="9" Classes="label" Text="Poki:" Margin="0,10,6,2" />
+                    <NumericUpDown Name="NUD_Poki" Grid.Row="9" Grid.Column="1" Maximum="2147483647" Margin="0,10,0,2" />
+                    <TextBlock Name="L_HotelTickets" Grid.Row="10" Classes="label" Text="Hotel Tickets:" />
+                    <NumericUpDown Name="NUD_HotelTickets" Grid.Row="10" Grid.Column="1" Maximum="2147483647" />
+                </Grid>
+            </Grid>
+        </TabItem>
+
+        <TabItem Name="Tab_Villagers" Header="Villagers">
+            <ContentControl Name="PAN_Villagers" Margin="4,8,4,4" />
+        </TabItem>
+
+        <TabItem Name="Tab_Map" Header="Map">
+            <Grid Margin="4,8,4,4" ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+                <Grid.Styles>
+                    <Style Selector="Grid > Button">
+                        <Setter Property="HorizontalAlignment" Value="Stretch" />
+                        <Setter Property="VerticalAlignment" Value="Stretch" />
+                        <Setter Property="MinHeight" Value="48" />
+                        <Setter Property="Margin" Value="3" />
+                    </Style>
+                </Grid.Styles>
+
+                <Button Name="B_EditTurnipExchange" Content="Edit Turnip Exchange" Click="B_EditTurnipExchange_Click" />
+                <Button Name="B_RecycleBin" Grid.Row="1" Content="Edit Recycle Bin" Click="B_RecycleBin_Click" />
+
+                <StackPanel Grid.Column="1" Grid.RowSpan="2" Margin="6,3" Spacing="2">
+                    <TextBlock Name="L_AirportColor" Text="Airport Color" />
+                    <ComboBox Name="CB_AirportColor" HorizontalAlignment="Stretch" />
+                </StackPanel>
+
+                <Grid Grid.Column="2" Grid.ColumnSpan="2" Grid.RowSpan="2" Margin="6,3" ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto">
+                    <Grid.Styles>
+                        <Style Selector="Grid > :is(Control)">
+                            <Setter Property="Margin" Value="0,2" />
+                        </Style>
+                    </Grid.Styles>
+                    <ComboBox Name="CB_Hemisphere" HorizontalAlignment="Stretch" />
+                    <TextBlock Name="L_Hemisphere" Grid.Column="1" Text="Island Hemisphere" VerticalAlignment="Center" Margin="6,0,0,0" />
+                    <NumericUpDown Name="NUD_WeatherSeed" Grid.Row="1" Maximum="4294967295" />
+                    <TextBlock Name="L_WeatherSeed" Grid.Row="1" Grid.Column="1" Text="Island Weather Seed" VerticalAlignment="Center" Margin="6,0,0,0" />
+                    <ComboBox Name="CB_Tour_Hemisphere" Grid.Row="2" HorizontalAlignment="Stretch" />
+                    <TextBlock Name="L_Tour_Hemisphere" Grid.Row="2" Grid.Column="1" Text="Tour Hemisphere" VerticalAlignment="Center" Margin="6,0,0,0" />
+                    <NumericUpDown Name="NUD_Tour_WeatherSeed" Grid.Row="3" Maximum="4294967295" />
+                    <TextBlock Name="L_Tour_WeatherSeed" Grid.Row="3" Grid.Column="1" Text="Tour Weather Seed" VerticalAlignment="Center" Margin="6,0,0,0" />
+                </Grid>
+
+                <Button Name="B_EditPatterns" Grid.Row="3" Content="Edit Patterns" Click="B_EditPatterns_Click" />
+                <Button Name="B_EditPRODesigns" Grid.Row="3" Grid.Column="1" Content="Edit PRO Designs" Click="B_EditPRODesigns_Click" />
+                <Button Name="B_EditPatternFlag" Grid.Row="3" Grid.Column="2" Content="Edit Flag Design" Click="B_EditPatternFlag_Click" />
+                <Button Name="B_EditDesignsTailor" Grid.Row="3" Grid.Column="3" Content="Edit Tailor Designs" Click="B_EditDesignsTailor_Click" />
+
+                <Button Name="B_EditPlayerHouses" Grid.Row="5" Content="Edit Player Houses" Click="B_EditPlayerHouses_Click" />
+                <Button Name="B_EditCampsite" Grid.Row="5" Grid.Column="1" Content="Edit Campsite" Click="B_EditCampsite_Click" />
+                <Button Name="B_EditFruitFlower" Grid.Row="5" Grid.Column="2" Content="Edit Island Fruits + Flowers" Click="B_EditFruitFlower_Click" />
+                <Button Name="B_EditMap" Grid.Row="5" Grid.Column="3" Content="Edit Map...">
+                    <Button.Flyout>
+                        <MenuFlyout Placement="TopEdgeAlignedRight">
+                            <MenuItem Name="B_EditLandFlags" Header="Edit Flags" Click="B_EditLandFlags_Click" />
+                            <MenuItem Name="B_EditFieldItems" Header="Edit Field Items" Click="B_EditFieldItems_Click" />
+                            <MenuItem Name="B_EditBulletin" Header="Edit Bulletin Board" Click="B_EditBulletin_Click" />
+                            <MenuItem Name="B_EditMuseum_Click" Header="Edit Museum" Click="B_EditMuseum_Click_Click" />
+                            <MenuItem Name="B_EditVisitors" Header="Edit Visitors" Click="B_EditVisitors_Click" />
+                            <MenuItem Name="B_EditFieldGoods" Header="Edit Field Goods" Click="B_EditFieldGoods_Click" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+            </Grid>
+        </TabItem>
+    </TabControl>
+</nh:NhseWindow>

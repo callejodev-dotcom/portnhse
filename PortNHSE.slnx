@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/NHSE/">
+    <Project Path="NHSE/NHSE.Core/NHSE.Core.csproj" />
+    <Project Path="NHSE/NHSE.Injection/NHSE.Injection.csproj" />
+    <Project Path="NHSE/NHSE.Villagers/NHSE.Villagers.csproj" />
+  </Folder>
+  <Project Path="src/NHSE.Mac/NHSE.Mac.csproj" />
+  <Project Path="tests/NHSE.Mac.Tests/NHSE.Mac.Tests.csproj" />
+</Solution>

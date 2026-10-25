@@ -1,0 +1,20 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.PlayerItemEditor"
+        Title="Inventory Editor"
+        SizeToContent="WidthAndHeight" CanResize="False">
+    <Grid RowDefinitions="*,Auto" ColumnDefinitions="*,Auto" Margin="12">
+        <ContentControl Name="PAN_Items" DragDrop.AllowDrop="True" />
+        <ScrollViewer Grid.Column="1" Margin="12,0,0,0" MaxHeight="520" VerticalScrollBarVisibility="Auto">
+            <nh:ItemEditor Name="ItemEditor" DragDrop.AllowDrop="True" />
+        </ScrollViewer>
+        <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="Auto,Auto,*,Auto,*,Auto,Auto" Margin="0,12,0,0">
+            <Button Name="B_Dump" Content="Dump" Width="90" Click="B_Dump_Click" />
+            <Button Name="B_Load" Grid.Column="1" Content="Load" Width="90" Margin="6,0,0,0" Click="B_Load_Click" />
+            <Button Name="B_Inject" Grid.Column="3" Content="Inject" Width="90" Click="B_Inject_Click" />
+            <Button Name="B_Cancel" Grid.Column="5" Content="Cancel" Width="80" IsCancel="True" Click="B_Cancel_Click" />
+            <Button Name="B_Save" Grid.Column="6" Content="Save" Width="80" Margin="6,0,0,0" Classes="accent" Click="B_Save_Click" />
+        </Grid>
+    </Grid>
+</nh:NhseWindow>

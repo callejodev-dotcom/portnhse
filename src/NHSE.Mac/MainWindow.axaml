@@ -1,0 +1,38 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="NHSE.Mac.MainWindow"
+        Title="NHSE"
+        Width="520" Height="440"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        Icon="/Assets/icon.png">
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="24,20,24,18">
+        <StackPanel Orientation="Horizontal" Spacing="14">
+            <Image Source="/Assets/icon.png" Width="56" Height="56" />
+            <StackPanel VerticalAlignment="Center" Spacing="2">
+                <TextBlock Text="NHSE" FontSize="22" FontWeight="SemiBold" />
+                <TextBlock Text="Animal Crossing: New Horizons Save Editor" Classes="hint" FontSize="12" />
+            </StackPanel>
+        </StackPanel>
+
+        <Border Grid.Row="1" Name="DropZone" Margin="0,18,0,14" CornerRadius="10"
+                BorderThickness="2" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8" Margin="24">
+                <TextBlock Name="L_Drop" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                <TextBlock Name="L_DropHint" Classes="hint" TextAlignment="Center" MaxWidth="380" />
+            </StackPanel>
+        </Border>
+
+        <WrapPanel Grid.Row="2" HorizontalAlignment="Center">
+            <Button Name="B_OpenFolder" Classes="accent" Margin="4" Click="B_OpenFolder_Click" />
+            <Button Name="B_OpenFile" Margin="4" Click="B_OpenFile_Click" />
+            <Button Name="B_Reopen" Margin="4" Click="B_Reopen_Click" />
+        </WrapPanel>
+
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,14,0,0">
+            <TextBlock Name="L_Warning" Classes="hint" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Name="B_Backups" Classes="hint" Margin="12,0,0,0" Click="B_Backups_Click" />
+        </Grid>
+    </Grid>
+</Window>

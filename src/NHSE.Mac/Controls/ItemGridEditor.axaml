@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="NHSE.Mac.ItemGridEditor">
+    <Grid Name="FLP_Controls" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto">
+        <TextBlock Name="L_ItemName" Grid.ColumnSpan="2" Height="22" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="2,0,0,4" />
+        <Panel Name="ItemGrid" Grid.Row="1" Background="Transparent" />
+        <StackPanel Name="PAN_Navigation" Grid.Row="1" Grid.Column="1" Width="90" Margin="8,0,0,0" Spacing="6">
+            <Button Name="B_Up" Content="↑" Height="34" HorizontalAlignment="Stretch" IsVisible="False" Click="B_Up_Click" />
+            <TextBlock Name="L_Page" Text="250/250" HorizontalAlignment="Center" IsVisible="False" />
+            <Button Name="B_Down" Content="↓" Height="34" HorizontalAlignment="Stretch" IsVisible="False" Click="B_Down_Click" />
+            <Button Name="B_Clear" Content="Clear" Height="34" HorizontalAlignment="Stretch" Margin="0,12,0,0">
+                <Button.Flyout>
+                    <MenuFlyout Placement="RightEdgeAlignedTop">
+                        <MenuItem Name="B_ClearAll" Header="All" Click="B_ClearAll_Click" />
+                        <MenuItem Name="B_ClearClothing" Header="Clothing" Click="B_ClearClothing_Click" />
+                        <MenuItem Name="B_ClearCrafting" Header="Crafting Materials" Click="B_ClearCrafting_Click" />
+                        <MenuItem Name="B_ClearBugs" Header="Bugs" Click="B_ClearBugs_Click" />
+                        <MenuItem Name="B_ClearFish" Header="Fish" Click="B_ClearFish_Click" />
+                        <MenuItem Name="B_ClearFurniture" Header="Furniture" Click="B_ClearFurniture_Click" />
+                        <MenuItem Name="B_ClearDive" Header="Dive" Click="B_ClearDive_Click" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </Button>
+            <Button Name="B_Sort" Content="Sort" Height="34" HorizontalAlignment="Stretch">
+                <Button.Flyout>
+                    <MenuFlyout Placement="RightEdgeAlignedTop">
+                        <MenuItem Name="B_SortAlpha" Header="Alphabetical" Click="B_SortAlpha_Click" />
+                        <MenuItem Name="B_SortType" Header="Type" Click="B_SortType_Click" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </Button>
+        </StackPanel>
+        <TextBlock Name="L_Hint" Grid.Row="2" Grid.ColumnSpan="2" Classes="hint" Margin="2,6,0,0" />
+    </Grid>
+</UserControl>

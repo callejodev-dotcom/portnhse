@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="NHSE.Mac.VillagerEditor">
+    <Grid ColumnDefinitions="150,*" RowDefinitions="*,Auto">
+        <!-- Left: index and picture -->
+        <StackPanel Spacing="6">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Name="L_VillagerID" Text="Villager Index:" VerticalAlignment="Center" />
+                <NumericUpDown Name="NUD_Villager" Maximum="9" Width="70" ValueChanged="LoadVillager" />
+            </StackPanel>
+            <Border Classes="slot" Width="140" Height="140" HorizontalAlignment="Left">
+                <Image Name="PB_Villager" Stretch="Uniform" />
+            </Border>
+        </StackPanel>
+
+        <!-- Right: values -->
+        <Grid Grid.Column="1" Margin="12,0,0,0" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*">
+            <Grid.Styles>
+                <Style Selector="Grid > :is(Control)">
+                    <Setter Property="Margin" Value="0,2" />
+                </Style>
+            </Grid.Styles>
+            <TextBlock Name="L_Species" Classes="label" Text="Species:" />
+            <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8">
+                <NumericUpDown Name="NUD_Species" Maximum="255" Width="90" ValueChanged="ChangeVillager" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Name="L_ExternalName" Text="externalName" FontWeight="SemiBold" />
+                    <TextBlock Name="L_InternalName" Text="internalName" Classes="hint" />
+                </StackPanel>
+            </StackPanel>
+            <TextBlock Name="L_Variant" Grid.Row="1" Classes="label" Text="Variant:" />
+            <NumericUpDown Name="NUD_Variant" Grid.Row="1" Grid.Column="1" Maximum="255" Width="90" HorizontalAlignment="Left" ValueChanged="ChangeVillager" />
+            <TextBlock Name="L_Personality" Grid.Row="2" Classes="label" Text="Personality:" />
+            <ComboBox Name="CB_Personality" Grid.Row="2" Grid.Column="1" Width="160" HorizontalAlignment="Left" />
+            <TextBlock Name="L_Catchphrase" Grid.Row="3" Classes="label" Text="Catchphrase:" />
+            <TextBox Name="TB_Catchphrase" Grid.Row="3" Grid.Column="1" />
+            <Button Name="B_SetPhraseOriginal" Grid.Row="3" Grid.Column="2" Content="Original" Margin="6,2,0,2" Click="B_SetPhraseOriginal_Click" />
+            <CheckBox Name="CHK_VillagerMovingOut" Grid.Row="4" Grid.Column="1" Content="Moving Out" IsCheckedChanged="CHK_VillagerMovingOut_CheckedChanged" />
+        </Grid>
+
+        <!-- Bottom: actions -->
+        <WrapPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0">
+            <WrapPanel.Styles>
+                <Style Selector="Button">
+                    <Setter Property="Width" Value="122" />
+                    <Setter Property="Height" Value="40" />
+                    <Setter Property="Margin" Value="0,0,6,6" />
+                </Style>
+            </WrapPanel.Styles>
+            <Button Name="B_DumpVillager" Content="Dump Villager" Click="B_DumpVillager_Click" ToolTip.Tip="⇧ Click: dump all the villagers to a folder" />
+            <Button Name="B_LoadVillager" Content="Load Villager" Click="B_LoadVillager_Click" />
+            <Button Name="B_EditHouses" Content="Edit House" Click="B_EditHouse_Click" />
+            <Button Name="B_ReplaceVillager" Content="Replace Villager" Click="B_ReplaceVillager_Click" ToolTip.Tip="Copy the villager's name (or internal name) first" />
+            <Button Name="B_EditVillagerFlags" Content="Edit Flags" Click="B_EditVillagerFlags_Click" />
+            <Button Name="B_EditVillager" Content="Edit Villager...">
+                <Button.Flyout>
+                    <MenuFlyout Placement="TopEdgeAlignedLeft">
+                        <MenuItem Name="B_EditFurniture" Header="Edit Furniture" Click="B_EditFurniture_Click" />
+                        <MenuItem Name="B_EditWear" Header="Edit Wear" Click="B_EditWear_Click" />
+                        <MenuItem Name="B_EditVillagerRoom" Header="Edit Room" Click="B_EditVillagerRoom_Click" />
+                        <MenuItem Name="B_EditVillagerDesign" Header="Edit Design Pattern" Click="B_EditVillagerDesign_Click" />
+                        <MenuItem Name="B_EditVillagerPlayerMemories" Header="Edit Player Memories" Click="B_EditVillagerPlayerMemories_Click" />
+                        <MenuItem Name="B_EditDIYTimer" Header="Edit DIY Timer" Click="B_EditDIYTimer_Click" />
+                        <Separator />
+                        <MenuItem Name="B_MoveOutAllVillagers" Header="Box All Villagers" Click="B_MoveOutAllVillagers_Click" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </Button>
+        </WrapPanel>
+    </Grid>
+</UserControl>

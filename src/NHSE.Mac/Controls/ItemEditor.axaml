@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:nh="using:NHSE.Mac"
+             x:Class="NHSE.Mac.ItemEditor"
+             Width="200">
+    <UserControl.Styles>
+        <Style Selector="CheckBox">
+            <Setter Property="MinHeight" Value="20" />
+            <Setter Property="Padding" Value="4,0,0,0" />
+        </Style>
+        <Style Selector="StackPanel.row">
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="Spacing" Value="6" />
+            <Setter Property="Margin" Value="0,2" />
+        </Style>
+        <Style Selector="StackPanel.row > TextBlock">
+            <Setter Property="Width" Value="64" />
+            <Setter Property="TextAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="StackPanel.row > NumericUpDown">
+            <Setter Property="Width" Value="120" />
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Name="FLP_Controls" Spacing="4">
+        <Border Width="68" Height="68" HorizontalAlignment="Left" ToolTip.Tip="Click: copy the item as hex · ⇧ Click: paste a hex item">
+            <nh:ItemSlot Name="PB_Item" ShowMarkup="False" PointerPressed="PB_Item_Click" />
+        </Border>
+
+        <StackPanel Name="FLP_Meta" Spacing="4">
+            <ComboBox Name="CB_ItemID" IsEditable="True" HorizontalAlignment="Stretch" MaxDropDownHeight="400"
+                      SelectionChanged="CB_ItemID_SelectedValueChanged" />
+            <CheckBox Name="CHK_IsExtension" Content="Extension" IsVisible="False" IsCheckedChanged="CHK_IsExtension_CheckedChanged" />
+            <StackPanel Name="FLP_Extension" IsVisible="False" Spacing="2">
+                <StackPanel Classes="row">
+                    <TextBlock Name="L_ExtensionX" Text="X:" />
+                    <NumericUpDown Name="NUD_ExtensionX" Maximum="255" />
+                </StackPanel>
+                <StackPanel Classes="row">
+                    <TextBlock Name="L_ExtensionY" Text="Y:" />
+                    <NumericUpDown Name="NUD_ExtensionY" Maximum="255" />
+                </StackPanel>
+            </StackPanel>
+            <ComboBox Name="CB_Recipe" IsEditable="True" IsVisible="False" HorizontalAlignment="Stretch" MaxDropDownHeight="400" SelectionChanged="CB_CountAlias_SelectedValueChanged" />
+            <ComboBox Name="CB_Fossil" IsEditable="True" IsVisible="False" HorizontalAlignment="Stretch" MaxDropDownHeight="400" SelectionChanged="CB_CountAlias_SelectedValueChanged" />
+        </StackPanel>
+
+        <StackPanel Name="FLP_Item">
+            <StackPanel Name="FLP_Count">
+                <StackPanel Classes="row">
+                    <TextBlock Name="L_Count" Text="Count:" DoubleTapped="L_Count_DoubleClick" ToolTip.Tip="Double click: max stack" />
+                    <NumericUpDown Name="NUD_Count" Maximum="65535" ValueChanged="NUD_Count_ValueChanged" />
+                </StackPanel>
+                <TextBlock Name="L_RemakeBody" Text="*RemakeBody" Classes="hint" IsVisible="False" Margin="4,2" />
+                <TextBlock Name="L_RemakeFabric" Text="*RemakeFabric" Classes="hint" IsVisible="False" Margin="4,2" />
+            </StackPanel>
+            <StackPanel Name="FLP_Uses" Classes="row">
+                <TextBlock Name="L_Uses" Text="Uses:" />
+                <NumericUpDown Name="NUD_Uses" Maximum="65535" />
+            </StackPanel>
+            <StackPanel Name="FLP_Flag0" Classes="row">
+                <TextBlock Name="L_Flag0" Text="Flag0:" />
+                <NumericUpDown Name="NUD_Flag0" Maximum="255" />
+            </StackPanel>
+
+            <StackPanel Name="FLP_Flower" IsVisible="False" Spacing="2" Margin="0,4,0,0">
+                <UniformGrid Name="FLP_Genetics" Columns="2">
+                    <CheckBox Name="CHK_R1" Content="R1" />
+                    <CheckBox Name="CHK_R2" Content="R2" />
+                    <CheckBox Name="CHK_Y1" Content="Y1" />
+                    <CheckBox Name="CHK_Y2" Content="Y2" />
+                    <CheckBox Name="CHK_W1" Content="W1" />
+                    <CheckBox Name="CHK_W2" Content="W2" />
+                    <CheckBox Name="CHK_S1" Content="S1" />
+                    <CheckBox Name="CHK_S2" Content="S2" />
+                </UniformGrid>
+                <CheckBox Name="CHK_IsWatered" Content="Watered" />
+                <StackPanel Classes="row">
+                    <TextBlock Name="L_WaterDays" Text="Days:" PointerPressed="L_WaterDays_Click" Cursor="Hand" ToolTip.Tip="Click: water everything · ⌥ Click: clear" />
+                    <NumericUpDown Name="NUD_WaterDays" Maximum="31" />
+                </StackPanel>
+                <UniformGrid Name="FLP_FlowerFlags" Columns="3">
+                    <CheckBox Name="CHK_WV0" Content="V1" />
+                    <CheckBox Name="CHK_WV1" Content="V2" />
+                    <CheckBox Name="CHK_WV2" Content="V3" />
+                    <CheckBox Name="CHK_WV3" Content="V4" />
+                    <CheckBox Name="CHK_WV4" Content="V5" />
+                    <CheckBox Name="CHK_WV5" Content="V6" />
+                    <CheckBox Name="CHK_WV6" Content="V7" />
+                    <CheckBox Name="CHK_WV7" Content="V8" />
+                    <CheckBox Name="CHK_WV8" Content="V9" />
+                    <CheckBox Name="CHK_WV9" Content="V10" />
+                    <CheckBox Name="CHK_Gold" Content="Gold" />
+                </UniformGrid>
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Name="FLP_Flag1Group">
+            <StackPanel Name="FLP_Flag1" Classes="row" IsVisible="False">
+                <TextBlock Name="L_Flag1" Text="Flag1:" />
+                <NumericUpDown Name="NUD_Flag1" Maximum="255" />
+            </StackPanel>
+            <CheckBox Name="CHK_Wrapped" Content="Wrapped" IsCheckedChanged="CHK_Wrapped_CheckedChanged" />
+            <StackPanel Name="FLP_Wrapped" IsVisible="False" Spacing="2">
+                <ComboBox Name="CB_WrapType" HorizontalAlignment="Stretch" SelectionChanged="CB_WrapType_SelectedIndexChanged" />
+                <ComboBox Name="CB_WrapColor" HorizontalAlignment="Stretch" IsVisible="False" />
+                <CheckBox Name="CHK_WrapShowName" Content="Show Item Name" />
+                <CheckBox Name="CHK_Wrap80" Content="Flag 0x80" IsVisible="False" />
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

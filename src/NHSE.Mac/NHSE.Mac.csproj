@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>NHSE</AssemblyName>
+    <RootNamespace>NHSE.Mac</RootNamespace>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- The windows that need save data have no parameterless constructor (they are never loaded by the runtime XAML loader). -->
+    <NoWarn>$(NoWarn);AVLN3001</NoWarn>
+    <Description>Animal Crossing: New Horizons Save Editor (macOS)</Description>
+    <ApplicationTitle>NHSE</ApplicationTitle>
+    <CFBundleIdentifier>com.callejodev.nhse</CFBundleIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(NHSEDir)NHSE.Core/NHSE.Core.csproj" />
+    <ProjectReference Include="$(NHSEDir)NHSE.Injection/NHSE.Injection.csproj" />
+    <ProjectReference Include="$(NHSEDir)NHSE.Villagers/NHSE.Villagers.csproj" />
+  </ItemGroup>
+
+  <!-- Recursos de NHSE.Sprites e NHSE.WinForms, tomados do submódulo sen copialos. -->
+  <ItemGroup>
+    <EmbeddedResource Include="$(NHSEDir)NHSE.Sprites/Resources/**/*.png" LogicalName="sprites/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(NHSEDir)NHSE.WinForms/Resources/text/lang_*.txt" LogicalName="lang/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(NHSEDir)NHSE.WinForms/Resources/Map assets/*.png" LogicalName="map/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(NHSEDir)NHSE.WinForms/Resources/network/hosts_images.txt" LogicalName="network/hosts_images.txt" />
+    <EmbeddedResource Include="Resources/MacStrings_*.txt" LogicalName="mac/%(Filename)%(Extension)" />
+    <AvaloniaResource Include="Assets/**" />
+  </ItemGroup>
+
+</Project>

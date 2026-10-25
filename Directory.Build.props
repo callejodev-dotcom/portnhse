@@ -1,0 +1,13 @@
+<Project>
+  <!-- Só para src/ e tests/: os proxectos de NHSE/ usan o seu propio Directory.Build.props. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Product>NHSE para Mac</Product>
+    <Version>0.1.0</Version>
+    <Authors>Adrián Callejo; NHSE por Kaphotics e colaboradores</Authors>
+    <NHSEDir>$(MSBuildThisFileDirectory)NHSE/</NHSEDir>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,39 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Shared look for the ported WinForms layouts: compact rows, labels aligned with their editors. -->
+    <Style Selector="TextBlock.label">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="Margin" Value="0,0,6,0" />
+    </Style>
+    <Style Selector="NumericUpDown">
+        <Setter Property="FormatString" Value="0" />
+        <Setter Property="ShowButtonSpinner" Value="True" />
+    </Style>
+    <Style Selector="Button">
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <!-- Like WinForms buttons, long captions wrap when the button has a fixed width. -->
+    <Style Selector="Button /template/ ContentPresenter">
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="TextAlignment" Value="Center" />
+    </Style>
+    <Style Selector="NumericUpDown">
+        <Setter Property="ClipValueToMinMax" Value="True" />
+    </Style>
+    <Style Selector="TabItem">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="MinHeight" Value="34" />
+        <Setter Property="Padding" Value="10,0" />
+    </Style>
+    <Style Selector="Border.slot">
+        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="TextBlock.hint">
+        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+</Styles>
