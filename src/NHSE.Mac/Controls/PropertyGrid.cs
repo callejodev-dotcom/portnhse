@@ -120,7 +120,7 @@ public sealed class PropertyGrid : UserControl
     private static string GetCategory(PropertyInfo p) => p.GetCustomAttribute<CategoryAttribute>()?.Category ?? "Misc";
 
     private static PropertyInfo[] GetProperties(Type t) => t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-        .Where(p => p.GetIndexParameters().Length == 0 && p.GetCustomAttribute<BrowsableAttribute>()?.Browsable != false)
+        .Where(p => p.GetIndexParameters().Length == 0 && !p.PropertyType.IsByRefLike && p.GetCustomAttribute<BrowsableAttribute>()?.Browsable != false)
         .OrderBy(p => p.MetadataToken)
         .ToArray();
 

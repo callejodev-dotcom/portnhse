@@ -1,0 +1,28 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.FruitsFlowersEditor"
+        Title="Fruits Flowers Editor"
+        SizeToContent="WidthAndHeight" CanResize="False">
+    <Grid ColumnDefinitions="210,210" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Margin="14">
+        <Grid.Styles>
+            <Style Selector="Grid > TextBlock">
+                <Setter Property="Margin" Value="0,0,0,4" />
+            </Style>
+        </Grid.Styles>
+        <TextBlock Name="L_ProfileSpecialtyFruit" Text="Fruit (Local)" />
+        <nh:RestrictedItemSelect Name="RIS_ProfileFruit" Grid.Row="1" />
+        <TextBlock Name="L_ProfileSisterFruit" Grid.Column="1" Margin="14,0,0,4" Text="Fruit (Sister)" />
+        <nh:RestrictedItemSelect Name="RIS_SisterFruit" Grid.Row="1" Grid.Column="1" Margin="14,0,0,0" />
+
+        <TextBlock Name="L_ProfileSpecialtyFlower" Grid.Row="2" Margin="0,12,0,4" Text="Flower (Local)" />
+        <ComboBox Name="CB_ProfileFlower" Grid.Row="3" HorizontalAlignment="Stretch" />
+        <TextBlock Name="L_ProfileSisterFlower" Grid.Row="2" Grid.Column="1" Margin="14,12,0,4" Text="Flower (Sister)" />
+        <ComboBox Name="CB_SisterFlower" Grid.Row="3" Grid.Column="1" Margin="14,0,0,0" HorizontalAlignment="Stretch" />
+
+        <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0,18,0,0">
+            <Button Name="B_Cancel" Content="Cancel" Width="90" IsCancel="True" Click="B_Cancel_Click" />
+            <Button Name="B_Save" Content="Save" Width="90" Classes="accent" Click="B_Save_Click" />
+        </StackPanel>
+    </Grid>
+</nh:NhseWindow>

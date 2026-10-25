@@ -115,17 +115,11 @@ public static class ImageUtil
         using var rt = new RenderTargetBitmap(new PixelSize(width, height));
         using (var ctx = rt.CreateDrawingContext())
             ctx.DrawImage(src, new Rect(0, 0, width, height));
-        var result = new int[width * height];
-        var handle = GCHandle.Alloc(result, GCHandleType.Pinned);
-        try
-        {
-            rt.CopyPixels(new PixelRect(0, 0, width, height), handle.AddrOfPinnedObject(), result.Length * 4, width * 4);
-        }
-        finally
-        {
-            handle.Free();
-        }
-        return result;
+        // The render target is premultiplied RGBA: let Avalonia convert it into a BGRA (ARGB ints) unpremultiplied bitmap.
+        using var result = Create(width, height);
+        using (var fb = result.Lock())
+            rt.CopyPixels(fb);
+        return result.GetPixels();
     }
 
     public static int[] ScalePixelImage(ReadOnlySpan<int> data, int imgScale, int imgWidthSingle, int imgHeightSingle, out int imgWidthUpscaled, out int imgHeightUpscaled)

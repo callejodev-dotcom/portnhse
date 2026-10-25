@@ -1,0 +1,48 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.CampsiteEditor"
+        Title="Campsite Editor"
+        SizeToContent="WidthAndHeight" CanResize="False">
+    <nh:NhseWindow.Styles>
+        <Style Selector="TextBlock:disabled, Image:disabled">
+            <Setter Property="Opacity" Value="0.45" />
+        </Style>
+    </nh:NhseWindow.Styles>
+    <Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto,*,Auto" Margin="14,10,14,14">
+        <TextBlock Name="L_CampsiteUnlockStatus" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="0,0,0,8"
+                   Text="Campsite is not currently unlocked on this save." Foreground="Red" FontStyle="Italic" FontSize="15" />
+        <CheckBox Name="CB_CampsiteOccupied" Grid.Row="1" Grid.ColumnSpan="2" Content="Campsite Has Visitor" />
+
+        <!-- Left: the visitor -->
+        <StackPanel Grid.Row="2" Grid.RowSpan="2" Spacing="4" Margin="0,4,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Name="L_Camper_ExternalName" Text="Visitor Name:" />
+                <TextBlock Name="L_ExternalName" Text="unknown" FontWeight="SemiBold" />
+            </StackPanel>
+            <Border Classes="slot" Width="170" Height="170" HorizontalAlignment="Left">
+                <Image Name="PB_Villager" Stretch="Uniform" />
+            </Border>
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Name="L_Camper_InternalName" Text="Villager Code:" />
+                <TextBlock Name="L_InternalName" Text="unknown" FontFamily="Menlo, Courier New, monospace" FontSize="12" VerticalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Right: editing -->
+        <Grid Grid.Row="2" Grid.Column="1" Margin="24,4,0,0" ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+            <TextBlock Name="L_Camper_Edit" Grid.ColumnSpan="2" Text="Edit Visitor:" Margin="0,0,0,4" />
+            <TextBlock Name="L_Species" Grid.Row="1" Classes="label" Text="Species:" />
+            <NumericUpDown Name="NUD_Species" Grid.Row="1" Grid.Column="1" Width="90" Maximum="400" Margin="0,2" ValueChanged="ChangeVillager" />
+            <TextBlock Name="L_Variant" Grid.Row="2" Classes="label" Text="Variant:" />
+            <NumericUpDown Name="NUD_Variant" Grid.Row="2" Grid.Column="1" Width="90" Maximum="255" Margin="0,2" ValueChanged="ChangeVillager" />
+            <TextBlock Name="L_CampDate" Grid.Row="3" Grid.ColumnSpan="2" Text="Set Camp Visit Date:" Margin="0,14,0,4" />
+            <CalendarDatePicker Name="CAL_CampTimestamp" Grid.Row="4" Grid.ColumnSpan="2" Width="240" HorizontalAlignment="Left" />
+        </Grid>
+
+        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Spacing="6" Margin="24,16,0,0">
+            <Button Name="B_Cancel" Content="Cancel" Width="100" IsCancel="True" Click="B_Cancel_Click" />
+            <Button Name="B_Save" Content="Save" Width="100" Classes="accent" Click="B_Save_Click" />
+        </StackPanel>
+    </Grid>
+</nh:NhseWindow>

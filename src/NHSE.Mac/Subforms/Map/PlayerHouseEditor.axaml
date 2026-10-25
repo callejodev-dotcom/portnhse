@@ -1,0 +1,81 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.PlayerHouseEditor"
+        Title="Player House Editor"
+        SizeToContent="WidthAndHeight" CanResize="False">
+    <Grid ColumnDefinitions="330,Auto,Auto" Margin="12">
+        <!-- Left: houses -->
+        <Grid RowDefinitions="*,Auto">
+            <nh:PropertyGrid Name="PG_Item" Height="370" PropertySort="NoSort" HelpVisible="False" PropertyValueChanged="PG_Item_PropertyValueChanged" />
+            <Grid Grid.Row="1" ColumnDefinitions="160,*" Height="200" Margin="0,8,0,0">
+                <ListBox Name="LB_Items" SelectionChanged="LB_Items_SelectedIndexChanged" />
+                <DockPanel Grid.Column="1">
+                    <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Right" Spacing="6">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Button Name="B_DumpHouse" Content="Dump" Width="76" Click="B_DumpHouse_Click" />
+                            <Button Name="B_LoadHouse" Content="Load" Width="76" Click="B_LoadHouse_Click" />
+                        </StackPanel>
+                        <Button Name="B_EditFlags" Content="Edit Flags" HorizontalAlignment="Stretch" Click="B_EditFlags_Click" />
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Bottom" HorizontalAlignment="Right" VerticalAlignment="Bottom" Spacing="4">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <TextBlock Name="L_Room" Classes="label" Text="Room:" />
+                            <NumericUpDown Name="NUD_Room" Width="64" Minimum="1" Maximum="6" Value="1" ValueChanged="NUD_Room_ValueChanged" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <TextBlock Name="L_Layer" Classes="label" Text="Layer:" />
+                            <NumericUpDown Name="NUD_Layer" Width="64" Minimum="1" Maximum="8" Value="1" ValueChanged="NUD_Layer_ValueChanged" />
+                        </StackPanel>
+                    </StackPanel>
+                </DockPanel>
+            </Grid>
+        </Grid>
+
+        <!-- Middle: room items -->
+        <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="4">
+            <TextBlock Name="L_Coordinates" Text="Coordinates" />
+            <Border Classes="slot" Background="BlanchedAlmond" HorizontalAlignment="Left">
+                <Image Name="PB_Room" Width="480" Height="480" Stretch="Fill" RenderOptions.BitmapInterpolationMode="None"
+                       PointerMoved="PB_Room_MouseMove" PointerReleased="PlayerHouseEditor_Click">
+                    <Image.ContextMenu>
+                        <ContextMenu Name="CM_Click">
+                            <MenuItem Name="Menu_View" Header="View" Click="Menu_View_Click" />
+                            <MenuItem Name="Menu_Set" Header="Set" Click="Menu_Set_Click" />
+                            <MenuItem Name="Menu_Reset" Header="Reset" Click="Menu_Reset_Click" />
+                        </ContextMenu>
+                    </Image.ContextMenu>
+                </Image>
+            </Border>
+            <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                <StackPanel>
+                    <StackPanel.Styles>
+                        <Style Selector="CheckBox">
+                            <Setter Property="MinHeight" Value="22" />
+                        </Style>
+                    </StackPanel.Styles>
+                    <CheckBox Name="CHK_RedirectExtensionLoad" Content="View Root instead of Extension" IsChecked="True" />
+                    <CheckBox Name="CHK_AutoExtension" Content="Handle Item Extensions Automatically" IsChecked="True" />
+                    <CheckBox Name="CHK_NoOverwrite" Content="Prevent Writing Occupied Item Tiles" IsChecked="True" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top" Spacing="6">
+                    <Button Name="B_DumpRoom" Content="Dump" Width="76" Click="B_DumpRoom_Click" />
+                    <Button Name="B_LoadRoom" Content="Load" Width="76" Click="B_LoadRoom_Click" />
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+
+        <!-- Right: item editor -->
+        <Grid Grid.Column="2" Margin="12,0,0,0" RowDefinitions="*,Auto">
+            <Border Classes="slot" Padding="6" Height="540" VerticalAlignment="Top">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <nh:ItemEditor Name="ItemEdit" />
+                </ScrollViewer>
+            </Border>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0,8,0,0">
+                <Button Name="B_Cancel" Content="Cancel" Width="80" IsCancel="True" Click="B_Cancel_Click" />
+                <Button Name="B_Save" Content="Save" Width="80" Classes="accent" Click="B_Save_Click" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</nh:NhseWindow>

@@ -1,0 +1,33 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.MuseumEditor"
+        Title="Flag Editor"
+        Width="580" Height="560" MinWidth="520" MinHeight="460">
+    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="12">
+        <ListBox Name="LB_Donations" Grid.RowSpan="5" SelectionChanged="LB_Counts_SelectedIndexChanged" />
+
+        <CalendarDatePicker Name="CAL_Date" Grid.Column="1" Margin="10,0,0,0" HorizontalAlignment="Stretch" />
+        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10,6,0,0">
+            <TextBlock Name="L_Player" Classes="label" Text="Player Index:" />
+            <NumericUpDown Name="NUD_Player" Width="80" Maximum="255" />
+        </StackPanel>
+        <ScrollViewer Grid.Row="2" Grid.Column="1" Margin="10,8,0,0" VerticalScrollBarVisibility="Auto">
+            <nh:ItemEditor Name="ItemEdit" />
+        </ScrollViewer>
+        <Button Name="B_Tools" Grid.Row="3" Grid.Column="1" Content="Tools..." Width="96" Margin="10,8,0,0" HorizontalAlignment="Left">
+            <Button.Flyout>
+                <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                    <MenuItem Name="B_Dump" Header="Dump" Click="B_Dump_Click" />
+                    <MenuItem Name="B_Load" Header="Load" Click="B_Load_Click" />
+                    <MenuItem Name="B_GiveAll" Header="Give All" Click="B_GiveAll_Click" />
+                    <MenuItem Name="B_SortDate" Header="Sort By Date" Click="B_SortDate_Click" />
+                </MenuFlyout>
+            </Button.Flyout>
+        </Button>
+        <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="10,8,0,0">
+            <Button Name="B_Cancel" Content="Cancel" Width="96" IsCancel="True" Click="B_Cancel_Click" />
+            <Button Name="B_Save" Content="Save" Width="96" Classes="accent" Click="B_Save_Click" />
+        </StackPanel>
+    </Grid>
+</nh:NhseWindow>

@@ -1,0 +1,60 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.PatternEditorPRO"
+        Title="Pro Design Editor"
+        SizeToContent="WidthAndHeight" CanResize="False">
+    <nh:NhseWindow.Styles>
+        <Style Selector="Grid#PAN_Sheets Image">
+            <Setter Property="Width" Value="128" />
+            <Setter Property="Height" Value="128" />
+            <Setter Property="Stretch" Value="Fill" />
+        </Style>
+    </nh:NhseWindow.Styles>
+    <Grid ColumnDefinitions="180,Auto,Auto" RowDefinitions="Auto,Auto" Margin="12">
+        <ListBox Name="LB_Items" Grid.RowSpan="2" Height="320" SelectionChanged="LB_Items_SelectedIndexChanged" />
+
+        <Grid Name="PAN_Sheets" Grid.Column="1" ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto" Margin="10,0,0,0" VerticalAlignment="Top">
+            <Grid.ContextMenu>
+                <ContextMenu Name="CM_Picture">
+                    <MenuItem Name="Menu_SavePNG" Header="Save .png" Click="Menu_SavePNG_Click" />
+                </ContextMenu>
+            </Grid.ContextMenu>
+            <Border Name="BG_Sheet0" Classes="slot" PointerEntered="PB_Pattern_MouseEnter" PointerExited="PB_Pattern_MouseLeave">
+                <Image Name="PB_Sheet0" RenderOptions.BitmapInterpolationMode="None" />
+            </Border>
+            <Border Grid.Column="1" Classes="slot">
+                <Image Name="PB_Sheet1" RenderOptions.BitmapInterpolationMode="None" />
+            </Border>
+            <Border Grid.Row="1" Classes="slot">
+                <Image Name="PB_Sheet2" RenderOptions.BitmapInterpolationMode="None" />
+            </Border>
+            <Border Grid.Row="1" Grid.Column="1" Classes="slot">
+                <Image Name="PB_Sheet3" RenderOptions.BitmapInterpolationMode="None" />
+            </Border>
+        </Grid>
+
+        <StackPanel Grid.Column="2" Margin="10,0,0,0" Spacing="6" MinWidth="170">
+            <Border Classes="slot" HorizontalAlignment="Left">
+                <Image Name="PB_Palette" Width="150" Height="10" Stretch="Fill" RenderOptions.BitmapInterpolationMode="None" />
+            </Border>
+            <TextBlock Name="L_PatternName" Text="*PatternName" MaxWidth="200" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <Button Name="B_DumpLoadDesign" Grid.Row="1" Grid.Column="1" Content="Dump/Import" Width="120" Margin="10,10,0,0"
+                HorizontalAlignment="Left" VerticalAlignment="Bottom">
+            <Button.Flyout>
+                <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                    <MenuItem Name="B_DumpDesign" Header="Dump Design" Click="B_DumpDesign_Click" />
+                    <MenuItem Name="B_DumpDesignAll" Header="Dump All Designs" Click="B_DumpDesign_Click" />
+                    <MenuItem Name="B_LoadDesign" Header="Load Design" Click="B_LoadDesign_Click" />
+                    <MenuItem Name="B_LoadDesignAll" Header="Load All Designs" Click="B_LoadDesign_Click" />
+                </MenuFlyout>
+            </Button.Flyout>
+        </Button>
+        <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Spacing="6">
+            <Button Name="B_Cancel" Content="Cancel" Width="90" IsCancel="True" Click="B_Cancel_Click" />
+            <Button Name="B_Save" Content="Save" Width="90" Classes="accent" Click="B_Save_Click" />
+        </StackPanel>
+    </Grid>
+</nh:NhseWindow>
