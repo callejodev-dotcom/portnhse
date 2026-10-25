@@ -20,8 +20,11 @@ public static class LiveBackups
     {
         Directory.CreateDirectory(Folder);
         var date = DateTime.Now;
-        var name = StringUtil.CleanFileName($"{date:yyyy-MM-dd HH.mm.ss} - {personal.TownName} ({personal.PlayerName}) - {why}.zip");
-        var path = Path.Combine(Folder, name);
+        var name = StringUtil.CleanFileName($"{date:yyyy-MM-dd HH.mm.ss} - {personal.TownName} ({personal.PlayerName}) - {why}");
+        // Two in the same second (sending twice quickly) get a number.
+        var path = Path.Combine(Folder, name + ".zip");
+        for (int n = 2; File.Exists(path); n++)
+            path = Path.Combine(Folder, $"{name} ({n}).zip");
         using (var zip = ZipFile.Open(path, ZipArchiveMode.Create))
         {
             Write(zip, "main.bin", main);

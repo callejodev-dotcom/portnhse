@@ -48,6 +48,7 @@ public partial class MainWindow : Window
         B_OpenFolder.Content = MacStrings.LauncherOpenFolder;
         B_OpenFile.Content = MacStrings.LauncherOpenFile;
         B_Reopen.Content = MacStrings.LauncherReopen;
+        B_OpenLive.Content = HomeStrings.OpenLive;
         B_Backups.Content = MacStrings.LauncherBackups;
         L_Warning.Text = MacStrings.LauncherWarning;
         B_Reopen.IsEnabled = Directory.Exists(Program.Settings.LastFilePath);
@@ -112,6 +113,12 @@ public partial class MainWindow : Window
 
     private void B_Backups_Click(object? sender, RoutedEventArgs e) => UiUtil.OpenInFinder(SaveFileLoader.BackupPath);
 
+    private async void B_OpenLive_Click(object? sender, RoutedEventArgs e)
+    {
+        if (await LiveOpen.Open(this) is { } live)
+            ShowEditor(new HomeWindow(live.Save, live.Game));
+    }
+
     /// <summary>
     /// Without the item image pack the grids only show category icons, so the launcher offers it until it is installed.
     /// </summary>
@@ -145,7 +152,12 @@ public partial class MainWindow : Window
             return false;
         Program.SaveSettings();
 
-        var editor = new HomeWindow(sav);
+        ShowEditor(new HomeWindow(sav));
+        return true;
+    }
+
+    private void ShowEditor(HomeWindow editor)
+    {
         Editors.Add(editor);
         editor.Closed += (_, _) =>
         {
@@ -159,7 +171,6 @@ public partial class MainWindow : Window
         };
         editor.Show();
         Hide();
-        return true;
     }
 
     /// <summary>

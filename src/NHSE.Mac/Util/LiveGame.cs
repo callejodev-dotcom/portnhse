@@ -21,6 +21,8 @@ public sealed class LiveGame : IDisposable
     private const int WriteChunk = 0x4000;
 
     private TcpClient? Client;
+    private string Ip = string.Empty;
+    private int Port;
     private NetworkStream? Stream;
 
     private byte[]? MainBefore;
@@ -34,10 +36,49 @@ public sealed class LiveGame : IDisposable
     public void Connect(string ip, int port)
     {
         Dispose();
+        Ip = ip;
+        Port = port;
         Client = new TcpClient { ReceiveTimeout = 20000, SendTimeout = 20000, NoDelay = true };
-        Client.Connect(ip, port);
+        // Without a limit, a console that is off or asleep takes half a minute to fail.
+        try
+        {
+            if (!Client.ConnectAsync(ip, port).Wait(TimeSpan.FromSeconds(5)))
+                throw new ConsoleUnreachableException(ip);
+        }
+        catch (Exception ex) when (ex is ConsoleUnreachableException or AggregateException { InnerException: SocketException })
+        {
+            Dispose();
+            throw ex as ConsoleUnreachableException ?? new ConsoleUnreachableException(ip);
+        }
         Stream = Client.GetStream();
     }
+
+    /// <summary>
+    /// Connects again if the console dropped the connection (it went to sleep, the Wi-Fi came back…), so a window left
+    /// open keeps working.
+    /// </summary>
+    private void EnsureConnected()
+    {
+        if (Stream is not null)
+        {
+            try
+            {
+                Send("getVersion");
+                ReadLine();
+                return;
+            }
+            catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException)
+            {
+                // Connect again below.
+            }
+        }
+        if (Ip.Length == 0)
+            throw new IOException(HomeStrings.LiveNotConnected);
+        Connect(Ip, Port);
+    }
+
+    /// <summary> What to tell the player when talking to the console failed. </summary>
+    public static string Explain(Exception ex) => ex is ConsoleUnreachableException ? ex.Message : string.Format(HomeStrings.LiveError, ex.Message);
 
     public void Dispose()
     {
@@ -112,6 +153,7 @@ public sealed class LiveGame : IDisposable
     /// <param name="step">Told what is happening at each step.</param>
     public async Task Reload(Action<string> step)
     {
+        await Task.Run(EnsureConnected);
         step(HomeStrings.LiveReloadSaving);
         Press("MINUS");          // «¿Qué quieres hacer?»
         await Task.Delay(1500);
@@ -134,6 +176,25 @@ public sealed class LiveGame : IDisposable
         step(HomeStrings.LiveReloadDone);
     }
 
+    /// <summary> Where the player's identity (island and player IDs and names) is in personal.dat of 3.0. </summary>
+    private const int PersonalId = 0xC248;
+
+    /// <summary>
+    /// Who is playing: the island and player of the first player, read from the game's memory; null if the game is not
+    /// on an island (or not this version).
+    /// </summary>
+    public (uint Town, string TownName, uint Player, string PlayerName)? ReadPlayerId()
+    {
+        var d = Read(PlayerAddress + PersonalId, 0x38);
+        var town = BitConverter.ToUInt32(d, 0);
+        var player = BitConverter.ToUInt32(d, 0x1C);
+        var townName = StringUtil.GetString(d, 4, 10);
+        var playerName = StringUtil.GetString(d, 0x20, 10);
+        if (town == 0 || player == 0 || townName.Length == 0 || playerName.Length == 0)
+            return null;
+        return (town, townName, player, playerName);
+    }
+
     /// <summary> Share of equal bytes, to tell whether the memory read is this island and player. </summary>
     private static double Likeness(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
     {
@@ -153,6 +214,7 @@ public sealed class LiveGame : IDisposable
     /// <returns>Null if done, or why not.</returns>
     public string? Pull(HorizonSave sav, Action<double>? progress = null)
     {
+        EnsureConnected();
         int mainLength = sav.Main.Data.Length, playerLength = sav.Players[0].Personal.Data.Length;
         var total = (double)(mainLength + playerLength);
         var gameMain = Read(MainAddress, mainLength, p => progress?.Invoke(p * mainLength / total));
@@ -160,8 +222,10 @@ public sealed class LiveGame : IDisposable
         var main = sav.Main.Data;
         var player = sav.Players[0].Personal.Data;
 
-        // The same island keeps most of its data between the save on the Mac and the game.
-        if (Likeness(gamePlayer, player) < 0.5 || Likeness(gameMain, main) < 0.5)
+        // The same player (island and player IDs and names), and the island keeps most of its data between the save on
+        // the Mac and the game (most of a save is zeros, so a likeness alone is not enough).
+        var id = sav.Players[0].Personal.Offsets.PersonalId;
+        if (!gamePlayer.AsSpan(id, 0x38).SequenceEqual(player.Slice(id, 0x38)) || Likeness(gamePlayer, player) < 0.5 || Likeness(gameMain, main) < 0.5)
             return HomeStrings.LiveGameOther;
 
         LiveBackups.Save(gameMain, gamePlayer, sav.Players[0].Personal, HomeStrings.LiveBackupPulled);
@@ -181,6 +245,7 @@ public sealed class LiveGame : IDisposable
     {
         if (MainBefore is null || PlayerBefore is null)
             return 0;
+        EnsureConnected();
         var personal = sav.Players[0].Personal;
         var id = personal.Offsets.PersonalId;
         var check = Read(PlayerAddress + (uint)id, 0x38);
@@ -245,3 +310,6 @@ public sealed class LiveGame : IDisposable
         return sent;
     }
 }
+
+/// <summary> The console did not answer at all (off, asleep, another network, no sys-botbase). </summary>
+public sealed class ConsoleUnreachableException(string ip) : IOException(string.Format(HomeStrings.LiveUnreachable, ip));

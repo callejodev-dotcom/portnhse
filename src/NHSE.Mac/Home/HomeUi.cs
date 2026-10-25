@@ -17,6 +17,9 @@ public sealed class HomeContext(HorizonSave sav, Window owner)
     public int PlayerIndex { get; set; }
     public Player Player => SAV.Players[PlayerIndex];
 
+    /// <summary> True when the save was brought from the console over Wi-Fi («Save» sends it back there). </summary>
+    public bool Live { get; init; }
+
     /// <summary>
     /// Raised whenever something in the save was changed.
     /// </summary>
@@ -104,8 +107,10 @@ public static class HomeUi
     /// <summary>
     /// Cards in equal columns; each row is as tall as its own tallest card (not as the tallest of all).
     /// </summary>
-    public static Grid Tiles(int columns, params Control[] items)
+    /// <remarks> Null items are left out (cards that do not apply). </remarks>
+    public static Grid Tiles(int columns, params Control?[] shown)
     {
+        var items = shown.OfType<Control>().ToArray();
         var g = new Grid { ColumnSpacing = 12, RowSpacing = 12 };
         for (int c = 0; c < columns; c++)
             g.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));

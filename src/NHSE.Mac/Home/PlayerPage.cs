@@ -210,7 +210,7 @@ public sealed class PlayerPage : UserControl
                     Build();
                 }
             }, ItemStrip(chest)),
-            ActionCard("Pachinko", HomeStrings.LiveCard, HomeStrings.LiveCardHint, () =>
+            Ctx.Live ? null : ActionCard("Pachinko", HomeStrings.LiveCard, HomeStrings.LiveCardHint, () =>
             {
                 var exist = UiUtil.GetWindows().OfType<ItemsWindow>().FirstOrDefault(z => z.Title == HomeStrings.LiveTitle);
                 if (exist is not null)

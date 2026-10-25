@@ -130,7 +130,7 @@ public sealed class LiveGameWindow : NhseWindow
         }
         catch (Exception ex)
         {
-            Say(string.Format(HomeStrings.LiveError, ex.Message), true);
+            Say(LiveGame.Explain(ex), true);
         }
         finally
         {

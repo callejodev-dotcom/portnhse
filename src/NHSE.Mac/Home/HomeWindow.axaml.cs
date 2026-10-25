@@ -22,10 +22,23 @@ public sealed partial class HomeWindow : NhseWindow
 
     private sealed record NavEntry(string Key, string Text, IImage? Icon, int Player = -1);
 
-    public HomeWindow(HorizonSave sav)
+    /// <summary> The console the save was brought from, when it was opened over Wi-Fi: «Save» sends to it. </summary>
+    private readonly LiveGame? Live;
+    private readonly Button ReloadIsland = new() { HorizontalAlignment = HorizontalAlignment.Stretch, Height = 30 };
+
+    public HomeWindow(HorizonSave sav, LiveGame? live = null)
     {
         InitializeComponent();
-        Ctx = new HomeContext(sav, this);
+        Live = live;
+        Ctx = new HomeContext(sav, this) { Live = live is not null };
+        if (live is not null)
+        {
+            ReloadIsland.Content = HomeStrings.LiveReload;
+            ReloadIsland.Click += async (_, _) => await ReloadFromConsole();
+            if (B_Save.Parent is StackPanel bottom)
+                bottom.Children.Insert(bottom.Children.IndexOf(B_Save) + 1, ReloadIsland);
+            Closed += (_, _) => live.Dispose();
+        }
         Ctx.Changed += () =>
         {
             Dirty = true;
@@ -70,7 +83,7 @@ public sealed partial class HomeWindow : NhseWindow
 
         LB_Nav.ItemsSource = entries.Select(MakeNavItem).ToArray();
         LB_Nav.SelectedIndex = 0;
-        Title = Ctx.SAV.GetSaveTitle("NHSE");
+        Title = Live is null ? Ctx.SAV.GetSaveTitle("NHSE") : $"NHSE · {Ctx.SAV.Players[0].Personal.TownName} ({HomeStrings.LiveTitleSuffix})";
     }
 
     private static IImage? NavIcon(string name) => ItemSprite.GetResource($"sprites/MenuIcon/{name}.png");
@@ -137,6 +150,17 @@ public sealed partial class HomeWindow : NhseWindow
 
     private void UpdateStatus()
     {
+        if (Live is not null)
+        {
+            B_Save.Content = HomeStrings.LiveSaveButton;
+            L_Status.Text = Dirty ? HomeStrings.LiveStatusDirty : HomeStrings.LiveStatus;
+            if (Dirty)
+                L_Status.Foreground = Brushes.DarkOrange;
+            else
+                L_Status.ClearValue(TextBlock.ForegroundProperty);
+            L_Backup.Text = HomeStrings.LiveStatusCopies;
+            return;
+        }
         B_Save.Content = HomeStrings.SaveButton;
         L_Status.Text = Dirty
             ? HomeStrings.StatusDirty
@@ -155,6 +179,8 @@ public sealed partial class HomeWindow : NhseWindow
     /// </summary>
     internal async Task<bool> SaveToFiles()
     {
+        if (Live is not null)
+            return await SendToConsole();
         // Text boxes write their value when they lose focus.
         B_Save.Focus();
         try
@@ -171,6 +197,69 @@ public sealed partial class HomeWindow : NhseWindow
         UpdateStatus();
         Sound.Asterisk();
         return true;
+    }
+
+    /// <summary> Sends what changed to the console (the save opened over Wi-Fi). </summary>
+    private async Task<bool> SendToConsole()
+    {
+        B_Save.Focus();
+        B_Save.IsEnabled = false;
+        try
+        {
+            var sent = await Task.Run(() => Live!.Push(Ctx.SAV));
+            if (sent < 0)
+            {
+                await Dialogs.Error(HomeStrings.LiveGameMoved);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            await Dialogs.Error(LiveGame.Explain(ex));
+            return false;
+        }
+        finally
+        {
+            B_Save.IsEnabled = true;
+        }
+        Dirty = false;
+        UpdateStatus();
+        Sound.Asterisk();
+        return true;
+    }
+
+    /// <summary> Saves the game in the console and loads the island again, then brings it again. </summary>
+    private async Task ReloadFromConsole()
+    {
+        if (Dirty && await Dialogs.Prompt(MessageBoxButtons.YesNo, HomeStrings.LiveReloadUnsent) != DialogResult.Yes)
+            return;
+        if (await Dialogs.Prompt(MessageBoxButtons.YesNo, HomeStrings.LiveReloadAsk) != DialogResult.Yes)
+            return;
+        ReloadIsland.IsEnabled = false;
+        B_Save.IsEnabled = false;
+        try
+        {
+            var live = Live!;
+            await live.Reload(text => Avalonia.Threading.Dispatcher.UIThread.Post(() => L_Status.Text = text));
+            L_Status.Text = HomeStrings.LiveGamePulling;
+            await Task.Delay(8000); // the island finishes loading
+            var problem = await Task.Run(() => live.Pull(Ctx.SAV));
+            if (problem is not null)
+                await Dialogs.Error(problem);
+            else
+                ReloadAll();
+            Dirty = false;
+        }
+        catch (Exception ex)
+        {
+            await Dialogs.Error(LiveGame.Explain(ex));
+        }
+        finally
+        {
+            ReloadIsland.IsEnabled = true;
+            B_Save.IsEnabled = true;
+            UpdateStatus();
+        }
     }
 
     protected override async void OnClosing(WindowClosingEventArgs e)

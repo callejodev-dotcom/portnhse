@@ -232,7 +232,8 @@ public static class ActionPages
                     ctx.MarkDirty();
                     Sound.Asterisk();
                 }),
-                ActionCard("Pachinko", HomeStrings.LiveGameCard, HomeStrings.LiveGameCardHint, () =>
+                // Opened from the console, the whole app already edits the game: these would connect a second time.
+                ctx.Live ? null : ActionCard("Pachinko", HomeStrings.LiveGameCard, HomeStrings.LiveGameCardHint, () =>
                 {
                     var exist = UiUtil.FirstFormOfType<LiveGameWindow>();
                     if (exist is not null)
@@ -241,7 +242,7 @@ public static class ActionPages
                         new LiveGameWindow(ctx, reload).Show(ctx.Owner);
                     return Task.CompletedTask;
                 }),
-                ActionCard("Pachinko", HomeStrings.LiveCard, HomeStrings.LiveCardHint, () =>
+                ctx.Live ? null : ActionCard("Pachinko", HomeStrings.LiveCard, HomeStrings.LiveCardHint, () =>
                 {
                     LivePockets.Create().Show(ctx.Owner);
                     return Task.CompletedTask;

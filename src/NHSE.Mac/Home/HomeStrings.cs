@@ -245,6 +245,7 @@ public static class HomeStrings
     public static string LiveSame { get; set; } = "Nothing to send: they are the same as in the game.";
     public static string LiveNotFound { get; set; } = "Your pockets are not where they should be in the game's memory, so nothing was changed. Are you on your island with your character?";
     public static string LiveError { get; set; } = "Could not talk to the console: {0}";
+    public static string LiveUnreachable { get; set; } = "The console at {0} does not answer. Is it on, on the same Wi-Fi, with sys-botbase? (Its IP is in System Settings → Internet.)";
     public static string RawMemory { get; set; } = "Game memory (raw)";
     public static string RawMemoryHint { get; set; } = "Reads and writes bytes of the running game by address. Only if you know what you are doing.";
 
@@ -288,4 +289,18 @@ public static class HomeStrings
     public static string LiveBackupUseThis { get; set; } = "Use this copy";
     public static string LiveBackupWrong { get; set; } = "That copy is not of this island or game version.";
     public static string LiveBackupReady { get; set; } = "The copy is in NHSE. «Send the changes» puts it in the game, and «Save and reload the island» shows it.";
+
+    // Opening the game over Wi-Fi from the launcher
+    public static string OpenLive { get; set; } = "Open from the console (Wi-Fi)";
+    public static string OpenLiveHint { get; set; } = "The game must be open and on your island, with sys-botbase on the console.";
+    public static string OpenLiveGo { get; set; } = "Open";
+    public static string OpenLiveNoIsland { get; set; } = "I can't find an island in the console: is the game open and are you on your island?";
+    public static string OpenLiveNeedCopy { get; set; } = "To open {0} over Wi-Fi I need, once, a copy of its save on the Mac (the folder you get with JKSV): the game only keeps the island and your character in memory. Choose it now?";
+    public static string OpenLiveWrongCopy { get; set; } = "That save is not {0} with this character.";
+    public static string LiveTitleSuffix { get; set; } = "live";
+    public static string LiveSaveButton { get; set; } = "Send to the console";
+    public static string LiveStatus { get; set; } = "Live with the console";
+    public static string LiveStatusDirty { get; set; } = "Changes not sent yet";
+    public static string LiveStatusCopies { get; set; } = "A copy is kept every time the game is brought and before every send.";
+    public static string LiveReloadUnsent { get; set; } = "There are changes not sent: they will be lost when the island is brought again. Reload anyway?";
 }

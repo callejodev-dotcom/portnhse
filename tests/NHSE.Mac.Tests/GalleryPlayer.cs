@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using NHSE.Core;
 using Xunit;
@@ -43,7 +44,8 @@ public class GalleryPlayer
         var w = new ItemReceivedEditor(sav.Players[0]);
         Gallery.Capture(w, "11-items-received", false);
 
-        // "Give All Fish" from the Give All menu, then save.
+        // "Give All Fish" from the Give All menu, then save. Alt (held in an earlier test's click) would take them away instead.
+        UiUtil.ModifierKeys = KeyModifiers.None;
         var fish = Find<Button>(w, "B_GiveAll").Flyout is MenuFlyout f ? f.Items.OfType<MenuItem>().First(z => z.Name == "B_AllFish") : null;
         Assert.NotNull(fish);
         fish!.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));

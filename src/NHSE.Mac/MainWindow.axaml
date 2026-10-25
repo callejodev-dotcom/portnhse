@@ -37,6 +37,7 @@
             <Button Name="B_OpenFolder" Classes="accent" Margin="4" Click="B_OpenFolder_Click" />
             <Button Name="B_OpenFile" Margin="4" Click="B_OpenFile_Click" />
             <Button Name="B_Reopen" Margin="4" Click="B_Reopen_Click" />
+            <Button Name="B_OpenLive" Margin="4" Click="B_OpenLive_Click" />
         </WrapPanel>
 
         <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,14,0,0">

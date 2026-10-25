@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Headless;
 using NHSE.Core;
@@ -11,6 +12,20 @@ namespace NHSE.Mac.Tests;
 public static class TestApp
 {
     /// <summary>
+    /// Points the app at the temporary folders when the test assembly loads, before any test (plain [Fact]s too) can
+    /// touch <see cref="Program"/>: its folder is fixed the first time it is used.
+    /// </summary>
+    [ModuleInitializer]
+    internal static void UseTemporaryFolders()
+    {
+        var appData = Path.Combine(Path.GetTempPath(), "nhse-mac-tests", "appdata");
+        Directory.CreateDirectory(appData);
+        Environment.SetEnvironmentVariable("NHSE_APPDATA", appData);
+        Environment.SetEnvironmentVariable("NHSE_LOGS", Path.Combine(Path.GetTempPath(), "nhse-mac-tests", "logs"));
+        Environment.SetEnvironmentVariable("NHSE_OFFLINE", "1"); // no downloads (e.g. the house pictures) while testing
+    }
+
+    /// <summary>
     /// Headless app with Skia rendering, so the gallery tests can capture real frames.
     /// </summary>
     /// <remarks>
@@ -21,12 +36,6 @@ public static class TestApp
     {
         TestSave.DeleteCopies();
         AppDomain.CurrentDomain.ProcessExit += (_, _) => TestSave.DeleteCopies();
-
-        var appData = Path.Combine(Path.GetTempPath(), "nhse-mac-tests", "appdata");
-        Directory.CreateDirectory(appData);
-        Environment.SetEnvironmentVariable("NHSE_APPDATA", appData);
-        Environment.SetEnvironmentVariable("NHSE_LOGS", Path.Combine(Path.GetTempPath(), "nhse-mac-tests", "logs"));
-        Environment.SetEnvironmentVariable("NHSE_OFFLINE", "1"); // no downloads (e.g. the house pictures) while testing
 
         if (Enum.TryParse<ThemeSetting>(Environment.GetEnvironmentVariable("NHSE_TEMA"), true, out var theme))
             Program.Settings.Theme = theme;
