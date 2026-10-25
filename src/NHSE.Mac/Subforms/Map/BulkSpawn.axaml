@@ -1,0 +1,28 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.BulkSpawn"
+        Title="Bulk Spawn"
+        SizeToContent="WidthAndHeight" CanResize="False">
+    <StackPanel Margin="12" Width="200" Spacing="6">
+        <ComboBox Name="CB_SpawnType" HorizontalAlignment="Stretch" SelectionChanged="CB_SpawnType_SelectedIndexChanged" />
+        <ComboBox Name="CB_SpawnArrange" HorizontalAlignment="Stretch" />
+        <Grid ColumnDefinitions="60,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="4">
+            <TextBlock Name="L_X" Classes="label" Text="X:" />
+            <NumericUpDown Name="NUD_SpawnX" Grid.Column="1" Minimum="0" Maximum="9999" />
+            <TextBlock Name="L_Y" Grid.Row="1" Classes="label" Text="Y:" />
+            <NumericUpDown Name="NUD_SpawnY" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="9999" />
+            <TextBlock Name="L_SpawnCount" Grid.Row="2" Classes="label" Text="Count:" />
+            <NumericUpDown Name="NUD_SpawnCount" Grid.Row="2" Grid.Column="1" Minimum="1" Maximum="9999" Value="10" />
+            <TextBlock Name="L_DIYStart" Grid.Row="3" Classes="label" Text="Start:" />
+            <NumericUpDown Name="NUD_DIYStart" Grid.Row="3" Grid.Column="1" Minimum="0" Maximum="9999" />
+            <TextBlock Name="L_DIYStop" Grid.Row="4" Classes="label" Text="Stop:" />
+            <NumericUpDown Name="NUD_DIYStop" Grid.Row="4" Grid.Column="1" Minimum="0" Maximum="9999" Value="9999" />
+            <StackPanel Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="2" Margin="2,0,0,0" Spacing="2">
+                <TextBlock Name="L_NHI" Text="NHI:" />
+                <TextBlock Name="L_NHIFileName" Text="&lt;none&gt;" Cursor="Hand" TextTrimming="CharacterEllipsis" Tapped="L_NHIFileName_Click" />
+            </StackPanel>
+        </Grid>
+        <Button Name="B_Apply" Content="Spawn" HorizontalAlignment="Stretch" Margin="0,6,0,0" Click="B_Apply_Click" />
+    </StackPanel>
+</nh:NhseWindow>

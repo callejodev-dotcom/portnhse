@@ -1,0 +1,109 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.TerrainBrushEditor"
+        Title="TerrainBrushEditor"
+        SizeToContent="WidthAndHeight" CanResize="False">
+    <nh:NhseWindow.Styles>
+        <!-- 64x64 buttons showing the stretched 32x32 brush picture (nearest neighbour). -->
+        <Style Selector="Button.tile">
+            <Setter Property="Width" Value="64" />
+            <Setter Property="Height" Value="64" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="Button.tile Image">
+            <Setter Property="Stretch" Value="Fill" />
+        </Style>
+        <Style Selector="TabItem > StackPanel">
+            <Setter Property="Margin" Value="8,10,8,8" />
+        </Style>
+        <Style Selector="Slider">
+            <Setter Property="IsSnapToTickEnabled" Value="True" />
+            <Setter Property="TickFrequency" Value="1" />
+            <Setter Property="SmallChange" Value="1" />
+            <Setter Property="TickPlacement" Value="BottomRight" />
+        </Style>
+    </nh:NhseWindow.Styles>
+
+    <Grid ColumnDefinitions="Auto,Auto" Margin="12">
+        <TabControl Name="tabControl1" Width="360">
+            <TabItem Name="tabPage1" Header="Dirt">
+                <StackPanel>
+                    <TextBlock Name="lbl_diagonal_borders" Text="Diagonal borders :" Margin="0,0,0,8" />
+                    <Grid ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
+                        <Button Name="nw_rounded_tile" Classes="tile" Click="NW_Rounded_Tile_Click" />
+                        <Button Name="n_tile" Grid.Column="1" Classes="tile" Click="N_tile_Click" />
+                        <Button Name="ne_rounded_tile" Grid.Column="2" Classes="tile" Click="NE_rounded_tile_Click" />
+                        <Button Name="w_tile" Grid.Row="1" Classes="tile" Click="W_tile_Click" />
+                        <Button Name="middle_tile" Grid.Row="1" Grid.Column="1" Classes="tile" Click="Middle_tile_Click" />
+                        <Button Name="e_tile" Grid.Row="1" Grid.Column="2" Classes="tile" Click="E_tile_Click" />
+                        <Button Name="sw_rounded_tile" Grid.Row="2" Classes="tile" Click="SW_rounded_tile_Click" />
+                        <Button Name="s_tile" Grid.Row="2" Grid.Column="1" Classes="tile" Click="S_tile_Click" />
+                        <Button Name="se_rounded_tile" Grid.Row="2" Grid.Column="2" Classes="tile" Click="SE_rounded_tile_Click" />
+                    </Grid>
+                    <Grid ColumnDefinitions="155,Auto" RowDefinitions="Auto,Auto,Auto" Margin="0,8,0,0">
+                        <TextBlock Name="lbl_angular_borders" Text="Angular borders :" Margin="0,0,0,8" />
+                        <Button Name="nw_angular_tile" Grid.Row="1" Classes="tile" Click="NW_angular_tile_Click" />
+                        <Button Name="ne_angular_tile" Grid.Row="1" Classes="tile" Margin="70,0,6,6" Click="NE_angular_tile_Click" />
+                        <Button Name="sw_angular_tile" Grid.Row="2" Classes="tile" Click="SW_angular_tile_Click" />
+                        <Button Name="se_angular_tile" Grid.Row="2" Classes="tile" Margin="70,0,6,6" Click="SE_angular_tile_Click" />
+                        <TextBlock Name="label3" Grid.Column="1" Text="Inner corners :" Margin="0,0,0,8" />
+                        <Button Name="tl_dirt_inside" Grid.Row="1" Grid.Column="1" Classes="tile" Click="TL_dirt_inside_Click" />
+                        <Button Name="tr_dirt_inside" Grid.Row="1" Grid.Column="1" Classes="tile" Margin="70,0,6,6" Click="TR_dirt_inside_Click" />
+                        <Button Name="dl_dirt_inside" Grid.Row="2" Grid.Column="1" Classes="tile" Click="DL_dirt_inside_Click" />
+                        <Button Name="dr_dirt_inside" Grid.Row="2" Grid.Column="1" Classes="tile" Margin="70,0,6,6" Click="DR_dirt_inside_Click" />
+                    </Grid>
+                </StackPanel>
+            </TabItem>
+            <TabItem Name="tabPage2" Header="Water">
+                <StackPanel>
+                    <TextBlock Name="label1" Text="Diagonal borders :" Margin="0,0,0,8" />
+                    <Grid ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
+                        <Button Name="nw_diagonal_water_tile" Classes="tile" Click="NW_diagonal_water_tile_Click" />
+                        <Button Name="n_water_tile" Grid.Column="1" Classes="tile" Click="N_water_tile_Click" />
+                        <Button Name="ne_diagonal_water_tile" Grid.Column="2" Classes="tile" Click="NE_diagonal_water_tile_Click" />
+                        <Button Name="w_water_tile" Grid.Row="1" Classes="tile" Click="W_water_tile_Click" />
+                        <Button Name="center_water_tile" Grid.Row="1" Grid.Column="1" Classes="tile" Click="Center_water_tile_Click" />
+                        <Button Name="e_water_tile" Grid.Row="1" Grid.Column="2" Classes="tile" Click="e_water_tile_Click" />
+                        <Button Name="sw_diagonal_water_tile" Grid.Row="2" Classes="tile" Click="sw_diagonal_water_tile_Click" />
+                        <Button Name="s_water_tile" Grid.Row="2" Grid.Column="1" Classes="tile" Click="s_water_tile_Click" />
+                        <Button Name="se_diagonal_water_tile" Grid.Row="2" Grid.Column="2" Classes="tile" Click="SE_diagonal_water_tile_Click" />
+                    </Grid>
+                    <Grid ColumnDefinitions="155,Auto" RowDefinitions="Auto,Auto,Auto" Margin="0,8,0,0">
+                        <TextBlock Name="label2" Text="Angular borders :" Margin="0,0,0,8" />
+                        <Button Name="nw_angular_water_tile" Grid.Row="1" Classes="tile" Click="NW_angular_water_tile_Click" />
+                        <Button Name="ne_angular_water_tile" Grid.Row="1" Classes="tile" Margin="70,0,6,6" Click="NE_angular_water_tile_Click" />
+                        <Button Name="sw_angular_water_tile" Grid.Row="2" Classes="tile" Click="SW_angular_water_tile_Click" />
+                        <Button Name="se_angular_water_tile" Grid.Row="2" Classes="tile" Margin="70,0,6,6" Click="SE_angular_water_tile_Click" />
+                        <TextBlock Name="label4" Grid.Column="1" Text="Inner corners :" Margin="0,0,0,8" />
+                        <Button Name="tl_water_inside" Grid.Row="1" Grid.Column="1" Classes="tile" Click="TL_water_inside_Click" />
+                        <Button Name="tr_water_inside" Grid.Row="1" Grid.Column="1" Classes="tile" Margin="70,0,6,6" Click="TR_water_inside_Click" />
+                        <Button Name="dl_water_inside" Grid.Row="2" Grid.Column="1" Classes="tile" Click="DL_water_inside_Click" />
+                        <Button Name="dr_water_inside" Grid.Row="2" Grid.Column="1" Classes="tile" Margin="70,0,6,6" Click="DR_water_inside_Click" />
+                    </Grid>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <StackPanel Grid.Column="1" Width="150" Margin="14,40,6,0" Spacing="4">
+            <StackPanel Orientation="Horizontal" Spacing="16">
+                <Button Name="btn_normal_click" Width="46" Height="42" Padding="0" Click="B_Normal_Click" />
+                <Button Name="btn_brush" Width="46" Height="42" Padding="0" Click="B_Brush_Click" />
+            </StackPanel>
+            <Grid ColumnDefinitions="*,Auto" Margin="0,24,0,0">
+                <TextBlock Name="lbl_elevation" Text="Elevation :" />
+                <TextBlock Name="lbl_elevation_count" Grid.Column="1" Text="0" />
+            </Grid>
+            <Slider Name="slider_elevation" Minimum="0" Maximum="6" Value="0" ValueChanged="SliderElevationValueChanged" />
+            <Grid ColumnDefinitions="*,Auto" Margin="0,16,0,0">
+                <TextBlock Name="lbl_brush" Text="Brush size :" />
+                <TextBlock Name="lbl_size_count" Grid.Column="1" Text="1" />
+            </Grid>
+            <Slider Name="slider_thickness" Minimum="1" Maximum="10" Value="1" ValueChanged="SliderThicknessValueChanged" />
+            <CheckBox Name="cb_tileVariation" Content="Randomize tile variation" Margin="0,12,0,0" IsCheckedChanged="CB_TileVariation_CheckedChanged" />
+        </StackPanel>
+    </Grid>
+</nh:NhseWindow>
