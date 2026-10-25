@@ -20,20 +20,51 @@ public static class TestSave
     public static bool Available => SourceFolder is not null;
 
     /// <summary>
-    /// Temporary copies of the test save (each one is ~27 MB): emptied when the tests start and when they end.
+    /// Temporary copies of the test save (each one is ~27 MB), one folder per test process so parallel runs
+    /// don't delete each other's copies. Emptied when the tests start and when they end.
     /// </summary>
-    public static string SavesFolder { get; } = Path.Combine(Path.GetTempPath(), "nhse-mac-tests", "saves");
+    private static readonly string SavesRoot = Path.Combine(Path.GetTempPath(), "nhse-mac-tests", "saves");
+    public static string SavesFolder { get; } = Path.Combine(SavesRoot, Environment.ProcessId.ToString());
 
     public static void DeleteCopies()
     {
+        TryDelete(SavesFolder);
+        if (!Directory.Exists(SavesRoot))
+            return;
+        // Folders of test runs that are no longer running.
+        foreach (var dir in Directory.GetDirectories(SavesRoot))
+        {
+            if (!int.TryParse(Path.GetFileName(dir), out var pid) || !IsRunning(pid))
+                TryDelete(dir);
+        }
+    }
+
+    private static bool IsRunning(int pid)
+    {
         try
         {
-            if (Directory.Exists(SavesFolder))
-                Directory.Delete(SavesFolder, true);
+            using var p = System.Diagnostics.Process.GetProcessById(pid);
+            return !p.HasExited;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+
+    private static void TryDelete(string dir)
+    {
+        try
+        {
+            if (Directory.Exists(dir))
+                Directory.Delete(dir, true);
         }
         catch (IOException)
         {
-            // Another test run is using them; the next run cleans up.
+            // In use; a later run cleans up.
+        }
+        catch (UnauthorizedAccessException)
+        {
         }
     }
 
