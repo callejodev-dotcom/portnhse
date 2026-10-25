@@ -1,3 +1,4 @@
 [submodule "NHSE"]
 	path = NHSE
 	url = https://github.com/kwsch/NHSE.git
+	ignore = untracked

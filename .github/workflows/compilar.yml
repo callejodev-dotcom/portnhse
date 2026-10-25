@@ -1,0 +1,44 @@
+name: Compilar NHSE para Mac
+
+# En cada subida: compila, pasa as probas e deixa os .dmg como artefactos.
+# Ao subir unha etiqueta «v0.1.0»… publica a versión cos dous .dmg (Apple Silicon e Intel).
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  mac:
+    runs-on: macos-15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Compilar
+        run: dotnet build PortNHSE.slnx -c Release -warnaserror
+
+      - name: Probas
+        run: dotnet test tests/NHSE.Mac.Tests -c Release --no-build
+
+      - name: Empaquetar
+        run: tools/empaquetar.sh arm64 x64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NHSE-macOS
+          path: dist/*.dmg
+
+      - name: Publicar a versión
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" dist/*.dmg --title "NHSE para Mac ${GITHUB_REF_NAME}" --notes-file LEEME.md

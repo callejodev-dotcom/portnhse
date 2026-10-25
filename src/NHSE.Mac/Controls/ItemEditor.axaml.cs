@@ -33,6 +33,11 @@ public partial class ItemEditor : UserControl
         ];
 
         L_WaterDays.Cursor = new Cursor(StandardCursorType.Hand);
+        CB_ItemID.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == ComboBox.TextProperty)
+                CB_ItemID_TextChanged();
+        };
     }
 
     private IReadOnlyList<ComboItem> AllItems = [];
@@ -385,6 +390,22 @@ public partial class ItemEditor : UserControl
     }
 
     private void CB_WrapType_SelectedIndexChanged(object? sender, SelectionChangedEventArgs e) => CB_WrapColor.IsVisible = (ItemWrapping)CB_WrapType.SelectedIndex == ItemWrapping.WrappingPaper;
+
+    /// <summary>
+    /// Typing selects the first name that starts with the text; the tooltip lists names that contain it.
+    /// </summary>
+    private void CB_ItemID_TextChanged()
+    {
+        var entered = CB_ItemID.Text;
+        if (string.IsNullOrEmpty(entered))
+        {
+            ToolTip.SetTip(CB_ItemID, null);
+            return;
+        }
+        var itemNames = AllItems.Where(z => z.Text.Contains(entered, StringComparison.CurrentCultureIgnoreCase)).Take(10).Select(z => z.Text);
+        var caption = string.Join(Environment.NewLine, itemNames);
+        ToolTip.SetTip(CB_ItemID, caption.Length == 0 ? null : caption);
+    }
 
     private void NUD_Count_ValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
