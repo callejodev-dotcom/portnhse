@@ -27,12 +27,19 @@ do formato da partida. Esta guía di como se fan as ventás novas dese estilo.
 
 - `HomeUi`: `Page`, `Card`, `CardHeader(icona, título, explicación, …)`, `ActionCard`,
   `SmallButton`, `Tiles(columnas, …)`, `Row`, `Amount` (cifra con separador de miles),
-  `ItemStrip` (fila de miniaturas), `Icon`, `Text`, `Section`.
+  `Stat` (tarxeta dunha cifra con icona e explicación), `ItemStrip` (fila de miniaturas),
+  `Icon`, `Text`, `Section`.
+- `PlayerDialog`: esqueleto dunha ventá amigable (título, explicación, contido, «Cancelar» e
+  «Gardar»); `Save()` escribe na partida e `Discard()` desfai o editado no sitio.
+- `PlayerUi`: `Chips` (filtros), `SearchBox`, `MenuButton` («Máis ▾»), `Labeled`, `DatePicker`,
+  `FormatDate`, `Dots`.
+- `IslandSummaries.Summary`: o que unha tarxeta do inicio mostra debaixo e se refai ao gardar.
 - `HomeContext`: a partida, o xogador escollido, `MarkDirty()` e `Edit(xanela)`, que abre
   un diálogo e marca a partida como cambiada se devolve `true`.
 - `ItemsWindow`: editor de listas de obxectos (exemplo completo do estilo).
 - `ItemSearchBox`: escoller un obxecto con categorías, buscador e imaxes.
 - `VillagerPicker`: escoller un veciño polo nome, con retrato.
+- `DesignsWindow` e `DesignSlot`: listas de deseños normais e PRO coa mesma ventá.
 - Estilos en `Styles.axaml` (`card`, `title`, `section`, `cardtitle`, `subtle`, `amount`,
   `chip`) e cores claras/escuras en `Themes.axaml` (`NhWindowBrush`, `NhCardBrush`,
   `NhGreenBrush`…).
