@@ -1,0 +1,24 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.ImageFetcher"
+        Title="Item Images"
+        Width="460" SizeToContent="Height" CanResize="False"
+        CanMinimize="False" CanMaximize="False">
+    <StackPanel Margin="32,18,32,14" Spacing="8">
+        <TextBlock Name="L_Warning" TextWrapping="Wrap" TextAlignment="Center"
+                   Text="The developers of this application are not responsible for curating item images. Images are hosted by third parties and while every effort is made to ensure completeness, this is not guaranteed." />
+        <Grid ColumnDefinitions="*,Auto,*" Margin="0,8,0,0">
+            <TextBlock Name="L_Host" Grid.Column="1" Text="Download Host:" VerticalAlignment="Bottom" />
+            <TextBlock Name="L_FileSize" Grid.Column="2" Text="00.0MB" MaxWidth="150" TextTrimming="CharacterEllipsis"
+                       HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+        </Grid>
+        <ComboBox Name="CB_HostSelect" HorizontalAlignment="Stretch" SelectionChanged="CB_HostSelect_SelectedIndexChanged" />
+        <TextBlock Name="L_ImgStatus" Foreground="#E5484D" TextWrapping="Wrap" TextAlignment="Center" Margin="8,0"
+                   Text="Images now exist. Only repair images if absolutely necessary. Images do NOT need to be redownloaded when NHSE updates." />
+        <Button Name="B_Download" Content="Download Images" MinWidth="180" HorizontalAlignment="Center" Margin="0,2,0,0"
+                Click="B_Download_Click" />
+        <ProgressBar Name="PBar_MultiUse" Minimum="0" Maximum="100" Margin="0,4,0,0" />
+        <TextBlock Name="L_Status" Text="Downloading..." MinHeight="18" HorizontalAlignment="Center" TextAlignment="Center" />
+    </StackPanel>
+</nh:NhseWindow>

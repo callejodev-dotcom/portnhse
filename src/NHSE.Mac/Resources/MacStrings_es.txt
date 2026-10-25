@@ -17,3 +17,4 @@ MsgBackupMac=NHSE puede guardar una copia de cada partida que abras, en su carpe
 MsgAbout=Versión para macOS de NHSE, el editor de partidas de Animal Crossing: New Horizons de Kaphotics y colaboradores. Licencia GPLv3.
 HintItemGrid=Clic: ver · ⇧ Clic: poner · ⌥ Clic: borrar · ⌘⌥ Clic: copiar a todos · Clic derecho: menú
 MsgNotPorted=Este editor todavía no está portado a macOS.
+MsgLibUsbMissing=La inyección por USB necesita la biblioteca libusb, que no se ha encontrado. Instálala con Homebrew (brew install libusb) y vuelve a intentarlo, o conéctate por Wi-Fi.

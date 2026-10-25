@@ -32,4 +32,5 @@ public static class MacStrings
 
     public static string HintItemGrid { get; set; } = "Click: view · ⇧ Click: set · ⌥ Click: delete · ⌘⌥ Click: clone to all · Right click: menu";
     public static string MsgNotPorted { get; set; } = "This editor has not been ported to macOS yet.";
+    public static string MsgLibUsbMissing { get; set; } = "USB injection needs the libusb library, which was not found. Install it with Homebrew (brew install libusb) and try again, or connect over Wi-Fi.";
 }

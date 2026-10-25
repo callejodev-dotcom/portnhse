@@ -19,7 +19,8 @@ public sealed class SysBotController(InjectionType type)
 
         try
         {
-            Bot.Connect(ip, p);
+            // Off the UI thread: an unreachable address takes a while to time out.
+            await Task.Run(() => Bot.Connect(ip, p));
         }
         catch (Exception ex)
         {
@@ -52,7 +53,7 @@ public sealed class SysBotController(InjectionType type)
 
     public async Task HexEdit(Window owner, uint offset, int length)
     {
-        var read = ReadBytes(offset, length);
+        var read = await Task.Run(() => ReadBytes(offset, length));
         var ram = new SimpleHexEditor(read);
         if (!await ram.ShowDialog<bool>(owner))
             return;
@@ -68,7 +69,7 @@ public sealed class SysBotController(InjectionType type)
                 return;
         }
 
-        WriteBytes(ram.Bytes, offset);
+        await Task.Run(() => WriteBytes(write, offset));
         SetOffset(offset);
         Sound.Asterisk();
     }
