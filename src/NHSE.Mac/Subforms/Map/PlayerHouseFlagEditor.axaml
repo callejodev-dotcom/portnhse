@@ -1,0 +1,24 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.PlayerHouseFlagEditor"
+        Title="Flag Editor"
+        Width="400" Height="340" MinWidth="340" MinHeight="300">
+    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,*,Auto" Margin="12">
+        <ListBox Name="LB_Counts" Grid.RowSpan="4" SelectionChanged="LB_Counts_SelectedIndexChanged" />
+        <TextBlock Name="L_Count" Grid.Column="1" Margin="10,0,0,4" Text="Value:" />
+        <NumericUpDown Name="NUD_Count" Grid.Row="1" Grid.Column="1" Margin="10,0,0,0" Width="100"
+                       Minimum="-32768" Maximum="32767" ValueChanged="NUD_Count_ValueChanged" />
+        <StackPanel Grid.Row="3" Grid.Column="1" Margin="10,0,0,0" Spacing="6">
+            <StackPanel.Styles>
+                <Style Selector="Button">
+                    <Setter Property="HorizontalAlignment" Value="Stretch" />
+                </Style>
+            </StackPanel.Styles>
+            <Button Name="B_Dump" Content="Dump" Click="B_Dump_Click" />
+            <Button Name="B_Load" Content="Load" Click="B_Load_Click" />
+            <Button Name="B_Save" Content="Save" Margin="0,12,0,0" Classes="accent" Click="B_Save_Click" />
+            <Button Name="B_Cancel" Content="Cancel" IsCancel="True" Click="B_Cancel_Click" />
+        </StackPanel>
+    </Grid>
+</nh:NhseWindow>
