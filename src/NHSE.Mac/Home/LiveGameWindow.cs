@@ -19,6 +19,7 @@ public sealed class LiveGameWindow : NhseWindow
     private readonly ProgressBar Progress = new() { Minimum = 0, Maximum = 1, IsVisible = false, Height = 6 };
     private readonly Button Pull = new() { Content = HomeStrings.LiveGamePull, IsEnabled = false, Classes = { "accent" } };
     private readonly Button Push = new() { Content = HomeStrings.LiveGamePush, IsEnabled = false, Classes = { "accent" } };
+    private readonly Button ReloadIsland = new() { Content = HomeStrings.LiveReload, IsEnabled = false };
 
     /// <param name="reload">Shows the home window again with what was brought from the game.</param>
     public LiveGameWindow(HomeContext ctx, Action reload)
@@ -44,10 +45,12 @@ public sealed class LiveGameWindow : NhseWindow
             settings.Port = p;
             Program.SaveSettings();
             Pull.IsEnabled = true;
+            ReloadIsland.IsEnabled = true;
             Say(HomeStrings.LiveGameConnected);
         });
         Pull.Click += async (_, _) => await Run(Pull, DoPull);
         Push.Click += async (_, _) => await Run(Push, DoPush);
+        ReloadIsland.Click += async (_, _) => await Run(ReloadIsland, DoReload);
 
         var row = new WrapPanel { ItemSpacing = 8, LineSpacing = 8 };
         row.Children.Add(new TextBlock { Text = HomeStrings.LiveConsole, VerticalAlignment = VerticalAlignment.Center });
@@ -60,6 +63,7 @@ public sealed class LiveGameWindow : NhseWindow
         steps.Children.Add(Step("2", HomeStrings.LiveGameStep2, Pull));
         steps.Children.Add(Step("3", HomeStrings.LiveGameStep3, null));
         steps.Children.Add(Step("4", HomeStrings.LiveGameStep4, Push));
+        steps.Children.Add(Step("5", HomeStrings.LiveGameStep5, ReloadIsland));
         steps.Children.Add(Progress);
         steps.Children.Add(Status);
 
@@ -152,7 +156,19 @@ public sealed class LiveGameWindow : NhseWindow
             return;
         }
         Sound.Asterisk();
+        ReloadIsland.IsEnabled = true;
         Say(sent == 0 ? HomeStrings.LiveSame : string.Format(HomeStrings.LiveGamePushed, sent.ToString("N0")));
+    }
+
+    private async Task DoReload()
+    {
+        if (await Dialogs.Prompt(MessageBoxButtons.YesNo, HomeStrings.LiveReloadAsk) != DialogResult.Yes)
+            return;
+        Push.IsEnabled = false;
+        Pull.IsEnabled = false;
+        await Game.Reload(text => Avalonia.Threading.Dispatcher.UIThread.Post(() => Say(text)));
+        // What was brought belongs to the game before it loaded again: bring it again before changing more.
+        Pull.IsEnabled = true;
     }
 
     protected override void OnClosed(EventArgs e)

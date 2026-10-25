@@ -102,6 +102,38 @@ public sealed class LiveGame : IDisposable
         ReadLine();
     }
 
+    /// <summary> Presses a button of the console's controller (sys-botbase's own controller). </summary>
+    private void Press(string button) => Send($"click {button}");
+
+    /// <summary>
+    /// Saves the game and loads the island again, as − → «Guardar y salir» → A on the title screen does, so the game
+    /// shows what it only reads when the island loads (the size of the house…). Takes about a minute.
+    /// </summary>
+    /// <param name="step">Told what is happening at each step.</param>
+    public async Task Reload(Action<string> step)
+    {
+        step(HomeStrings.LiveReloadSaving);
+        Press("MINUS");          // «¿Qué quieres hacer?»
+        await Task.Delay(1500);
+        Press("A");
+        await Task.Delay(1500);
+        Press("A");              // «Guardar y salir»: saves
+        await Task.Delay(10000);
+        Press("A");              // «Se han guardado los datos. ¡Hasta pronto!»
+        step(HomeStrings.LiveReloadTitle);
+        await Task.Delay(20000);
+        // The title screen takes a while: A a few times (while it is still loading they do nothing).
+        step(HomeStrings.LiveReloadEnter);
+        for (int i = 0; i < 4; i++)
+        {
+            Press("A");
+            await Task.Delay(4000);
+        }
+        // Give the controller back to the player.
+        Send("detachController");
+        step(HomeStrings.LiveReloadDone);
+    }
+
     /// <summary> Share of equal bytes, to tell whether the memory read is this island and player. </summary>
     private static double Likeness(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
     {

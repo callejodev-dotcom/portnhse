@@ -267,4 +267,13 @@ public static class HomeStrings
     public static string LiveGameOther { get; set; } = "What is in the console doesn't look like the save open in NHSE (another island or game version), so nothing was brought.";
     public static string LiveGameMoved { get; set; } = "The game no longer has your character where it was (it went back to the title screen?). Bring the game again.";
     public static string LiveGameNotes { get; set; } = "Only the first player of the island. Make a copy of your save on the console (JKSV) before trying. «Save changes» in NHSE still writes the files on the Mac, now with what you brought from the game.";
+
+    // Reloading the island
+    public static string LiveGameStep5 { get; set; } = "If something doesn't show (the size of the house…), reload the island: NHSE saves and loads it again for you, pressing the buttons. Leave the controller alone meanwhile.";
+    public static string LiveReload { get; set; } = "Save and reload the island";
+    public static string LiveReloadAsk { get; set; } = "NHSE will press − → «Save and exit» → A on the console, as you would. Your island must be on screen with no menu open. Go ahead?";
+    public static string LiveReloadSaving { get; set; } = "Saving the game…";
+    public static string LiveReloadTitle { get; set; } = "Going back to the title screen…";
+    public static string LiveReloadEnter { get; set; } = "Entering the island again…";
+    public static string LiveReloadDone { get; set; } = "Done. If it stayed on the title screen, press A yourself. Bring the game again before changing more.";
 }
