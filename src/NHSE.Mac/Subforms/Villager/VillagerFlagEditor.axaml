@@ -1,0 +1,46 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.VillagerFlagEditor"
+        Title="Flag Editor"
+        Width="500" Height="460" MinWidth="360" MinHeight="340">
+    <nh:NhseWindow.Styles>
+        <Style Selector="ListBox">
+            <Setter Property="Background" Value="{DynamicResource TextControlBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+        <Style Selector="ListBox ListBoxItem">
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+        <Style Selector="StackPanel#FLP_Buttons > Button">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+    </nh:NhseWindow.Styles>
+
+    <Grid ColumnDefinitions="*,Auto" Margin="12">
+        <!-- Thousands of rows: virtualized, only the visible ones are created. -->
+        <ListBox Name="LB_Counts" SelectionMode="Single" SelectionChanged="LB_Counts_SelectedIndexChanged">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="nh:FlagListItem">
+                    <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <DockPanel Grid.Column="1" Width="110" Margin="12,0,0,0">
+            <StackPanel DockPanel.Dock="Top" Spacing="4">
+                <TextBlock Name="L_Count" Text="Value:" />
+                <NumericUpDown Name="NUD_Count" Minimum="0" Maximum="65535" ValueChanged="NUD_Count_ValueChanged" />
+            </StackPanel>
+            <StackPanel Name="FLP_Buttons" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" Spacing="6">
+                <Button Name="B_Dump" Content="Dump" Click="B_Dump_Click" />
+                <Button Name="B_Load" Content="Load" Click="B_Load_Click" />
+                <Button Name="B_Save" Content="Save" Classes="accent" Margin="0,12,0,0" Click="B_Save_Click" />
+                <Button Name="B_Cancel" Content="Cancel" IsCancel="True" Click="B_Cancel_Click" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</nh:NhseWindow>

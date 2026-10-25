@@ -1,0 +1,101 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.VillagerMemoryEditor"
+        Title="Villager Player Memory Editor"
+        Width="660" Height="530" MinWidth="560" MinHeight="420">
+    <nh:NhseWindow.Styles>
+        <Style Selector="ListBox">
+            <Setter Property="Background" Value="{DynamicResource TextControlBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+        <Style Selector="ListBox ListBoxItem">
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+    </nh:NhseWindow.Styles>
+
+    <Grid ColumnDefinitions="210,*" RowDefinitions="*,Auto" Margin="12">
+        <!-- Left: players remembered by the villager -->
+        <StackPanel Spacing="6">
+            <ListBox Name="LB_Players" Height="176" SelectionMode="Single" SelectionChanged="LB_Players_SelectedIndexChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="nh:FlagListItem">
+                        <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                <Button Name="B_Dump" Content="Dump" HorizontalAlignment="Stretch" Click="B_Dump_Click" />
+                <Button Name="B_Load" Grid.Column="1" Content="Load" HorizontalAlignment="Stretch" Click="B_Load_Click" />
+            </Grid>
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" RowSpacing="4" Margin="0,6,0,0">
+                <TextBlock Name="LBL_Name" Classes="label" Text="Name:" />
+                <TextBox Name="TB_NamePlayer" Grid.Column="1" TextChanged="TB_NamePlayer_TextChanged" />
+                <TextBlock Name="LBL_IslandName" Grid.Row="1" Classes="label" Text="Island:" />
+                <TextBox Name="TB_Island" Grid.Row="1" Grid.Column="1" TextChanged="TB_Island_TextChanged" />
+            </Grid>
+        </StackPanel>
+
+        <TabControl Name="TC_Memory" Grid.Column="1" Margin="12,-4,0,0">
+            <TabItem Name="Tab_Flags" Header="Flags">
+                <Grid RowDefinitions="Auto,*" Margin="0,8,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Name="L_Count" Classes="label" Text="Value:" />
+                        <NumericUpDown Name="NUD_Count" Maximum="255" Width="100" ValueChanged="NUD_Count_ValueChanged" />
+                    </StackPanel>
+                    <ListBox Name="LB_Counts" Grid.Row="1" Margin="0,8,0,0" SelectionMode="Single" SelectionChanged="LB_Counts_SelectedIndexChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="nh:FlagListItem">
+                                <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </TabItem>
+            <TabItem Name="Tab_Misc" Header="Misc">
+                <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Top" Margin="0,8,0,0">
+                    <TextBlock Name="L_NickName" Classes="label" Text="Nickname:" />
+                    <TextBox Name="TB_NickName" Grid.Column="1" Width="200" HorizontalAlignment="Left" />
+                </Grid>
+            </TabItem>
+            <TabItem Name="Tab_Greet" Header="Greet">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowSpacing="4" Margin="0,8,4,0">
+                        <CalendarDatePicker Name="CAL_GreetDate" Grid.Column="1" SelectedDateFormat="Long" PlaceholderText=" " HorizontalAlignment="Stretch" Margin="0,0,0,4" />
+                        <TextBlock Name="L_Greeting" Grid.Row="1" Classes="label" Text="Greeting:" />
+                        <TextBox Name="TB_Greeting" Grid.Row="1" Grid.Column="1" />
+                        <TextBlock Name="L_Greeting1" Grid.Row="2" Classes="label" Text="Greeting 1:" />
+                        <TextBox Name="TB_Greeting1" Grid.Row="2" Grid.Column="1" />
+                        <TextBlock Name="L_Greeting2" Grid.Row="3" Classes="label" Text="Greeting 2:" />
+                        <TextBox Name="TB_Greeting2" Grid.Row="3" Grid.Column="1" />
+                        <TextBlock Name="L_Greeting3" Grid.Row="4" Classes="label" Text="Greeting 3:" />
+                        <TextBox Name="TB_Greeting3" Grid.Row="4" Grid.Column="1" />
+                        <TextBlock Name="L_Greeting4" Grid.Row="5" Classes="label" Text="Greeting 4:" />
+                        <TextBox Name="TB_Greeting4" Grid.Row="5" Grid.Column="1" />
+                        <TextBlock Name="L_Greeting5" Grid.Row="6" Classes="label" Text="Greeting 5:" />
+                        <TextBox Name="TB_Greeting5" Grid.Row="6" Grid.Column="1" />
+                        <TextBlock Name="L_Greeting6" Grid.Row="7" Classes="label" Text="Greeting 6:" />
+                        <TextBox Name="TB_Greeting6" Grid.Row="7" Grid.Column="1" />
+                        <TextBlock Name="L_Greeting7" Grid.Row="8" Classes="label" Text="Greeting 7:" />
+                        <TextBox Name="TB_Greeting7" Grid.Row="8" Grid.Column="1" />
+                        <TextBlock Name="L_Greeting8" Grid.Row="9" Classes="label" Text="Greeting 8:" />
+                        <TextBox Name="TB_Greeting8" Grid.Row="9" Grid.Column="1" />
+                        <TextBlock Name="L_Greeting9" Grid.Row="10" Classes="label" Text="Greeting 9:" />
+                        <TextBox Name="TB_Greeting9" Grid.Row="10" Grid.Column="1" />
+                        <TextBlock Name="L_Greeting10" Grid.Row="11" Classes="label" Text="Greeting 10:" />
+                        <TextBox Name="TB_Greeting10" Grid.Row="11" Grid.Column="1" />
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0,12,0,0">
+            <Button Name="B_Cancel" Content="Cancel" Width="80" IsCancel="True" Click="B_Cancel_Click" />
+            <Button Name="B_Save" Content="Save" Width="80" Classes="accent" Click="B_Save_Click" />
+        </StackPanel>
+    </Grid>
+</nh:NhseWindow>

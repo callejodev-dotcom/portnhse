@@ -1,0 +1,24 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.VillagerDIYTimerEditor"
+        Title="Villager DIY Editor"
+        SizeToContent="WidthAndHeight" CanResize="False">
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" Width="360" Margin="16">
+        <CheckBox Name="CHK_Crafting" Grid.ColumnSpan="2" Content="Is crafting?" Margin="0,0,0,6"
+                  IsCheckedChanged="CHK_Crafting_CheckedChanged" />
+
+        <TextBlock Name="L_EndTime" Grid.Row="1" Classes="label" Text="Crafting until:" />
+        <TimePicker Name="DT_Time" Grid.Row="1" Grid.Column="1" ClockIdentifier="24HourClock" UseSeconds="True"
+                    HorizontalAlignment="Stretch" SelectedTimeChanged="DT_Time_ValueChanged" />
+
+        <TextBlock Name="L_Recipe" Grid.Row="2" Classes="label" Text="Recipe:" Margin="0,8,6,0" />
+        <ComboBox Name="CB_Recipe" Grid.Row="2" Grid.Column="1" IsEditable="True" HorizontalAlignment="Stretch"
+                  MaxDropDownHeight="400" Margin="0,8,0,0" SelectionChanged="CB_Recipe_SelectedIndexChanged" />
+
+        <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0,18,0,0">
+            <Button Name="B_Cancel" Content="Cancel" Width="92" IsCancel="True" Click="B_Cancel_Click" />
+            <Button Name="B_Save" Content="Save" Width="92" Classes="accent" Click="B_Save_Click" />
+        </StackPanel>
+    </Grid>
+</nh:NhseWindow>
