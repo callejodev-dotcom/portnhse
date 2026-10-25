@@ -78,6 +78,7 @@ public partial class App : Application
         TranslationUtil.SetLocalization(typeof(MessageStrings), lang);
         TranslationUtil.SetLocalization(GameInfo.Strings.InternalNameTranslation, lang);
         TranslationUtil.SetLocalizationMac(typeof(MacStrings), lang);
+        TranslationUtil.SetLocalizationMac(typeof(HomeStrings), lang);
         LanguageChanged?.Invoke(lang);
     }
 

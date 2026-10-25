@@ -1,6 +1,28 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:nh="using:NHSE.Mac">
+    <!-- Colours of the home window (cards and sidebar), in light and dark. -->
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="NhWindowBrush" Color="#FBFBFD" />
+            <SolidColorBrush x:Key="NhSidebarBrush" Color="#EEEEF2" />
+            <SolidColorBrush x:Key="NhCardBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="NhCardBorderBrush" Color="#E2E2E8" />
+            <SolidColorBrush x:Key="NhSubtleBrush" Color="#6E6E73" />
+            <SolidColorBrush x:Key="NhGreenBrush" Color="#2F9E62" />
+            <SolidColorBrush x:Key="NhSelectedBrush" Color="#DDEFE4" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="NhWindowBrush" Color="#1C1C1E" />
+            <SolidColorBrush x:Key="NhSidebarBrush" Color="#242427" />
+            <SolidColorBrush x:Key="NhCardBrush" Color="#2C2C2F" />
+            <SolidColorBrush x:Key="NhCardBorderBrush" Color="#3A3A3E" />
+            <SolidColorBrush x:Key="NhSubtleBrush" Color="#A1A1A6" />
+            <SolidColorBrush x:Key="NhGreenBrush" Color="#4CC284" />
+            <SolidColorBrush x:Key="NhSelectedBrush" Color="#244A35" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
     <ControlTheme x:Key="{x:Type nh:GroupBox}" TargetType="nh:GroupBox">
         <Setter Property="Padding" Value="8" />
         <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />

@@ -20,6 +20,18 @@ public sealed partial class Editor : NhseWindow
 
     private Bitmap? PlayerPhoto;
 
+    /// <summary>
+    /// Opened from the home window: copy the values into the save data when closing, without writing the files.
+    /// </summary>
+    public bool WriteBackOnClose { get; init; }
+
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        base.OnClosing(e);
+        if (WriteBackOnClose && !e.Cancel)
+            SaveAll();
+    }
+
     public Editor(HorizonSave file)
     {
         InitializeComponent();

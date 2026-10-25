@@ -40,7 +40,7 @@
     <EmbeddedResource Include="$(NHSEDir)NHSE.WinForms/Resources/text/lang_*.txt" LogicalName="lang/%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(NHSEDir)NHSE.WinForms/Resources/Map assets/*.png" LogicalName="map/%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(NHSEDir)NHSE.WinForms/Resources/network/hosts_images.txt" LogicalName="network/hosts_images.txt" />
-    <EmbeddedResource Include="Resources/MacStrings_*.txt" LogicalName="mac/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Resources/*Strings_*.txt" LogicalName="mac/%(Filename)%(Extension)" />
     <AvaloniaResource Include="Assets/**" />
   </ItemGroup>
 

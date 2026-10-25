@@ -1,0 +1,23 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.HomeWindow"
+        Title="NHSE"
+        Width="1060" Height="740" MinWidth="880" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource NhWindowBrush}"
+        Icon="/Assets/icon.png">
+    <Grid ColumnDefinitions="230,*">
+        <Border Background="{DynamicResource NhSidebarBrush}">
+            <DockPanel Margin="12,16,12,14">
+                <StackPanel DockPanel.Dock="Bottom" Spacing="6">
+                    <TextBlock Name="L_Status" Classes="subtle" FontSize="12" Margin="4,0" />
+                    <Button Name="B_Save" Classes="accent" HorizontalAlignment="Stretch" Height="36" FontWeight="SemiBold" Click="B_Save_Click" />
+                    <TextBlock Name="L_Backup" Classes="subtle" FontSize="11" Margin="4,0" />
+                </StackPanel>
+                <ListBox Name="LB_Nav" Classes="nav" SelectionChanged="LB_Nav_SelectionChanged" />
+            </DockPanel>
+        </Border>
+        <ContentControl Grid.Column="1" Name="PAN_Page" />
+    </Grid>
+</nh:NhseWindow>

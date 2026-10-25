@@ -76,17 +76,18 @@ public static class SaveFileLoader
         return sav;
     }
 
-    private static async Task CheckBackupPrompt(ApplicationSettings settings)
+    /// <summary>
+    /// Backups are on by default without asking (WinForms asked once); they can be turned off in the settings.
+    /// </summary>
+    private static Task CheckBackupPrompt(ApplicationSettings settings)
     {
-        if (settings.BackupPrompted)
-            return;
-
-        settings.BackupPrompted = true;
-        var line1 = string.Format(MacStrings.MsgBackupMac, UiUtil.ShortPath(BackupPath));
-        var line2 = MessageStrings.MsgBackupCreateQuestion;
-        var prompt = await Dialogs.Prompt(MessageBoxButtons.YesNo, line1, line2);
-        settings.AutomaticBackup = prompt == DialogResult.Yes;
-        Program.SaveSettings();
+        if (!settings.BackupPrompted)
+        {
+            settings.BackupPrompted = true;
+            settings.AutomaticBackup = true;
+            Program.SaveSettings();
+        }
+        return Task.CompletedTask;
     }
 
     private static async Task<bool> TryValidateSaveFile(HorizonSave file)

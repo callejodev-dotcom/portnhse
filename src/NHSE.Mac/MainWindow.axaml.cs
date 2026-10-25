@@ -143,10 +143,10 @@ public partial class MainWindow : Window
             return false;
         Program.SaveSettings();
 
-        var editor = new Editor(sav);
+        var editor = new HomeWindow(sav);
         editor.Closed += (_, _) =>
         {
-            if (!UiUtil.GetWindows().OfType<Editor>().Any(z => z != editor))
+            if (!UiUtil.GetWindows().OfType<HomeWindow>().Any(z => z != editor))
             {
                 LoadText();
                 Show();
