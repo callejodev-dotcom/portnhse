@@ -27,8 +27,7 @@ public static class ActionPages
             ctx.MarkDirty();
         };
 
-        string[] airportColors = [HomeStrings.ColorBlue, HomeStrings.ColorYellow, HomeStrings.ColorOrange, HomeStrings.ColorGreen]; // AirportColor order
-        var airport = new ComboBox { ItemsSource = airportColors, SelectedIndex = (int)main.AirportThemeColor, MinWidth = 160, Margin = new Thickness(0, 6, 0, 0) };
+        var airport = new ComboBox { ItemsSource = Enum.GetValues<AirportColor>().Select(IslandSummaries.AirportName).ToArray(), SelectedIndex = (int)main.AirportThemeColor, MinWidth = 160, Margin = new Thickness(0, 6, 0, 0) };
         airport.SelectionChanged += (_, _) =>
         {
             if (airport.SelectedIndex < 0 || (int)main.AirportThemeColor == airport.SelectedIndex)
@@ -36,6 +35,11 @@ public static class ActionPages
             main.AirportThemeColor = (AirportColor)airport.SelectedIndex;
             ctx.MarkDirty();
         };
+
+        var fruit = IslandSummaries.Fruit(main);
+        var turnips = IslandSummaries.Turnips(main);
+        var campsite = IslandSummaries.Campsite(main);
+        var visitors = IslandSummaries.Visitors(main);
 
         return Page(HomeStrings.IslandTitle, null,
             Tiles(2,
@@ -52,20 +56,32 @@ public static class ActionPages
                 })),
             Section(HomeStrings.IslandLife),
             Tiles(2,
-                ActionCard("Peach", HomeStrings.FruitFlowers, HomeStrings.FruitFlowersHint, () => ctx.Edit(new FruitsFlowersEditor(ctx.Player, main))),
+                ActionCard("Peach", IslandStrings.FruitTitle, IslandStrings.FruitHint, async () =>
+                {
+                    if (await ctx.Edit(new FruitsFlowersWindow(ctx.SAV.Players, ctx.PlayerIndex, main)))
+                        fruit.Refresh();
+                }, fruit),
                 ActionCard("Kabu", HomeStrings.Turnips, HomeStrings.TurnipsHint, async () =>
                 {
-                    var editor = new SingleObjectEditor<TurnipStonk>(main.Turnips, PropertySort.Categorized, false);
-                    if (await ctx.Edit(editor))
-                        main.Turnips = editor.Object;
-                }),
-                ActionCard("Tent", HomeStrings.Campsite, HomeStrings.CampsiteHint, () => ctx.Edit(new CampsiteEditor(ctx.SAV))),
+                    var t = main.Turnips;
+                    if (!await ctx.Edit(new TurnipsWindow(t)))
+                        return;
+                    main.Turnips = t;
+                    turnips.Refresh();
+                }, turnips),
+                ActionCard("Tent", HomeStrings.Campsite, HomeStrings.CampsiteHint, async () =>
+                {
+                    if (await ctx.Edit(new CampsiteWindow(main)))
+                        campsite.Refresh();
+                }, campsite),
                 ActionCard("Balloon", HomeStrings.Visitors, HomeStrings.VisitorsHint, async () =>
                 {
-                    var editor = new SingleObjectEditor<object>(main.Visitor, PropertySort.NoSort, false);
-                    if (await ctx.Edit(editor))
-                        main.Visitor = (GSaveVisitorNpc)editor.Object;
-                }),
+                    var v = main.Visitor;
+                    if (!await ctx.Edit(new VisitorsWindow(v)))
+                        return;
+                    main.Visitor = v;
+                    visitors.Refresh();
+                }, visitors),
                 ActionCard("Megaphone", HomeStrings.Bulletin, HomeStrings.BulletinHint, async () =>
                 {
                     var editor = new SingleObjectEditor<object>(main.Bulletin, PropertySort.NoSort, false);
@@ -74,15 +90,21 @@ public static class ActionPages
                 })));
     }
 
-    public static Control Museum(HomeContext ctx) => Page(HomeStrings.MuseumTitle, null,
-        Tiles(2,
-            ActionCard("Fossil", HomeStrings.MuseumTitle, HomeStrings.MuseumHint, async () =>
-            {
-                var museum = ctx.SAV.Main.Museum;
-                if (await ctx.Edit(new MuseumEditor(museum)))
+    public static Control Museum(HomeContext ctx)
+    {
+        var summary = IslandSummaries.Museum(ctx.SAV.Main);
+        return Page(HomeStrings.MuseumTitle, null,
+            Tiles(2,
+                ActionCard("Fossil", HomeStrings.MuseumTitle, HomeStrings.MuseumHint, async () =>
+                {
+                    var museum = ctx.SAV.Main.Museum;
+                    if (!await ctx.Edit(new MuseumWindow(museum, ctx.SAV.Players, ctx.PlayerIndex)))
+                        return;
                     ctx.SAV.Main.Museum = museum;
-            }),
-            ActionCard("Book", HomeStrings.Catalog, HomeStrings.CatalogHint, () => ctx.Edit(new ItemReceivedEditor(ctx.Player)))));
+                    summary.Refresh();
+                }, summary),
+                ActionCard("Book", HomeStrings.Catalog, HomeStrings.CatalogHint, () => ctx.Edit(new ItemReceivedEditor(ctx.Player)))));
+    }
 
     public static Control Designs(HomeContext ctx)
     {
