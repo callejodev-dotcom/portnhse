@@ -165,7 +165,8 @@ public static class ActionPages
                     })));
     }
 
-    public static Control Advanced(HomeContext ctx, Func<Task> classicEditor)
+    /// <param name="reload">Shows the whole home window again (after the save was filled from the game).</param>
+    public static Control Advanced(HomeContext ctx, Func<Task> classicEditor, Action reload)
     {
         var main = ctx.SAV.Main;
 
@@ -230,6 +231,15 @@ public static class ActionPages
                     ctx.SAV.Load(dir);
                     ctx.MarkDirty();
                     Sound.Asterisk();
+                }),
+                ActionCard("Pachinko", HomeStrings.LiveGameCard, HomeStrings.LiveGameCardHint, () =>
+                {
+                    var exist = UiUtil.FirstFormOfType<LiveGameWindow>();
+                    if (exist is not null)
+                        exist.Activate();
+                    else
+                        new LiveGameWindow(ctx, reload).Show(ctx.Owner);
+                    return Task.CompletedTask;
                 }),
                 ActionCard("Pachinko", HomeStrings.LiveCard, HomeStrings.LiveCardHint, () =>
                 {

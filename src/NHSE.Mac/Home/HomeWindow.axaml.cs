@@ -110,8 +110,18 @@ public sealed partial class HomeWindow : NhseWindow
             "island" => ActionPages.Island(Ctx),
             "museum" => ActionPages.Museum(Ctx),
             "designs" => ActionPages.Designs(Ctx),
-            _ => ActionPages.Advanced(Ctx, OpenClassicEditor),
+            _ => ActionPages.Advanced(Ctx, OpenClassicEditor, ReloadAll),
         };
+    }
+
+    /// <summary>
+    /// Builds every page again from the save (after it was filled with what the game has), keeping the chosen page.
+    /// </summary>
+    private void ReloadAll()
+    {
+        var selected = LB_Nav.SelectedIndex;
+        BuildNav();
+        LB_Nav.SelectedIndex = Math.Max(0, selected);
     }
 
     /// <summary>

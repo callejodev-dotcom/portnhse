@@ -247,4 +247,24 @@ public static class HomeStrings
     public static string LiveError { get; set; } = "Could not talk to the console: {0}";
     public static string RawMemory { get; set; } = "Game memory (raw)";
     public static string RawMemoryHint { get; set; } = "Reads and writes bytes of the running game by address. Only if you know what you are doing.";
+
+    // Live game (Wi-Fi)
+    public static string LiveGameTitle { get; set; } = "Game live (Wi-Fi)";
+    public static string LiveGameHint { get; set; } = "Edit the game the console is playing, with everything in NHSE: your island and your character.";
+    public static string LiveGameCard { get; set; } = "Everything live (Wi-Fi)";
+    public static string LiveGameCardHint { get; set; } = "Bring the game from the console, change anything in NHSE and send it back. Needs sys-botbase.";
+    public static string LiveGameStep1 { get; set; } = "Connect to the console (same Wi-Fi, game open and on your island).";
+    public static string LiveGameStep2 { get; set; } = "Bring the game: NHSE will show what the game has now (the files on the Mac are not touched).";
+    public static string LiveGameStep3 { get; set; } = "Change what you like in any part of NHSE: money, pockets, storage, recipes, map, houses…";
+    public static string LiveGameStep4 { get; set; } = "Send the changes: only what you changed is written into the game.";
+    public static string LiveGamePull { get; set; } = "Bring the game";
+    public static string LiveGamePush { get; set; } = "Send the changes";
+    public static string LiveGameConnected { get; set; } = "Connected. Now bring the game.";
+    public static string LiveGamePulling { get; set; } = "Bringing the game (about half a minute)…";
+    public static string LiveGamePulled { get; set; } = "NHSE now shows the game. Change what you like and send the changes.";
+    public static string LiveGamePushing { get; set; } = "Sending…";
+    public static string LiveGamePushed { get; set; } = "Sent ({0} bytes). Some things show at once; others when you go into a building and out, or the next day.";
+    public static string LiveGameOther { get; set; } = "What is in the console doesn't look like the save open in NHSE (another island or game version), so nothing was brought.";
+    public static string LiveGameMoved { get; set; } = "The game no longer has your character where it was (it went back to the title screen?). Bring the game again.";
+    public static string LiveGameNotes { get; set; } = "Only the first player of the island. Make a copy of your save on the console (JKSV) before trying. «Save changes» in NHSE still writes the files on the Mac, now with what you brought from the game.";
 }
