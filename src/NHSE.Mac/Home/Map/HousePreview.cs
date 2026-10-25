@@ -33,13 +33,19 @@ public sealed class HousePreview : Control
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
-        ExteriorPictures.PicturesChanged += InvalidateVisual;
+        ExteriorPictures.PicturesChanged += Refresh;
+    }
+
+    private void Refresh()
+    {
+        HouseComposer.Clear();
+        InvalidateVisual();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromVisualTree(e);
-        ExteriorPictures.PicturesChanged -= InvalidateVisual;
+        ExteriorPictures.PicturesChanged -= Refresh;
     }
 
     /// <summary> Part of a roof picture covered with tiles in every roof (left of the ridge, below the eaves). </summary>
@@ -61,6 +67,13 @@ public sealed class HousePreview : Control
         context.FillRectangle(new SolidColorBrush(Color.FromRgb(0x8C, 0xCB, 0x6E)), new Rect(0, ground, b.Width, b.Height - ground));
         context.DrawEllipse(new SolidColorBrush(Color.FromRgb(0x7A, 0xBD, 0x5D)), null, new Point(b.Width * 0.12, ground + 4), b.Width * 0.12, 10);
         context.DrawEllipse(new SolidColorBrush(Color.FromRgb(0x7A, 0xBD, 0x5D)), null, new Point(b.Width * 0.9, ground + 6), b.Width * 0.14, 11);
+
+        // The house made from the game's pictures, when they are there; otherwise a drawing.
+        if (HouseComposer.Compose(_walls, _roof) is { } front)
+        {
+            DrawFront(context, front, b, ground);
+            return;
+        }
 
         // House
         var bodyW = b.Width * 0.56;
@@ -153,6 +166,61 @@ public sealed class HousePreview : Control
         {
             var d = new Rect(body.Center.X - (bodyW * 0.09), ground - (bodyH * 0.55), bodyW * 0.18, bodyH * 0.55);
             context.DrawRectangle(new SolidColorBrush(Color.FromRgb(0x9A, 0x6B, 0x4F)), line, d, 4, 4);
+        }
+    }
+
+    private static readonly Dictionary<Bitmap, Rect> DoorBounds = [];
+
+    /// <summary> The part of a door picture that is the door (its pictures have empty space around). </summary>
+    private static Rect DoorPart(Bitmap door)
+    {
+        if (DoorBounds.TryGetValue(door, out var known))
+            return known;
+        var (w, h) = (door.PixelSize.Width, door.PixelSize.Height);
+        using var copy = ImageUtil.Create(w, h);
+        using (var fb = copy.Lock())
+            door.CopyPixels(fb);
+        var px = copy.GetPixels();
+        int x0 = w, y0 = h, x1 = -1, y1 = -1;
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                if ((uint)px[(y * w) + x] >> 24 < 40)
+                    continue;
+                (x0, y0, x1, y1) = (Math.Min(x0, x), Math.Min(y0, y), Math.Max(x1, x), Math.Max(y1, y));
+            }
+        }
+        var part = x1 < 0 ? new Rect(0, 0, w, h) : new Rect(x0, y0, x1 - x0 + 1, y1 - y0 + 1);
+        DoorBounds[door] = part;
+        return part;
+    }
+
+    /// <summary>
+    /// The house front made by <see cref="HouseComposer"/>, standing on the grass, with the chosen door in its doorway.
+    /// </summary>
+    private void DrawFront(DrawingContext context, HouseComposer.Front front, Rect b, double ground)
+    {
+        var pic = front.Picture;
+        var (w, h) = (pic.PixelSize.Width, pic.PixelSize.Height);
+        var scale = Math.Min(b.Width * 0.8 / w, (ground - (b.Height * 0.06)) / h);
+        var dest = new Rect(b.Center.X - (w * scale / 2), ground + 3 - (h * scale), w * scale, h * scale);
+        context.DrawEllipse(new SolidColorBrush(Color.FromArgb(0x30, 0, 0, 0)), null, new Point(dest.Center.X, ground + 3), dest.Width * 0.55, 7);
+        using (context.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = BitmapInterpolationMode.HighQuality }))
+        {
+            context.DrawImage(pic, new Rect(0, 0, w, h), dest);
+            if (front.Door is { } doorway && ExteriorPictures.Get(_door) is { } door)
+            {
+                // The door fills the doorway from a little above what is always lit down to the ground.
+                var part = DoorPart(door);
+                var top = dest.Y + ((doorway.Y - (front.Exact ? 0 : doorway.Height * 0.25)) * scale);
+                var opening = new Rect(dest.X + (doorway.X * scale), top, doorway.Width * scale, dest.Bottom - top);
+                var dh = opening.Height;
+                var dw = part.Width * dh / part.Height;
+                if (dw > opening.Width * 0.9)
+                    (dw, dh) = (opening.Width * 0.9, part.Height * opening.Width * 0.9 / part.Width);
+                context.DrawImage(door, part, new Rect(opening.Center.X - (dw / 2), dest.Bottom - dh, dw, dh));
+            }
         }
     }
 

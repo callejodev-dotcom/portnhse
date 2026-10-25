@@ -875,7 +875,8 @@ public sealed class IslandMapWindow : NhseWindow
                     (name, roof, w, h) = (MapStrings.Building, Color.FromRgb(0xA0, 0x8C, 0x70), 8, 6);
                     break;
             }
-            var angle = diagonal ? DiagonalAngle(map.LayerTerrain, b.X, b.Y, w, b.Angle) : b.Angle * 90d;
+            // Diagonal bridges are turned 45° back from their straight direction (checked against the game).
+            var angle = diagonal ? (b.Angle * 90d) - 45 : b.Angle * 90d;
             result.Add(new MapBuilding(type, b.X, b.Y, w, h, name, roof, icon, portrait, angle, i));
         }
         return result;
@@ -898,28 +899,6 @@ public sealed class IslandMapWindow : NhseWindow
         // a square more for the ends that rest on the banks.
         var squares = diagonal ? number / 10.0 * Math.Sqrt(2) : number;
         return (material, (squares + 1) * 2, diagonal);
-    }
-
-    /// <summary>
-    /// Which of the two diagonals a diagonal bridge takes: the one whose ends rest on land, as the game needs.
-    /// </summary>
-    private static double DiagonalAngle(LayerTerrain terrain, double x, double y, double length, byte angle)
-    {
-        bool Wet(double tx, double ty)
-        {
-            // Item tiles → squares; the terrain starts one area (16 squares) in from the edge of the map.
-            int sx = (int)Math.Floor(tx / 2) - 16, sy = (int)Math.Floor(ty / 2) - 16;
-            return terrain.Contains(sx, sy) && terrain.GetTile(sx, sy).UnitModel is var m && (m.IsRiver || m.IsFall);
-        }
-        int Score(double degrees)
-        {
-            var rad = degrees * Math.PI / 180;
-            var (dx, dy) = (Math.Cos(rad) * ((length / 2) - 1), Math.Sin(rad) * ((length / 2) - 1));
-            return (Wet(x, y) ? 1 : 0) + (Wet(x + dx, y + dy) ? 0 : 1) + (Wet(x - dx, y - dy) ? 0 : 1);
-        }
-        var first = (angle * 90d) + 45;
-        var other = first + 90;
-        return Score(other) > Score(first) ? other : first;
     }
 
     /// <summary> Colour of a bridge or incline by its material. </summary>
