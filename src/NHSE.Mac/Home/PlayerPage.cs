@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -54,7 +55,7 @@ public sealed class PlayerPage : UserControl
         ToolTip.SetTip(name, HomeStrings.RenameHint);
         CommitOnLeave(name, value => Rename(value, isTown: false));
 
-        var town = new TextBox { Text = Pers.TownName, MaxLength = 10, MinWidth = 140, FontSize = 15, HorizontalAlignment = HorizontalAlignment.Left };
+        var town = new TextBox { Text = Pers.TownName, MaxLength = 10, MinWidth = 140, FontSize = 16, Classes = { "inline" }, HorizontalAlignment = HorizontalAlignment.Left };
         ToolTip.SetTip(town, HomeStrings.RenameHint);
         CommitOnLeave(town, value => Rename(value, isTown: true));
 
@@ -112,13 +113,13 @@ public sealed class PlayerPage : UserControl
     private Control Money()
     {
         var wallet = Amount(Pers.Wallet.Value);
-        var walletHint = Text(HomeStrings.WalletHint, "subtle");
         void CheckWallet()
         {
+            // The game only holds 99,999 in the wallet.
             if ((wallet.Value ?? 0) > 99_999)
-                walletHint.Foreground = Brushes.IndianRed;
+                wallet.Foreground = Brushes.IndianRed;
             else
-                walletHint.ClearValue(TextBlock.ForegroundProperty);
+                wallet.ClearValue(TemplatedControl.ForegroundProperty);
         }
         CheckWallet();
         wallet.ValueChanged += (_, _) =>
@@ -144,9 +145,9 @@ public sealed class PlayerPage : UserControl
 
         var cards = new List<Control>
         {
-            Card(CardHeader("MoneyBag039", HomeStrings.Wallet, null, wallet, walletHint)),
-            Card(CardHeader("MoneyBag069", HomeStrings.Bank, null, bank, Text(HomeStrings.BankHint, "subtle"))),
-            Card(CardHeader("Coin", HomeStrings.NookMiles, null, miles, Text(string.Format(HomeStrings.NookMilesEarned, Pers.TotalNookMiles.Value.ToString("N0")), "subtle"))),
+            Stat("MoneyBag039", HomeStrings.Wallet, wallet, HomeStrings.WalletHint),
+            Stat("MoneyBag069", HomeStrings.Bank, bank, HomeStrings.BankHint),
+            Stat("Coin", HomeStrings.NookMiles, miles, string.Format(HomeStrings.NookMilesEarned, Pers.TotalNookMiles.Value.ToString("N0"))),
         };
 
         if (Ctx.Player.WhereAreN is { } wan)
@@ -157,7 +158,7 @@ public sealed class PlayerPage : UserControl
                 wan.Poki = wan.Poki with { Value = (uint)(poki.Value ?? 0) };
                 Ctx.MarkDirty();
             };
-            cards.Add(Card(CardHeader("Coin", HomeStrings.Poki, null, poki)));
+            cards.Add(Stat("Coin", HomeStrings.Poki, poki, HomeStrings.PokiHint));
         }
         if (Pers.Data30 is { IsInitialized30: true } addition)
         {
@@ -167,7 +168,7 @@ public sealed class PlayerPage : UserControl
                 addition.HotelTickets = addition.HotelTickets with { Value = (uint)(tickets.Value ?? 0) };
                 Ctx.MarkDirty();
             };
-            cards.Add(Card(CardHeader("RollanTicket", HomeStrings.HotelTickets, null, tickets)));
+            cards.Add(Stat("RollanTicket", HomeStrings.HotelTickets, tickets, HomeStrings.HotelTicketsHint));
         }
 
         var panel = new StackPanel();

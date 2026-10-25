@@ -27,13 +27,15 @@ public static class HomeStrings
     public static string IslandOf { get; set; } = "Island";
     public static string SectionMoney { get; set; } = "Money";
     public static string Wallet { get; set; } = "Wallet";
-    public static string WalletHint { get; set; } = "Bells you carry. The game holds up to 99,999.";
+    public static string WalletHint { get; set; } = "In your pocket (max. 99,999)";
     public static string Bank { get; set; } = "Savings";
-    public static string BankHint { get; set; } = "Bells in the ABD.";
+    public static string BankHint { get; set; } = "Bells in the ABD";
     public static string NookMiles { get; set; } = "Nook Miles";
     public static string NookMilesEarned { get; set; } = "{0} earned in total";
     public static string Poki { get; set; } = "Poki";
+    public static string PokiHint { get; set; } = "Hotel currency";
     public static string HotelTickets { get; set; } = "Hotel tickets";
+    public static string HotelTicketsHint { get; set; } = "To spend at the hotel";
     public static string SectionItems { get; set; } = "Items";
     public static string Pockets { get; set; } = "Pockets";
     public static string PocketsHint { get; set; } = "{0} items";

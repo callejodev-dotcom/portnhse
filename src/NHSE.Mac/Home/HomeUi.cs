@@ -101,12 +101,43 @@ public static class HomeUi
         return b;
     }
 
-    public static UniformGrid Tiles(int columns, params Control[] items)
+    /// <summary>
+    /// Cards in equal columns; each row is as tall as its own tallest card (not as the tallest of all).
+    /// </summary>
+    public static Grid Tiles(int columns, params Control[] items)
     {
-        var g = new UniformGrid { Columns = columns, ColumnSpacing = 12, RowSpacing = 12 };
-        foreach (var i in items)
-            g.Children.Add(i);
+        var g = new Grid { ColumnSpacing = 12, RowSpacing = 12 };
+        for (int c = 0; c < columns; c++)
+            g.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        for (int r = 0; r < (items.Length + columns - 1) / columns; r++)
+            g.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+        for (int i = 0; i < items.Length; i++)
+        {
+            Grid.SetColumn(items[i], i % columns);
+            Grid.SetRow(items[i], i / columns);
+            g.Children.Add(items[i]);
+        }
         return g;
+    }
+
+    /// <summary>
+    /// A figure the player can change: icon, small label, the number in big (editable in place) and a caption.
+    /// All stat cards have the same parts, so they line up.
+    /// </summary>
+    public static Border Stat(string icon, string label, NumericUpDown amount, string caption)
+    {
+        var text = new StackPanel { Spacing = 0, VerticalAlignment = VerticalAlignment.Center };
+        text.Children.Add(Text(label, "statlabel"));
+        text.Children.Add(amount);
+        text.Children.Add(Text(caption, "statcaption"));
+
+        var g = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 14 };
+        var image = Icon(icon, 44);
+        image.VerticalAlignment = VerticalAlignment.Center;
+        g.Children.Add(image);
+        Grid.SetColumn(text, 1);
+        g.Children.Add(text);
+        return Card(g);
     }
 
     public static WrapPanel Row(params Control[] items)
@@ -144,10 +175,8 @@ public static class HomeUi
         Maximum = max,
         FormatString = "N0",
         ShowButtonSpinner = false,
-        FontSize = 20,
-        FontWeight = FontWeight.SemiBold,
         HorizontalAlignment = HorizontalAlignment.Stretch,
-        Margin = new Thickness(0, 4, 0, 0),
+        Classes = { "amount" },
     };
 
     /// <summary>
