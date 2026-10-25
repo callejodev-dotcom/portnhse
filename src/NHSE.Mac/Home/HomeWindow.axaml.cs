@@ -1,3 +1,5 @@
+using Avalonia;
+using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -166,9 +168,13 @@ public sealed partial class HomeWindow : NhseWindow
         if (Live is not null)
         {
             B_Save.Content = HomeStrings.LiveSaveButton;
-            L_Status.Text = Dirty ? HomeStrings.LiveStatusDirty : HomeStrings.LiveStatus;
+            L_Status.Text = Dirty ? HomeStrings.LiveStatusDirty
+                : LastSent is { } sent ? string.Format(SentNothing ? HomeStrings.LiveStatusSame : HomeStrings.LiveStatusSent, sent.ToString("HH:mm"))
+                : HomeStrings.LiveStatus;
             if (Dirty)
                 L_Status.Foreground = Brushes.DarkOrange;
+            else if (LastSent is not null)
+                L_Status.Foreground = new SolidColorBrush(Color.FromRgb(0x2F, 0x9E, 0x62));
             else
                 L_Status.ClearValue(TextBlock.ForegroundProperty);
             L_Backup.Text = HomeStrings.LiveStatusCopies;
@@ -218,17 +224,15 @@ public sealed partial class HomeWindow : NhseWindow
     {
         B_Save.Focus();
         B_Save.IsEnabled = false;
+        L_Status.Text = HomeStrings.LiveGamePushing;
+        LiveGame.SendResult sent;
         try
         {
-            var sent = await Task.Run(() => Live!.Push(Ctx.SAV));
-            if (sent < 0)
-            {
-                await Dialogs.Error(HomeStrings.LiveGameMoved);
-                return false;
-            }
+            sent = await Task.Run(() => Live!.Push(Ctx.SAV));
         }
         catch (Exception ex)
         {
+            UpdateStatus();
             await Dialogs.Error(LiveGame.Explain(ex));
             return false;
         }
@@ -236,10 +240,72 @@ public sealed partial class HomeWindow : NhseWindow
         {
             B_Save.IsEnabled = true;
         }
+        if (sent.Moved)
+        {
+            UpdateStatus();
+            await Dialogs.Error(HomeStrings.LiveGameMoved);
+            return false;
+        }
+        if (sent.Wrong != 0)
+        {
+            // Still not sent: the next «Send» writes those places again.
+            UpdateStatus();
+            await Dialogs.Error(string.Format(HomeStrings.LiveVerifyFailed, sent.Wrong));
+            return false;
+        }
         Dirty = false;
+        LastSent = DateTime.Now;
+        SentNothing = sent.Bytes == 0;
         UpdateStatus();
         Sound.Asterisk();
+        Toast(SentNothing ? HomeStrings.LiveToastSame : HomeStrings.LiveToastOk, SentNothing ? null : string.Format(HomeStrings.LiveToastDetail, sent.Places.ToString("N0")));
         return true;
+    }
+
+    /// <summary> When the last send was checked in the console, and whether there was nothing to send. </summary>
+    private DateTime? LastSent;
+    private bool SentNothing;
+
+    private Border? ToastBox;
+    private Avalonia.Threading.DispatcherTimer? ToastTimer;
+
+    /// <summary> A message over the window for a few seconds (the send was checked…). </summary>
+    private void Toast(string text, string? detail)
+    {
+        if (ToastBox is null)
+        {
+            ToastBox = new Border
+            {
+                CornerRadius = new CornerRadius(12),
+                Padding = new Thickness(18, 12),
+                Background = new SolidColorBrush(Color.FromRgb(0x2F, 0x9E, 0x62)),
+                BoxShadow = new BoxShadows(new BoxShadow { Blur = 18, OffsetY = 4, Color = Color.FromArgb(0x50, 0, 0, 0) }),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                Margin = new Thickness(0, 0, 0, 28),
+                IsHitTestVisible = false,
+                Transitions = [new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(300) }],
+            };
+            if (Content is Grid root)
+            {
+                Grid.SetColumnSpan(ToastBox, Math.Max(1, root.ColumnDefinitions.Count));
+                root.Children.Add(ToastBox);
+            }
+            ToastTimer = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
+            ToastTimer.Tick += (_, _) =>
+            {
+                ToastTimer.Stop();
+                ToastBox.Opacity = 0;
+            };
+        }
+        var stack = new StackPanel { Spacing = 2 };
+        stack.Children.Add(new TextBlock { Text = text, Foreground = Brushes.White, FontWeight = FontWeight.SemiBold, FontSize = 15 });
+        if (detail is not null)
+            stack.Children.Add(new TextBlock { Text = detail, Foreground = Brushes.White, FontSize = 12, Opacity = 0.9 });
+        ToastBox.Child = stack;
+        ToastBox.Opacity = 1;
+        ToastTimer!.Stop();
+        ToastTimer.Start();
     }
 
     /// <summary> Saves the game in the console and loads the island again, then brings it again. </summary>

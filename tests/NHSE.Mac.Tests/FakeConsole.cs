@@ -18,6 +18,9 @@ internal sealed class FakeConsole : IDisposable
     public int Connections { get; private set; }
     public List<string> Pressed { get; } = [];
 
+    /// <summary> Takes the writes without doing them, as a write that went wrong. </summary>
+    public bool IgnorePokes { get; set; }
+
     public FakeConsole(byte[] main, byte[] player)
     {
         Memory[LiveGame.MainAddress] = main;
@@ -84,6 +87,8 @@ internal sealed class FakeConsole : IDisposable
                 }
             case "poke":
                 {
+                    if (IgnorePokes)
+                        return null;
                     var (block, at) = Find(Convert.ToUInt32(c[1], 16));
                     Convert.FromHexString(c[2][2..]).CopyTo(block, at);
                     return null;

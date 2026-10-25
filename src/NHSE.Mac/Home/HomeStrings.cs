@@ -265,7 +265,13 @@ public static class HomeStrings
     public static string LiveGamePulling { get; set; } = "Bringing the game (about half a minute)…";
     public static string LiveGamePulled { get; set; } = "NHSE now shows the game. Change what you like and send the changes.";
     public static string LiveGamePushing { get; set; } = "Sending…";
-    public static string LiveGamePushed { get; set; } = "Sent ({0} bytes). Some things show at once; others when you go into a building and out, or the next day.";
+    public static string LiveGamePushed { get; set; } = "Sent and checked: read back, the console has the changes. Some things show at once; others when you go into a building and out, or after reloading the island.";
+    public static string LiveVerifyFailed { get; set; } = "Read back, the console does not have {0} of the changes. Send again: those are written again.";
+    public static string LiveToastOk { get; set; } = "✓ Sent and checked: the console has your changes";
+    public static string LiveToastDetail { get; set; } = "Read back from the console: it is all there. What you don't see in the game, reload the island.";
+    public static string LiveToastSame { get; set; } = "✓ The console already had it all";
+    public static string LiveStatusSent { get; set; } = "✓ Sent and checked at {0}";
+    public static string LiveStatusSame { get; set; } = "✓ The console has it all ({0})";
     public static string LiveGameOther { get; set; } = "What is in the console doesn't look like the save open in NHSE (another island or game version), so nothing was brought.";
     public static string LiveGameMoved { get; set; } = "The game no longer has your character where it was (it went back to the title screen?). Bring the game again.";
     public static string LiveGameNotes { get; set; } = "Only the first player of the island. Make a copy of your save on the console (JKSV) before trying. «Save changes» in NHSE still writes the files on the Mac, now with what you brought from the game.";

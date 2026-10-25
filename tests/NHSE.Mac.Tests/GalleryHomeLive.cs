@@ -80,4 +80,37 @@ public class GalleryHomeLive
         Assert.StartsWith(HomeStrings.StatusFromConsole.Split('(')[0], status);
         Gallery.Capture(w, "79-home-reopened");
     }
+
+    /// <summary> «Send to the console» says, in green and with a message over the window, that the console has the changes. </summary>
+    [AvaloniaFact]
+    public void SendSaysItWasChecked()
+    {
+        Assert.SkipUnless(TestSave.Available, "NHSE_TEST_SAVE is not set");
+        var sav = TestSave.LoadCopy(out _);
+        var pers = sav.Players[0].Personal;
+        using var console = new FakeConsole(sav.Main.Data.ToArray(), pers.Data.ToArray());
+        var game = new LiveGame();
+        game.Connect("127.0.0.1", console.Port);
+        Assert.Null(game.Pull(sav));
+        var w = new HomeWindow(sav, game);
+        w.Show();
+
+        var wallet = pers.Wallet;
+        wallet.Value = wallet.Value == 777 ? 778u : 777u;
+        pers.Wallet = wallet;
+        var send = w.SaveToFiles();
+        var until = DateTime.UtcNow.AddSeconds(20);
+        while (!send.IsCompleted && DateTime.UtcNow < until)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(10);
+        }
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(send.Result);
+        Assert.Equal(pers.Data.ToArray(), console.Player);
+        Assert.StartsWith(HomeStrings.LiveStatusSent.Split('{')[0], w.FindControl<TextBlock>("L_Status")!.Text);
+        Assert.Contains(w.GetVisualDescendants().OfType<TextBlock>(), t => t.Text == HomeStrings.LiveToastOk && t.IsEffectivelyVisible);
+        Gallery.Capture(w, "79-home-live-sent", false);
+        w.Close();
+    }
 }

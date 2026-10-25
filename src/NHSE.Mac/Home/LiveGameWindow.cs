@@ -160,15 +160,20 @@ public sealed class LiveGameWindow : NhseWindow
     {
         Say(HomeStrings.LiveGamePushing);
         var sent = await Task.Run(() => Game.Push(Ctx.SAV));
-        if (sent < 0)
+        if (sent.Moved)
         {
             Say(HomeStrings.LiveGameMoved, true);
             Push.IsEnabled = false;
             return;
         }
+        if (sent.Wrong != 0)
+        {
+            Say(string.Format(HomeStrings.LiveVerifyFailed, sent.Wrong), true);
+            return;
+        }
         Sound.Asterisk();
         ReloadIsland.IsEnabled = true;
-        Say(sent == 0 ? HomeStrings.LiveSame : string.Format(HomeStrings.LiveGamePushed, sent.ToString("N0")));
+        Say(sent.Bytes == 0 ? HomeStrings.LiveSame : string.Format(HomeStrings.LiveGamePushed, sent.Places.ToString("N0")));
     }
 
     private async Task DoReload()

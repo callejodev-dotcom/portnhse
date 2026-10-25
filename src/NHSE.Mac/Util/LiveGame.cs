@@ -132,13 +132,24 @@ public sealed class LiveGame : IDisposable
     /// <summary> Writes into the game's memory, a piece at a time. </summary>
     public void Write(uint address, ReadOnlySpan<byte> data)
     {
+        Poke(address, data);
+        Sync();
+    }
+
+    /// <summary> Sends the writes without waiting for them (see <see cref="Sync"/>). </summary>
+    private void Poke(uint address, ReadOnlySpan<byte> data)
+    {
         for (int done = 0; done < data.Length;)
         {
             var size = Math.Min(WriteChunk, data.Length - done);
             Send($"poke 0x{address + (uint)done:X8} 0x{Convert.ToHexString(data.Slice(done, size))}");
             done += size;
         }
-        // sys-botbase answers nothing to a write: ask something small to know they are all done.
+    }
+
+    /// <summary> sys-botbase answers nothing to a write: asks something small, to know the writes before are all done. </summary>
+    private void Sync()
+    {
         Send("getVersion");
         ReadLine();
     }
@@ -238,29 +249,71 @@ public sealed class LiveGame : IDisposable
     }
 
     /// <summary>
-    /// Sends to the game the bytes of the island and the first player that changed since they were brought, after checking
-    /// that the game still has them where they were.
+    /// What sending did: how many bytes were written and in how many places, and in how many of those the console does
+    /// not have them when read back. <see cref="Moved"/>: nothing was sent, the game no longer has the player where it was.
     /// </summary>
-    /// <returns>How many bytes were sent, or -1 if the game no longer looks like what was brought.</returns>
-    public int Push(HorizonSave sav)
+    public sealed record SendResult(bool Moved, int Bytes, int Places, int Wrong)
+    {
+        public static readonly SendResult Nothing = new(false, 0, 0, 0);
+        public bool Checked => !Moved && Wrong == 0;
+    }
+
+    /// <summary>
+    /// Sends to the game the bytes of the island and the first player that changed since they were brought, after checking
+    /// that the game still has them where they were, and reads them back to check the console has them.
+    /// </summary>
+    public SendResult Push(HorizonSave sav)
     {
         if (MainBefore is null || PlayerBefore is null)
-            return 0;
+            return SendResult.Nothing;
         EnsureConnected();
         var personal = sav.Players[0].Personal;
         var id = personal.Offsets.PersonalId;
         var check = Read(PlayerAddress + (uint)id, 0x38);
         if (!check.AsSpan().SequenceEqual(PlayerBefore.AsSpan(id, 0x38)))
-            return -1;
+            return new SendResult(true, 0, 0, 0);
 
         // The game as it is now, in case it has to go back.
         if (!sav.Main.Data.SequenceEqual(MainBefore) || !personal.Data.SequenceEqual(PlayerBefore))
             LiveBackups.Save(MainBefore, PlayerBefore, personal, HomeStrings.LiveBackupBeforeSend);
-        int sent = Send(MainAddress, sav.Main.Data, MainBefore);
-        sent += Send(PlayerAddress, personal.Data, PlayerBefore);
-        if (sent != 0)
-            LiveBackups.SaveLatest(MainBefore, PlayerBefore, personal);
-        return sent;
+        var mainRuns = Send(MainAddress, sav.Main.Data, MainBefore);
+        var playerRuns = Send(PlayerAddress, personal.Data, PlayerBefore);
+        if (mainRuns.Count + playerRuns.Count == 0)
+            return SendResult.Nothing;
+        Sync();
+        var wrong = Verify(MainAddress, mainRuns, MainBefore) + Verify(PlayerAddress, playerRuns, PlayerBefore);
+        LiveBackups.SaveLatest(MainBefore, PlayerBefore, personal);
+        var runs = mainRuns.Concat(playerRuns).ToList();
+        return new SendResult(false, runs.Sum(z => z.Length), runs.Count, wrong);
+    }
+
+    /// <summary>
+    /// Reads back the places just written (close ones in one read) and counts those the console does not have. Those keep
+    /// what the console has as the known state, so sending again writes them again.
+    /// </summary>
+    private int Verify(uint address, List<(int Start, int Length)> runs, byte[] before)
+    {
+        int wrong = 0;
+        for (int r = 0; r < runs.Count; r++)
+        {
+            int first = r, start = runs[r].Start, end = runs[r].Start + runs[r].Length;
+            while (r + 1 < runs.Count && runs[r + 1].Start - end < 0x800)
+            {
+                r++;
+                end = runs[r].Start + runs[r].Length;
+            }
+            var read = Read(address + (uint)start, end - start);
+            for (int k = first; k <= r; k++)
+            {
+                var (s, length) = runs[k];
+                var has = read.AsSpan(s - start, length);
+                if (has.SequenceEqual(before.AsSpan(s, length)))
+                    continue;
+                has.CopyTo(before.AsSpan(s));
+                wrong++;
+            }
+        }
+        return wrong;
     }
 
     /// <summary>
@@ -282,9 +335,10 @@ public sealed class LiveGame : IDisposable
     }
 
     /// <summary> Writes the runs of bytes that differ (close runs joined), and keeps them as the new state. </summary>
-    private int Send(uint address, ReadOnlySpan<byte> now, byte[] before)
+    /// <returns>Where they were written.</returns>
+    private List<(int Start, int Length)> Send(uint address, ReadOnlySpan<byte> now, byte[] before)
     {
-        int sent = 0;
+        var runs = new List<(int, int)>();
         for (int i = 0; i < now.Length;)
         {
             if (now[i] == before[i])
@@ -305,12 +359,12 @@ public sealed class LiveGame : IDisposable
                     gap++;
                 }
             }
-            Write(address + (uint)i, now[i..end]);
+            Poke(address + (uint)i, now[i..end]);
             now[i..end].CopyTo(before.AsSpan(i));
-            sent += end - i;
+            runs.Add((i, end - i));
             i = end;
         }
-        return sent;
+        return runs;
     }
 }
 
