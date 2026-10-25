@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="NHSE.Mac.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="$(NHSEDir)NHSE.Core/NHSE.Core.csproj" />
     <ProjectReference Include="$(NHSEDir)NHSE.Injection/NHSE.Injection.csproj" />
     <ProjectReference Include="$(NHSEDir)NHSE.Villagers/NHSE.Villagers.csproj" />

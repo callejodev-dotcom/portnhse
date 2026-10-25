@@ -88,15 +88,45 @@ public sealed class ApplicationSettings
     /// </summary>
     private static string GetDefaultLanguage()
     {
-        var culture = System.Globalization.CultureInfo.CurrentUICulture;
-        return culture.TwoLetterISOLanguageName switch
+        var name = GetSystemLanguage() ?? System.Globalization.CultureInfo.CurrentUICulture.Name;
+        var code = name.Split('-', '_')[0].ToLowerInvariant();
+        return code switch
         {
-            "de" or "en" or "es" or "fr" or "it" or "ko" => culture.TwoLetterISOLanguageName,
+            "de" or "en" or "es" or "fr" or "it" or "ko" => code,
             "gl" or "ca" or "eu" => "es",
             "ja" => "jp",
-            "zh" => culture.Name.Contains("Hant") || culture.Name.EndsWith("TW") || culture.Name.EndsWith("HK") ? "zht" : "zhs",
+            "zh" => name.Contains("Hant") || name.EndsWith("TW") || name.EndsWith("HK") ? "zht" : "zhs",
             _ => "en",
         };
+    }
+
+    /// <summary>
+    /// First language in System Settings → Language &amp; Region (apps opened from Finder have no LANG for .NET to read).
+    /// </summary>
+    private static string? GetSystemLanguage()
+    {
+        if (!OperatingSystem.IsMacOS())
+            return null;
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo("/usr/bin/defaults", ["read", "-g", "AppleLanguages"])
+            {
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+            };
+            using var p = System.Diagnostics.Process.Start(psi);
+            if (p is null)
+                return null;
+            var output = p.StandardOutput.ReadToEnd();
+            p.WaitForExit(2000);
+            var start = output.IndexOf('"');
+            var end = start < 0 ? -1 : output.IndexOf('"', start + 1);
+            return end > start ? output[(start + 1)..end] : null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 }
 

@@ -6,6 +6,15 @@
         CanResize="False"
         WindowStartupLocation="CenterScreen"
         Icon="/Assets/icon.png">
+    <Window.Styles>
+        <Style Selector="Rectangle#DropZone">
+            <Setter Property="Stroke" Value="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+        </Style>
+        <Style Selector="Rectangle#DropZone.over">
+            <Setter Property="Stroke" Value="DodgerBlue" />
+            <Setter Property="Fill" Value="#181E90FF" />
+        </Style>
+    </Window.Styles>
     <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="24,20,24,18">
         <StackPanel Orientation="Horizontal" Spacing="14">
             <Image Source="/Assets/icon.png" Width="56" Height="56" />
@@ -15,14 +24,14 @@
             </StackPanel>
         </StackPanel>
 
-        <Border Grid.Row="1" Name="DropZone" Margin="0,18,0,14" CornerRadius="10"
-                BorderThickness="2" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
-                Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
+        <Panel Grid.Row="1" Margin="0,18,0,14">
+            <Rectangle Name="DropZone" RadiusX="12" RadiusY="12" StrokeThickness="2" StrokeDashArray="5,3" Fill="#0C808080" />
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8" Margin="24">
+                <TextBlock Text="⤓" FontSize="34" HorizontalAlignment="Center" Classes="hint" />
                 <TextBlock Name="L_Drop" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" />
                 <TextBlock Name="L_DropHint" Classes="hint" TextAlignment="Center" MaxWidth="380" />
             </StackPanel>
-        </Border>
+        </Panel>
 
         <WrapPanel Grid.Row="2" HorizontalAlignment="Center">
             <Button Name="B_OpenFolder" Classes="accent" Margin="4" Click="B_OpenFolder_Click" />

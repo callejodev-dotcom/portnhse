@@ -24,7 +24,7 @@ public partial class MainWindow : Window
 
         DragDrop.SetAllowDrop(this, true);
         AddHandler(DragDrop.DragOverEvent, Main_DragOver);
-        AddHandler(DragDrop.DragLeaveEvent, (_, _) => DropZone.BorderBrush = null);
+        AddHandler(DragDrop.DragLeaveEvent, (_, _) => DropZone.Classes.Set("over", false));
         AddHandler(DragDrop.DropEvent, Main_DragDrop);
 
         Opened += async (_, _) =>
@@ -63,13 +63,12 @@ public partial class MainWindow : Window
     {
         var any = e.DataTransfer.TryGetFiles()?.Length > 0;
         e.DragEffects = any ? DragDropEffects.Copy : DragDropEffects.None;
-        if (any)
-            DropZone.BorderBrush = Avalonia.Media.Brushes.DodgerBlue;
+        DropZone.Classes.Set("over", any);
     }
 
     private async void Main_DragDrop(object? sender, DragEventArgs e)
     {
-        DropZone.ClearValue(Border.BorderBrushProperty);
+        DropZone.Classes.Set("over", false);
         var files = e.DataTransfer.TryGetFiles();
         if (files is not { Length: not 0 })
             return;

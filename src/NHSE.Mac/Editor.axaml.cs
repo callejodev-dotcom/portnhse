@@ -144,10 +144,9 @@ public sealed partial class Editor : NhseWindow
 
     private async void Menu_Save_Click()
     {
-        SaveAll();
         try
         {
-            SAV.Save((uint)DateTime.Now.Ticks);
+            SaveToFiles();
         }
         catch (Exception ex)
         {
@@ -229,6 +228,15 @@ public sealed partial class Editor : NhseWindow
         imgfetcher.Show(this);
     }
     #endregion
+
+    /// <summary>
+    /// Writes the values of the open editors into the save data, then encrypts and writes the files.
+    /// </summary>
+    internal void SaveToFiles()
+    {
+        SaveAll();
+        SAV.Save((uint)DateTime.Now.Ticks);
+    }
 
     private void ReloadAll()
     {

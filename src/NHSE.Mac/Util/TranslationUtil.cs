@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Linq;
 using NHSE.Core;
 
@@ -22,8 +23,9 @@ public static class TranslationUtil
 
     private static IEnumerable<string> DumpStrings(Type t)
     {
-        var props = ReflectUtil.GetPropertiesStartWithPrefix(t, string.Empty);
-        return props.Select(p => $"{p}{TranslationSplitter}{ReflectUtil.GetValue(t, p)}");
+        // Static properties: ReflectUtil.GetValue(t, p) would look them up on System.Type itself.
+        var props = t.GetProperties(BindingFlags.Public | BindingFlags.Static);
+        return props.Select(p => $"{p.Name}{TranslationSplitter}{p.GetValue(null)}");
     }
 
     /// <summary>
@@ -51,7 +53,8 @@ public static class TranslationUtil
 
             try
             {
-                ReflectUtil.SetValue(t, prop, value);
+                // Static properties (upstream's ReflectUtil.SetValue(t, …) targets System.Type and silently does nothing).
+                t.GetProperty(prop, BindingFlags.Public | BindingFlags.Static)?.SetValue(null, value);
             }
             catch (Exception e)
             {
