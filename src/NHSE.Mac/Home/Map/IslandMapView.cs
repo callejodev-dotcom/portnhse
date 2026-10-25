@@ -70,6 +70,25 @@ public sealed class IslandMapView : Control
     /// <summary> Raised when the view moves or zooms. </summary>
     public event Action? ViewChanged;
 
+    /// <summary> Raised when an item of the active layer is dragged elsewhere: its corner, then the new one (map item tiles). </summary>
+    public event Action<int, int, int, int>? ItemDragged;
+
+    /// <summary> Raised when an area is chosen by dragging with ⇧ held (map item tiles, whole squares). </summary>
+    public event Action<Rect>? AreaChosen;
+
+    /// <summary> Chosen area (map item tiles), drawn dashed until it is cleared. </summary>
+    public Rect? Area { get => _area; set { _area = value; InvalidateVisual(); } }
+    private Rect? _area;
+
+    /// <summary> Whether an item would fit with its corner at a map tile, to colour the item being dragged. </summary>
+    public Func<Item, int, int, bool>? CanPut { get; set; }
+
+    private enum Gesture { None, Pan, Item, Area }
+    private Gesture Doing;
+    private (int X, int Y, int HoldX, int HoldY, Item Item)? Held;
+    private (Item Item, int X, int Y)? Ghost;
+    private Point AreaStart;
+
     // Pointer state
     private Point PressPoint;
     private Point PressOffset;
@@ -327,8 +346,35 @@ public sealed class IslandMapView : Control
         Panning = point.Properties.IsMiddleButtonPressed;
         PressPoint = point.Position;
         PressOffset = Offset;
+        Held = null;
+        Doing = Panning ? Gesture.Pan : Gesture.None;
+        if (!Panning)
+        {
+            var map = ToMap(point.Position);
+            if ((e.KeyModifiers & KeyModifiers.Shift) != 0)
+            {
+                Doing = Gesture.Area;
+                AreaStart = map;
+            }
+            else if (ItemAt(map) is { } held)
+            {
+                Held = held;
+            }
+        }
         e.Pointer.Capture(this);
         e.Handled = true;
+    }
+
+    /// <summary> The item of the active layer under a map point, its corner and where in it the point is. </summary>
+    private (int X, int Y, int HoldX, int HoldY, Item Item)? ItemAt(Point map)
+    {
+        var layer = Layers[ActiveLayer];
+        int x = (int)Math.Floor(map.X) - LayerOrigin.X, y = (int)Math.Floor(map.Y) - LayerOrigin.Y;
+        if (!layer.Contains(x, y) || !GridItems.TryGetRoot(layer, x, y, out var root, out var rx, out var ry) || !root.IsRoot)
+            return null;
+        var copy = new Item();
+        copy.CopyFrom(root);
+        return (rx + LayerOrigin.X, ry + LayerOrigin.Y, x - rx, y - ry, copy);
     }
 
     protected override void OnPointerMoved(PointerEventArgs e)
@@ -338,19 +384,48 @@ public sealed class IslandMapView : Control
         if (Pressed)
         {
             var delta = p - PressPoint;
-            if (!Panning && (Math.Abs(delta.X) > 4 || Math.Abs(delta.Y) > 4))
+            var moved = Math.Abs(delta.X) > 4 || Math.Abs(delta.Y) > 4;
+            if (Doing == Gesture.None && moved)
             {
-                Panning = true;
-                Cursor = new Cursor(StandardCursorType.SizeAll);
+                Doing = Held is not null ? Gesture.Item : Gesture.Pan;
+                Panning = Doing == Gesture.Pan;
+                if (Panning)
+                    Cursor = new Cursor(StandardCursorType.SizeAll);
             }
-            if (Panning)
+            switch (Doing)
             {
-                Offset = PressOffset;
-                PanBy(delta);
+                case Gesture.Pan:
+                    Offset = PressOffset;
+                    PanBy(delta);
+                    break;
+                case Gesture.Item when Held is { } held:
+                {
+                    var map = ToMap(p);
+                    int x = (int)Math.Floor(map.X) - held.HoldX, y = (int)Math.Floor(map.Y) - held.HoldY;
+                    if (held.Item.IsFieldItem)
+                        (x, y) = (x & ~1, y & ~1); // plants, fences and rocks go on whole squares
+                    Ghost = (held.Item, x, y);
+                    Hover = null;
+                    InvalidateVisual();
+                    break;
+                }
+                case Gesture.Area:
+                    Area = Snap(AreaStart, ToMap(p));
+                    break;
             }
             return;
         }
         SetHover(p);
+    }
+
+    /// <summary> The whole squares covered by the rectangle between two map points. </summary>
+    private static Rect Snap(Point a, Point b)
+    {
+        var x0 = Math.Floor(Math.Min(a.X, b.X) / 2) * 2;
+        var y0 = Math.Floor(Math.Min(a.Y, b.Y) / 2) * 2;
+        var x1 = (Math.Floor(Math.Max(a.X, b.X) / 2) * 2) + 2;
+        var y1 = (Math.Floor(Math.Max(a.Y, b.Y) / 2) * 2) + 2;
+        return new Rect(Math.Max(0, x0), Math.Max(0, y0), Math.Min(MapWidth, x1) - Math.Max(0, x0), Math.Min(MapHeight, y1) - Math.Max(0, y0));
     }
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
@@ -361,17 +436,40 @@ public sealed class IslandMapView : Control
         Pressed = false;
         e.Pointer.Capture(null);
         Cursor = new Cursor(StandardCursorType.Hand);
-        if (Panning)
-        {
-            Panning = false;
+        var doing = Doing;
+        Doing = Gesture.None;
+        Panning = false;
+        var ghost = Ghost;
+        Ghost = null;
+        if (doing == Gesture.Pan)
             return;
-        }
         if (e.InitialPressMouseButton != MouseButton.Left)
             return;
+        if (doing == Gesture.Item && Held is { } held && ghost is { } to)
+        {
+            InvalidateVisual();
+            ItemDragged?.Invoke(held.X, held.Y, to.X, to.Y);
+            return;
+        }
+        if (doing == Gesture.Area && Area is { } area)
+        {
+            AreaChosen?.Invoke(area);
+            return;
+        }
         var map = ToMap(e.GetPosition(this));
         if (map.X < 0 || map.Y < 0 || map.X >= MapWidth || map.Y >= MapHeight)
             return;
         TileClicked?.Invoke((int)map.X, (int)map.Y);
+    }
+
+    protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
+    {
+        base.OnPointerCaptureLost(e);
+        Pressed = false;
+        Panning = false;
+        Doing = Gesture.None;
+        Ghost = null;
+        InvalidateVisual();
     }
 
     protected override void OnPointerExited(PointerEventArgs e)
@@ -485,10 +583,33 @@ public sealed class IslandMapView : Control
 
         if (Hover is { } hover && !Panning)
             context.DrawRectangle(new SolidColorBrush(Color.FromArgb(0x30, 0xFF, 0xFF, 0xFF)), new Pen(new SolidColorBrush(Color.FromArgb(0xD0, 0xFF, 0xFF, 0xFF)), 1.5), ToScreen(hover.Area).Inflate(1), 4, 4);
-        if (Selection is { } sel)
+        if (Selection is { } sel && Doing != Gesture.Item)
             RoomView.DrawSelection(context, ToScreen(sel), SelectionFacing);
-        if (Hover is { Text.Length: > 0 } tip && HoverPoint is { } at && !Panning)
+        if (Area is { } area)
+        {
+            var r = ToScreen(area);
+            context.DrawRectangle(new SolidColorBrush(Color.FromArgb(0x30, 0xFF, 0xFF, 0xFF)), new Pen(Brushes.White, 2) { DashStyle = new DashStyle([5, 4], 0) }, r, 4, 4);
+            context.DrawRectangle(null, new Pen(new SolidColorBrush(Color.FromArgb(0x70, 0, 0, 0)), 1), r.Inflate(1.5), 5, 5);
+        }
+        if (Ghost is { } ghost)
+            DrawGhost(context, ghost.Item, ghost.X, ghost.Y);
+        if (Hover is { Text.Length: > 0 } tip && HoverPoint is { } at && !Panning && Doing == Gesture.None)
             RoomView.DrawBubble(context, tip.Text, tip.Picture, at, bounds.Size, ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark);
+    }
+
+    /// <summary>
+    /// The item being dragged on the spot it would take: green if it fits, red if not.
+    /// </summary>
+    private void DrawGhost(DrawingContext context, Item item, int x, int y)
+    {
+        var (w, h) = GridItems.GetSize(item);
+        var r = ToScreen(new Rect(x, y, w, h));
+        var fits = CanPut?.Invoke(item, x, y) ?? true;
+        var color = fits ? Color.FromRgb(0x2F, 0x9E, 0x62) : Color.FromRgb(0xD0, 0x40, 0x40);
+        context.DrawRectangle(new SolidColorBrush(color, 0.3), new Pen(new SolidColorBrush(color), 2.5), r, 4, 4);
+        using (context.PushOpacity(0.85))
+        using (context.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = BitmapInterpolationMode.HighQuality }))
+            DrawPicture(context, GetPicture(item), r.Deflate(Math.Min(r.Width, r.Height) * 0.05));
     }
 
     private void DrawItems(DrawingContext context, List<MapItem> items, Rect visible, bool onTop = false)

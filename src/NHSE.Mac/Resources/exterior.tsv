@@ -1,4 +1,4 @@
-# House roofs, walls and doors: internal name, picture, and the name in each game language (en es de fr it jp ko zhs zht).
+# House roofs, walls and doors, bridges and inclines: internal name, picture, and the name in each game language (en es de fr it jp ko zhs zht).
 # From the Animal Crossing: New Horizons data spreadsheet, via github.com/Norviah/animal-crossing (MIT).
 HouseDoorCarvingAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCarvingAR.png	white fancy door	puerta elegante blanca	Weiß-Designtür	porte luxueuse blanche	porta elegante bianca	ホワイトリッチなドア	화이트 고급스러운 문	白色浮雕门	白色浮雕門
 HouseDoorCarvingBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCarvingBR.png	black fancy door	puerta elegante negra	Schwarz-Designtür	porte luxueuse noire	porta elegante nera	ブラックリッチなドア	블랙 고급스러운 문	黑色浮雕门	黑色浮雕門
@@ -369,3 +369,19 @@ HouseWallPD04WoodE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04WoodECropp
 HouseWallPD04WoodF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04WoodFCropped.png									
 HouseWallPD04WoodG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04WoodGCropped.png									
 HouseWallPD04WoodH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04WoodHCropped.png									
+BridgeBricks	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1wqearthyjuk,.png	brick bridge	puente de ladrillo	Backsteinbrücke	pont en brique	ponte di mattoni	レンガのはし	벽돌 다리	砖桥	磚塊橋
+BridgeIron	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1wdaeteyhrjtuy.png	iron bridge	puente de hierro	Eisenbrücke	pont en fer	ponte di ferro	てつのはし	철제 다리	铁桥	鐵橋
+BridgeJapanese	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1w.png	zen bridge	puente de madera	Japan-Brücke	pont zen	ponte giapponese	わふうのはし	동양풍 다리	和风桥	和風橋
+BridgeLog	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1adsvfbgnhjh.png	log bridge	puente de troncos	Baumstammbrücke	pont en rondins	ponte di tronchi	まるたのはし	통나무 다리	圆木桥	圓木橋
+BridgeRed	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1wdqfegrhtryjmm.png	red zen bridge	puente de madera rojo	Rot-Japan-Brücke	pont zen rouge	ponte giapponese rosso	あかいわふうのはし	빨간 동양풍 다리	红色和风桥	紅色和風橋
+BridgeStone	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1adwfesgrdthfgmj.png	stone bridge	puente de piedra	Steinbrücke	pont de pierre	ponte di pietra	いしのはし	돌 다리	石桥	石橋
+BridgeSuspension	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1sxdaefwrge5yhyjum.png	suspension bridge	puente colgante	Hängebrücke	pont suspendu	ponte sospeso	つりばし	출렁다리	吊桥	吊橋
+BridgeWood	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1adsfhngm.png	wooden bridge	puente de tablones	Holzbrücke	pont en bois	ponte di legno	もくせいのはし	목제 다리	木桥	木橋
+SlopeBrickStair	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1dafsgdb.png	brick staircase	escalera de ladrillos	Backsteintreppe	escalier en brique	scala di mattoni	レンガのかいだん	벽돌 계단	砖台阶	磚塊樓梯
+SlopeIronStair	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1wretehryjm.png	red steel staircase	escalera de acero rojo	Rot-Stahltreppe	escalier en acier rouge	scala di acciaio rosso	あかいてっこつかいだん	빨간 철골 계단	红色钢筋台阶	紅色鋼筋樓梯
+SlopeIronStairBlue	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1wdqferbgf%20%20.png	blue steel staircase	escalera de acero azul	Blau-Stahltreppe	escalier en acier bleu	scala di acciaio blu	あおいてっこつかいだん	파란 철골 계단	蓝色钢筋台阶	藍色鋼筋樓梯
+SlopeNatural	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1qewt453yw46ujyk.png	natural ramp	rampa natural	Hangpfad	pente naturelle	rampa naturale	ナチュラルなスロープ	내추럴 슬로프	天然斜坡	自然風斜坡
+SlopeStoneStair	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1ewfweaf.png	stone staircase	escalera de piedra	Steintreppe	escalier en pierre	scala di pietra	いしのかいだん	돌 계단	石台阶	石樓梯
+SlopeWood	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1qwr3t4y56ujj.png	white-plank ramp	rampa de tablas blancas	Weiß-Bretterrampe	pente planches blanches	rampa di assi bianche	しろいいたのスロープ	하얀 널빤지 슬로프	白色木板斜坡	白色木板斜坡
+SlopeWoodBlue	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1wr3t453y46ujyk%2Cj.png	blue-plank ramp	rampa de tablas azules	Blau-Bretterrampe	pente planches bleues	rampa di assi blu	あおいいたのスロープ	파란 널빤지 슬로프	蓝色木板斜坡	藍色木板斜坡
+SlopeWoodStair	http://acnhcdn.com/drivesync/bridgearamp/NewCanvas1awr3t45y6u5jky.png	log staircase	escalera de troncos	Baumstammtreppe	escalier en rondins	scala di tronchi	まるたのかいだん	통나무 계단	圆木台阶	圓木樓梯

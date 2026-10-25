@@ -54,6 +54,9 @@ public sealed class IslandMapWindow : NhseWindow
         var plaza = new Rect(Map.Plaza.X, Map.Plaza.Z, 24, 20);
         View = new IslandMapView(null, Buildings, plaza, Layers, Origin);
         View.TileClicked += ClickTile;
+        View.ItemDragged += (x, y, toX, toY) => MoveItem(x, y, toX, toY);
+        View.AreaChosen += ChooseArea;
+        View.CanPut = (item, x, y) => Layer.Contains(x - Origin.X, y - Origin.Y);
         GroundReady = PaintGround();
 
         // Header
@@ -184,6 +187,8 @@ public sealed class IslandMapWindow : NhseWindow
     public void ClickTile(int absX, int absY)
     {
         Message = null;
+        ChosenArea = null;
+        View.Area = null;
         var x = absX - Origin.X;
         var y = absY - Origin.Y;
         var layer = Layer;
@@ -263,6 +268,7 @@ public sealed class IslandMapWindow : NhseWindow
     {
         if (Selected is not { } s)
             return PlaceResult.OutOfBounds;
+        Remember();
         var copy = new Item();
         copy.CopyFrom(item);
         if (ActiveLayer == 0 && !copy.IsFieldItem && !copy.IsNone && !GridItems.CanRotate(copy) && copy.SystemParam == 0)
@@ -292,6 +298,7 @@ public sealed class IslandMapWindow : NhseWindow
     {
         if (Selected is not { } s)
             return;
+        Remember();
         Message = null;
         if (GridItems.Remove(Layer, s.X, s.Y))
             View.RefreshItems();
@@ -304,6 +311,7 @@ public sealed class IslandMapWindow : NhseWindow
     {
         if (Selected is not { } s)
             return PlaceResult.OutOfBounds;
+        Remember();
         var result = GridItems.Rotate(Layer, s.X, s.Y, out var blocker);
         Message = result == PlaceResult.Collision ? string.Format(MapStrings.DoesNotFit, blocker is null ? "?" : GridItems.GetName(blocker)) : null;
         if (result == PlaceResult.Ok)
@@ -312,6 +320,268 @@ public sealed class IslandMapWindow : NhseWindow
         BuildDetails();
         return result;
     }
+
+    #region Undo
+    /// <summary> Both item layers as they were before each change, newest last. </summary>
+    private readonly List<ulong[][]> UndoSteps = [];
+    private const int MaxUndo = 30;
+
+    /// <summary> Keeps the item layers as they are now, so the next change can be undone. </summary>
+    private void Remember()
+    {
+        UndoSteps.Add([.. Layers.Select(l => l.Tiles.Select(t => t.RawValue).ToArray())]);
+        if (UndoSteps.Count > MaxUndo)
+            UndoSteps.RemoveAt(0);
+    }
+
+    public bool CanUndo => UndoSteps.Count != 0;
+
+    /// <summary> Puts the items back as they were before the last change (⌘Z). </summary>
+    public void Undo()
+    {
+        if (UndoSteps.Count == 0)
+            return;
+        var step = UndoSteps[^1];
+        UndoSteps.RemoveAt(UndoSteps.Count - 1);
+        for (int l = 0; l < Layers.Length; l++)
+        {
+            var tiles = Layers[l].Tiles;
+            for (int i = 0; i < tiles.Length; i++)
+                tiles[i].RawValue = step[l][i];
+        }
+        Message = MapStrings.Undone;
+        View.RefreshItems();
+        UpdateSelectionArea();
+        BuildDetails();
+    }
+    #endregion
+
+    #region Moving and tidying
+    /// <summary>
+    /// Moves an item of the active layer from its corner to another one (map item tiles), as dragging it does.
+    /// Nothing moves if something is in the way.
+    /// </summary>
+    public PlaceResult MoveItem(int x, int y, int toX, int toY)
+    {
+        var layer = Layer;
+        int fx = x - Origin.X, fy = y - Origin.Y, tx = toX - Origin.X, ty = toY - Origin.Y;
+        if (!layer.Contains(fx, fy) || !GridItems.TryGetRoot(layer, fx, fy, out var root, out var rx, out var ry) || !root.IsRoot)
+            return PlaceResult.OutOfBounds;
+        if (rx == tx && ry == ty)
+        {
+            SelectTile(rx, ry);
+            return PlaceResult.Ok;
+        }
+        var item = new Item();
+        item.CopyFrom(root);
+        Remember();
+        GridItems.Remove(layer, rx, ry);
+        Item? blocker = null;
+        PlaceResult result;
+        if (!layer.Contains(tx, ty))
+            result = PlaceResult.OutOfBounds;
+        else if (GridItems.TryGetRoot(layer, tx, ty, out var other, out _, out _))
+            (result, blocker) = (PlaceResult.Collision, other);
+        else
+            result = GridItems.Place(layer, item, tx, ty, out blocker, false);
+        if (result != PlaceResult.Ok)
+        {
+            GridItems.Place(layer, item, rx, ry, out _, false);
+            UndoSteps.RemoveAt(UndoSteps.Count - 1);
+        }
+        Message = result switch
+        {
+            PlaceResult.Collision => string.Format(MapStrings.DoesNotFit, blocker is null ? "?" : GridItems.GetName(blocker)),
+            PlaceResult.OutOfBounds => MapStrings.OutOfMap,
+            _ => null,
+        };
+        View.RefreshItems();
+        Selected = result == PlaceResult.Ok ? (tx, ty) : (rx, ry);
+        SelectedBuilding = null;
+        UpdateSelectionArea();
+        BuildDetails();
+        return result;
+    }
+
+    /// <summary> Kinds of things the tidying tools work on. </summary>
+    public enum Tidy { Weeds, Flowers, Trees, Bushes, Fences, Holes, Branches, Shells, Things, Everything }
+
+    private static bool IsKind(Item t, Tidy kind)
+    {
+        var id = t.DisplayItemId;
+        var field = FieldItemList.Items.TryGetValue(id, out var def) ? def.Kind : (FieldItemKind?)null;
+        return kind switch
+        {
+            Tidy.Weeds => field is { IsWeed: true },
+            Tidy.Flowers => field is { IsFlower: true },
+            Tidy.Trees => field is { IsTree: true },
+            Tidy.Bushes => field is { IsBush: true },
+            Tidy.Fences => field is { IsFence: true },
+            Tidy.Holes => field == FieldItemKind.UnitIconHole,
+            Tidy.Branches => id == 2500,
+            Tidy.Shells => GameLists.Shells.Contains(id),
+            Tidy.Things => field is null,
+            _ => true,
+        };
+    }
+
+    /// <summary> Area of the active layer (layer tiles) for the chosen area, or the whole layer. </summary>
+    private Rect LayerArea(Rect? area)
+    {
+        var l = Layer.TileInfo;
+        if (area is not { } a)
+            return new Rect(0, 0, l.TotalWidth, l.TotalHeight);
+        return new Rect(a.X - Origin.X, a.Y - Origin.Y, a.Width, a.Height);
+    }
+
+    /// <summary> Corners of the things of a kind whose corner is inside an area of the active layer. </summary>
+    private List<(int X, int Y)> Find(Tidy kind, Rect area)
+    {
+        var layer = Layer;
+        var result = new List<(int, int)>();
+        for (int x = (int)area.X; x < area.Right; x++)
+        {
+            for (int y = (int)area.Y; y < area.Bottom; y++)
+            {
+                if (!layer.Contains(x, y))
+                    continue;
+                var t = layer.GetTile(x, y);
+                if (!t.IsNone && t.IsRoot && IsKind(t, kind))
+                    result.Add((x, y));
+            }
+        }
+        return result;
+    }
+
+    /// <summary> How many things of a kind there are in the chosen area (or the whole island). </summary>
+    public int Count(Tidy kind, Rect? area = null) => Find(kind, LayerArea(area)).Count;
+
+    /// <summary>
+    /// Removes every thing of a kind (whole things: every square of the big ones) in the chosen area or the whole island.
+    /// </summary>
+    /// <returns>How many were removed.</returns>
+    public int RemoveAll(Tidy kind, Rect? area = null)
+    {
+        var found = Find(kind, LayerArea(area));
+        if (found.Count == 0)
+            return 0;
+        Remember();
+        foreach (var (x, y) in found)
+            GridItems.Remove(Layer, x, y);
+        AfterTidy(string.Format(MapStrings.Removed, found.Count));
+        return found.Count;
+    }
+
+    /// <summary> Waters every flower in the chosen area or the whole island. </summary>
+    public int WaterFlowers(Rect? area = null)
+    {
+        var count = Count(Tidy.Flowers, area);
+        if (count == 0)
+            return 0;
+        Remember();
+        var a = LayerArea(area);
+        Layer.WaterAllFlowers((int)a.X, (int)a.Y, (int)a.Width, (int)a.Height, false);
+        AfterTidy(string.Format(MapStrings.Watered, count));
+        return count;
+    }
+
+    private void AfterTidy(string message)
+    {
+        Message = message;
+        Selected = null;
+        SelectedBuilding = null;
+        View.Selection = null;
+        View.RefreshItems();
+        BuildDetails();
+    }
+
+    /// <summary> Area chosen by dragging with ⇧ (map item tiles); the side panel shows what is in it. </summary>
+    private Rect? ChosenArea;
+
+    public void ChooseArea(Rect area)
+    {
+        ChosenArea = area;
+        View.Area = area;
+        Selected = null;
+        SelectedBuilding = null;
+        View.Selection = null;
+        Message = null;
+        BuildDetails();
+    }
+
+    /// <summary>
+    /// The tidying tools: for each kind of thing, how many there are and buttons to remove (or water) them,
+    /// in the chosen area or the whole island. Each one asks first and can be undone.
+    /// </summary>
+    private Control TidyTools(Rect? area)
+    {
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto"), ColumnSpacing = 8, RowSpacing = 6 };
+        int row = 0;
+        void Row(string icon, string label, Tidy kind, string action, bool water = false)
+        {
+            var count = Count(kind, area);
+            if (count == 0 && kind is not (Tidy.Weeds or Tidy.Flowers))
+                return;
+            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            var img = Icon(icon, 24);
+            Grid.SetRow(img, row);
+            grid.Children.Add(img);
+            var l = new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
+            Grid.SetRow(l, row);
+            Grid.SetColumn(l, 1);
+            grid.Children.Add(l);
+            var c = new TextBlock { Text = count.ToString("N0"), FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetRow(c, row);
+            Grid.SetColumn(c, 2);
+            grid.Children.Add(c);
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+            if (water)
+                buttons.Children.Add(Small(MapStrings.Water, count, () =>
+                {
+                    WaterFlowers(area);
+                    return Task.CompletedTask;
+                }));
+            buttons.Children.Add(Small(action, count, async () =>
+            {
+                var where = area is null ? MapStrings.WholeIsland : MapStrings.ChosenArea;
+                if (await Dialogs.Prompt(MessageBoxButtons.YesNo, string.Format(MapStrings.AskRemove, label.ToLowerInvariant(), count, where)) == DialogResult.Yes)
+                    RemoveAll(kind, area);
+            }));
+            Grid.SetRow(buttons, row);
+            Grid.SetColumn(buttons, 3);
+            grid.Children.Add(buttons);
+            row++;
+        }
+        Button Small(string text, int count, Func<Task> act)
+        {
+            var b = new Button { Content = text, Padding = new Thickness(8, 2), FontSize = 12, IsEnabled = count != 0 };
+            b.Click += async (_, _) => await act();
+            return b;
+        }
+
+        Row("Weed", MapStrings.CountWeeds, Tidy.Weeds, MapStrings.Remove);
+        Row("Turip0", MapStrings.CountFlowers, Tidy.Flowers, MapStrings.Remove, water: true);
+        Row("Branch", MapStrings.TidyBranches, Tidy.Branches, MapStrings.Remove);
+        Row("Shell1", MapStrings.TidyShells, Tidy.Shells, MapStrings.Remove);
+        Row("Scoop", MapStrings.TidyHoles, Tidy.Holes, MapStrings.FillHoles);
+        Row("Fence", MapStrings.CountFences, Tidy.Fences, MapStrings.Remove);
+        Row("SeedlingBush", MapStrings.TidyBushes, Tidy.Bushes, MapStrings.Remove);
+        Row("PltOak", MapStrings.CountTrees, Tidy.Trees, MapStrings.Remove);
+        Row("Lantern", MapStrings.CountFurniture, Tidy.Things, MapStrings.Remove);
+        if (area is not null)
+            Row("Cardboard", MapStrings.TidyEverything, Tidy.Everything, MapStrings.Remove);
+
+        var p = new StackPanel { Spacing = 8 };
+        p.Children.Add(grid);
+        if (CanUndo)
+        {
+            var undo = new Button { Content = MapStrings.UndoButton, HorizontalAlignment = HorizontalAlignment.Left };
+            undo.Click += (_, _) => Undo();
+            p.Children.Add(undo);
+        }
+        return p;
+    }
+    #endregion
 
     private async Task SaveAndClose()
     {
@@ -336,6 +606,11 @@ public sealed class IslandMapWindow : NhseWindow
             Details.Content = BuildingDetails(b);
             return;
         }
+        if (ChosenArea is { } area)
+        {
+            Details.Content = AreaDetails(area);
+            return;
+        }
         if (Selected is not { } s)
         {
             Details.Content = Summary();
@@ -357,6 +632,26 @@ public sealed class IslandMapWindow : NhseWindow
         });
     }
 
+    private Control AreaDetails(Rect area)
+    {
+        var panel = new StackPanel { Spacing = 10 };
+        panel.Children.Add(Text(string.Format(MapStrings.AreaTitle, (int)(area.Width / 2), (int)(area.Height / 2)), "cardtitle"));
+        panel.Children.Add(Text(MapStrings.AreaHint, "subtle"));
+        if (Message is { } m)
+            panel.Children.Add(new TextBlock { Text = m, TextWrapping = TextWrapping.Wrap, FontWeight = FontWeight.SemiBold });
+        panel.Children.Add(TidyTools(area));
+        var close = new Button { Content = MapStrings.AreaClear };
+        close.Click += (_, _) =>
+        {
+            ChosenArea = null;
+            View.Area = null;
+            Message = null;
+            BuildDetails();
+        };
+        panel.Children.Add(close);
+        return panel;
+    }
+
     private List<ComboItem> GetClassicItems()
     {
         if (ClassicItems is not null)
@@ -369,52 +664,15 @@ public sealed class IslandMapWindow : NhseWindow
 
     private Control Summary()
     {
-        int trees = 0, flowers = 0, furniture = 0, fences = 0, weeds = 0;
-        foreach (var t in Layers[0].Tiles)
-        {
-            if (!t.IsRoot || t.IsNone)
-                continue;
-            if (FieldItemList.Items.TryGetValue(t.ItemId, out var def))
-            {
-                var k = def.Kind;
-                if (k.IsTree) trees++;
-                else if (k.IsFlower) flowers++;
-                else if (k.IsFence) fences++;
-                else if (k.IsWeed) weeds++;
-            }
-            else
-            {
-                furniture++;
-            }
-        }
-
         var panel = new StackPanel { Spacing = 10 };
         panel.Children.Add(Icon("PltPalm", 48));
         panel.Children.Add(Text(MapStrings.NothingSelected, "cardtitle"));
         panel.Children.Add(Text(MapStrings.NothingSelectedHint, "subtle"));
-        panel.Children.Add(new TextBlock { Text = MapStrings.OnYourIsland, FontWeight = FontWeight.SemiBold, Margin = new Thickness(0, 10, 0, 0) });
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), ColumnSpacing = 10, RowSpacing = 6 };
-        void Row(int r, string icon, string label, int count)
-        {
-            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            var img = Icon(icon, 26);
-            Grid.SetRow(img, r);
-            grid.Children.Add(img);
-            var l = new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center };
-            Grid.SetRow(l, r);
-            Grid.SetColumn(l, 1);
-            grid.Children.Add(l);
-            var c = new TextBlock { Text = count.ToString("N0"), FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center };
-            Grid.SetRow(c, r);
-            Grid.SetColumn(c, 2);
-            grid.Children.Add(c);
-        }
-        Row(0, "PltOak", MapStrings.CountTrees, trees);
-        Row(1, "Turip0", MapStrings.CountFlowers, flowers);
-        Row(2, "Lantern", MapStrings.CountFurniture, furniture);
-        Row(3, "Fence", MapStrings.CountFences, fences);
-        Row(4, "Weed", MapStrings.CountWeeds, weeds);
-        panel.Children.Add(grid);
+        panel.Children.Add(new TextBlock { Text = MapStrings.TidyTitle, FontWeight = FontWeight.SemiBold, Margin = new Thickness(0, 10, 0, 0) });
+        panel.Children.Add(Text(MapStrings.TidyHint, "subtle"));
+        if (Message is { } m)
+            panel.Children.Add(new TextBlock { Text = m, TextWrapping = TextWrapping.Wrap, FontWeight = FontWeight.SemiBold });
+        panel.Children.Add(TidyTools(null));
         return panel;
     }
 
@@ -451,6 +709,14 @@ public sealed class IslandMapWindow : NhseWindow
         {
             case Key.Delete or Key.Back when Selected is not null:
                 RemoveSelected();
+                break;
+            case Key.Z when e.KeyModifiers == cmd:
+                Undo();
+                break;
+            case Key.Escape when ChosenArea is not null:
+                ChosenArea = null;
+                View.Area = null;
+                BuildDetails();
                 break;
             case Key.Left: Move(-2, 0); break;
             case Key.Right: Move(2, 0); break;
@@ -534,6 +800,7 @@ public sealed class IslandMapWindow : NhseWindow
             Color roof;
             IImage? icon = null, portrait = null;
             double w, h;
+            bool diagonal = false;
             switch (type)
             {
                 case >= BuildingType.PlayerHouse1 and <= BuildingType.PlayerHouse8:
@@ -588,20 +855,88 @@ public sealed class IslandMapWindow : NhseWindow
                     (name, roof, icon, w, h) = (MapStrings.ReddsBoat, Color.FromRgb(0x6B, 0x5B, 0xA0), GridItems.HomeIcon("Haniwa"), 12, 6);
                     break;
                 case BuildingType.Bridge:
-                    (name, roof, w, h) = (MapStrings.Bridge, Color.FromRgb(0xB9, 0x8A, 0x5A), 10, 5);
+                {
+                    // The model says the material, how far it spans and whether it crosses diagonally.
+                    var shape = BridgeShape((BridgeType)b.Type);
+                    name = ExteriorPictures.GetName(shape.Material) ?? MapStrings.Bridge;
+                    roof = CrossingColor(shape.Material);
+                    (w, h, diagonal) = (shape.Length, 5, shape.Diagonal);
                     break;
+                }
                 case BuildingType.Incline:
-                    (name, roof, w, h) = (MapStrings.Incline, Color.FromRgb(0xCF, 0xC4, 0xB0), 8, 4);
+                {
+                    var slope = ((SlopeType)b.Type).ToString();
+                    name = ExteriorPictures.GetName(slope) ?? MapStrings.Incline;
+                    roof = CrossingColor(slope);
+                    (w, h) = (8, 4);
                     break;
+                }
                 default:
                     (name, roof, w, h) = (MapStrings.Building, Color.FromRgb(0xA0, 0x8C, 0x70), 8, 6);
                     break;
             }
-            var angle = b.Angle < 4 ? b.Angle * 90d : 45 + ((b.Angle - 4) * 90d);
+            var angle = diagonal ? DiagonalAngle(map.LayerTerrain, b.X, b.Y, w, b.Angle) : b.Angle * 90d;
             result.Add(new MapBuilding(type, b.X, b.Y, w, h, name, roof, icon, portrait, angle, i));
         }
         return result;
     }
+
+    /// <summary>
+    /// Material ("BridgeLog"…), length in item tiles and whether it is diagonal, from a bridge model such as
+    /// "BridgeLogDiagonal030" (spans 3 squares diagonally) or "BridgeStone05" (5 squares straight).
+    /// </summary>
+    internal static (string Material, double Length, bool Diagonal) BridgeShape(BridgeType type)
+    {
+        var name = type.ToString();
+        var digits = name.Length;
+        while (digits > 0 && char.IsDigit(name[digits - 1]))
+            digits--;
+        var number = int.TryParse(name.AsSpan(digits), out var n) ? n : 4;
+        var diagonal = name.Contains("Diagonal", StringComparison.Ordinal);
+        var material = name[..digits].Replace("Diagonal", string.Empty, StringComparison.Ordinal);
+        // Straight ones say the squares of water they cross (03…05), diagonal ones tenths of a square (025…035);
+        // a square more for the ends that rest on the banks.
+        var squares = diagonal ? number / 10.0 * Math.Sqrt(2) : number;
+        return (material, (squares + 1) * 2, diagonal);
+    }
+
+    /// <summary>
+    /// Which of the two diagonals a diagonal bridge takes: the one whose ends rest on land, as the game needs.
+    /// </summary>
+    private static double DiagonalAngle(LayerTerrain terrain, double x, double y, double length, byte angle)
+    {
+        bool Wet(double tx, double ty)
+        {
+            // Item tiles → squares; the terrain starts one area (16 squares) in from the edge of the map.
+            int sx = (int)Math.Floor(tx / 2) - 16, sy = (int)Math.Floor(ty / 2) - 16;
+            return terrain.Contains(sx, sy) && terrain.GetTile(sx, sy).UnitModel is var m && (m.IsRiver || m.IsFall);
+        }
+        int Score(double degrees)
+        {
+            var rad = degrees * Math.PI / 180;
+            var (dx, dy) = (Math.Cos(rad) * ((length / 2) - 1), Math.Sin(rad) * ((length / 2) - 1));
+            return (Wet(x, y) ? 1 : 0) + (Wet(x + dx, y + dy) ? 0 : 1) + (Wet(x - dx, y - dy) ? 0 : 1);
+        }
+        var first = (angle * 90d) + 45;
+        var other = first + 90;
+        return Score(other) > Score(first) ? other : first;
+    }
+
+    /// <summary> Colour of a bridge or incline by its material. </summary>
+    private static Color CrossingColor(string material) => material switch
+    {
+        "BridgeStone" or "SlopeStoneStair" => Color.FromRgb(0xA4, 0xA2, 0x9C),
+        "BridgeSuspension" => Color.FromRgb(0xD2, 0xB0, 0x7E),
+        "BridgeJapanese" => Color.FromRgb(0x9C, 0x6B, 0x45),
+        "BridgeLog" or "SlopeWoodStair" => Color.FromRgb(0x8E, 0x5E, 0x37),
+        "BridgeRed" => Color.FromRgb(0xC2, 0x45, 0x38),
+        "BridgeIron" or "SlopeIronStair" => Color.FromRgb(0x7E, 0x8A, 0x96),
+        "SlopeIronStairBlue" or "SlopeWoodBlue" => Color.FromRgb(0x5B, 0x8F, 0xC9),
+        "BridgeWood" or "SlopeWood" => Color.FromRgb(0xC9, 0x9D, 0x6A),
+        "BridgeBricks" or "SlopeBrickStair" => Color.FromRgb(0xB3, 0x5A, 0x42),
+        "SlopeNatural" => Color.FromRgb(0xB8, 0xA6, 0x7E),
+        _ => Color.FromRgb(0xB9, 0x8A, 0x5A),
+    };
 
     private static Bitmap? GetPhoto(Personal pers)
     {

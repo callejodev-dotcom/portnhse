@@ -10,7 +10,7 @@ public static class MapStrings
     // Island map window
     public static string MapTitle { get; set; } = "Island map";
     public static string Painting { get; set; } = "Drawing the island…";
-    public static string MapHint { get; set; } = "Click a spot to see what is there and change it. Drag to move around; ⌘ + scroll or the buttons to zoom.";
+    public static string MapHint { get; set; } = "Click a spot to see what is there and change it. Drag a thing to move it, or the map to move around; ⌘ + scroll or the buttons to zoom.";
     public static string ZoomIn { get; set; } = "Zoom in";
     public static string ZoomOut { get; set; } = "Zoom out";
     public static string ZoomFit { get; set; } = "See the whole island";
@@ -22,7 +22,7 @@ public static class MapStrings
     public static string LayerTopHint { get; set; } = "Things placed on top of other furniture, like whatever sits on an outdoor table.";
     public static string Cancel { get; set; } = "Cancel";
     public static string Save { get; set; } = "Save";
-    public static string NavigationHint { get; set; } = "Drag to move · ⌘ + scroll to zoom · Delete removes what is selected";
+    public static string NavigationHint { get; set; } = "Drag the map to move around · Drag a thing to move it · ⇧ + drag marks an area · ⌘Z undoes · Delete removes what is selected";
 
     // Side panel
     public static string NothingSelected { get; set; } = "Choose a spot";
@@ -187,4 +187,25 @@ public static class MapStrings
     // Door shape
     public static string DoorArched { get; set; } = "Arched";
     public static string DoorSquare { get; set; } = "Square";
+
+    // Tidying the island, moving things, undo
+    public static string TidyTitle { get; set; } = "Tidy up the island";
+    public static string TidyHint { get; set; } = "Everything at once, on the whole island. To do it in one part only, drag over the map holding ⇧ (Shift).";
+    public static string TidyBranches { get; set; } = "Branches";
+    public static string TidyShells { get; set; } = "Shells";
+    public static string TidyHoles { get; set; } = "Holes";
+    public static string TidyBushes { get; set; } = "Bushes";
+    public static string TidyEverything { get; set; } = "Everything";
+    public static string FillHoles { get; set; } = "Fill";
+    public static string Water { get; set; } = "Water";
+    public static string WholeIsland { get; set; } = "the whole island";
+    public static string ChosenArea { get; set; } = "the chosen area";
+    public static string AskRemove { get; set; } = "Remove {1} {0} from {2}? You can undo it with ⌘Z.";
+    public static string Removed { get; set; } = "Done: {0} removed. ⌘Z undoes it.";
+    public static string Watered { get; set; } = "Done: {0} flowers watered. ⌘Z undoes it.";
+    public static string Undone { get; set; } = "Undone.";
+    public static string UndoButton { get; set; } = "Undo the last change (⌘Z)";
+    public static string AreaTitle { get; set; } = "Chosen area · {0} × {1} squares";
+    public static string AreaHint { get; set; } = "What is in the area you marked (on the layer you are editing). Esc or a click on the map to stop.";
+    public static string AreaClear { get; set; } = "Forget the area";
 }

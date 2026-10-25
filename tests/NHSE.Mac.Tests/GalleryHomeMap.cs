@@ -369,4 +369,59 @@ public class GalleryHomeMap
         Assert.All(names, n => Assert.DoesNotContain("HouseDoor", n));
     }
     #endregion
+
+    /// <summary>
+    /// The tidying tools: every weed of the island removed at once and back with undo; flowers removed only in a chosen
+    /// area; a piece of furniture dragged elsewhere (60-…).
+    /// </summary>
+    [AvaloniaFact]
+    public void MapTidyAndMove()
+    {
+        var sav = Save();
+        var w = ShowMap(sav, out var view);
+        Gallery.Capture(w, "60-map-tidy", false);
+
+        var weeds = w.Count(IslandMapWindow.Tidy.Weeds);
+        Assume(weeds > 0, "the test save has weeds");
+        Assert.Equal(weeds, w.RemoveAll(IslandMapWindow.Tidy.Weeds));
+        Assert.Equal(0, w.Count(IslandMapWindow.Tidy.Weeds));
+        w.Undo();
+        Assert.Equal(weeds, w.Count(IslandMapWindow.Tidy.Weeds));
+
+        // Flowers only in an area: the ones outside stay.
+        var flowers = w.Count(IslandMapWindow.Tidy.Flowers);
+        var area = new Rect(0, 0, IslandMapView.MapWidth / 2, IslandMapView.MapHeight);
+        var inside = w.Count(IslandMapWindow.Tidy.Flowers, area);
+        w.ChooseArea(area);
+        Dispatcher.UIThread.RunJobs();
+        Gallery.Capture(w, "60-map-area", false);
+        Assert.Equal(inside, w.RemoveAll(IslandMapWindow.Tidy.Flowers, area));
+        Assert.Equal(flowers - inside, w.Count(IslandMapWindow.Tidy.Flowers));
+
+        // A piece of furniture dragged to an empty square.
+        var map = MapTileManagerUtil.FromSaveFile(sav.Main);
+        var (ox, oy) = map.ConfigItems.GetCoordinatesAbsolute();
+        var (fx, fy) = FindEmptySquare(sav);
+        var layer = map.FieldItems.Layer0;
+        var piece = Enumerable.Range(0, layer.TileInfo.TotalWidth).SelectMany(x => Enumerable.Range(0, layer.TileInfo.TotalHeight).Select(y => (x, y)))
+            .First(p => layer.GetTile(p.x, p.y) is { IsRoot: true, IsNone: false } t && !t.IsFieldItem && GridItems.GetSize(t) == (2, 2));
+        Assert.Equal(PlaceResult.Ok, w.MoveItem(piece.x + ox, piece.y + oy, fx + ox, fy + oy));
+        w.ApplyToSave();
+        w.Close();
+        var after = MapTileManagerUtil.FromSaveFile(sav.Main).FieldItems.Layer0;
+        Assert.Equal(layer.GetTile(piece.x, piece.y).ItemId, after.GetTile(fx, fy).ItemId);
+        Assert.True(after.GetTile(piece.x, piece.y).IsNone);
+    }
+
+    private static void Assume(bool condition, string what) => Assert.SkipUnless(condition, what);
+
+    [AvaloniaFact]
+    public void BridgeShapes()
+    {
+        Assert.Equal(("BridgeJapanese", 10, false), IslandMapWindow.BridgeShape(BridgeType.BridgeJapanese04));
+        var diagonal = IslandMapWindow.BridgeShape(BridgeType.BridgeLogDiagonal030);
+        Assert.True(diagonal.Diagonal);
+        Assert.Equal("BridgeLog", diagonal.Material);
+        Assert.True(diagonal.Length > 10);
+    }
 }
