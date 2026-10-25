@@ -76,6 +76,7 @@ public sealed class ItemSearchBox : UserControl
                     return row;
                 row.Children.Add(new Image { Source = ItemSprite.GetItemSprite(e.SpriteId), Width = 28, Height = 28 });
                 row.Children.Add(new TextBlock { Text = e.Name, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
+                HomeUi.SetItemTip(row, () => row.DataContext is Entry current ? new Item(current.SpriteId) : null);
                 return row;
             }),
         };

@@ -576,9 +576,10 @@ public sealed class HouseWindow : NhseWindow
                 ShowRoom(VisibleRooms[0]);
         };
         p.Children.Add(Labeled(MapStrings.HouseSize, size));
-        p.Children.Add(Labeled(MapStrings.Roof, StylePicker(house.RoofUniqueID, v => house.RoofUniqueID = v)));
-        p.Children.Add(Labeled(MapStrings.Walls, StylePicker(house.WallUniqueID, v => house.WallUniqueID = v)));
-        p.Children.Add(Labeled(MapStrings.Door, StylePicker(house.DoorUniqueID, v => house.DoorUniqueID = v)));
+        // The "order" is what the house turns into the next day: set it too, so the change stays.
+        p.Children.Add(Labeled(MapStrings.Roof, StylePicker(house.RoofUniqueID, v => { house.RoofUniqueID = v; house.OrderRoofUniqueID = v; })));
+        p.Children.Add(Labeled(MapStrings.Walls, StylePicker(house.WallUniqueID, v => { house.WallUniqueID = v; house.OrderWallUniqueID = v; })));
+        p.Children.Add(Labeled(MapStrings.Door, StylePicker(house.DoorUniqueID, v => { house.DoorUniqueID = v; house.OrderDoorUniqueID = v; })));
 
         // Raw values and files, for those who know
         var advanced = new StackPanel { Spacing = 8 };
@@ -699,6 +700,19 @@ public static class HouseStyleNames
     private static readonly string[] Regions = ["PA00", "PA01", "PA02", "PA03", "PA04", "PB04", "NA", "NB", "NC", "ND"];
 
     private readonly record struct Parts(string Material, int Color, bool Round, string Family);
+
+    /// <summary>
+    /// Looks that a villager's house can have.
+    /// </summary>
+    public static bool IsForVillagers<T>(T value) where T : struct, Enum
+    {
+        var name = value.ToString();
+        if (name.StartsWith('_'))
+            return false;
+        if (typeof(T) == typeof(DoorKind))
+            return !name.StartsWith("HouseTent", StringComparison.Ordinal);
+        return name.StartsWith("HouseRoofN", StringComparison.Ordinal) || name.StartsWith("HouseWallN", StringComparison.Ordinal);
+    }
 
     /// <summary>
     /// Looks that a player's house can have (villagers' houses have their own styles).

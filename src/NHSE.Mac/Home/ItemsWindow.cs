@@ -54,7 +54,7 @@ public sealed class ItemsWindow : NhseWindow
             slot.PointerPressed += Slot_PointerPressed;
             slot.PointerMoved += Slot_PointerMoved;
             slot.PointerReleased += Slot_PointerReleased;
-            slot.PointerEntered += (_, _) => ToolTip.SetTip(slot, GetName(GetItem(slot.Index)));
+            SetItemTip(slot, () => GetItem(slot.Index));
             Slots.Add(slot);
             SlotGrid.Children.Add(slot);
         }

@@ -200,6 +200,7 @@ public sealed class RecipesWindow : PlayerDialog
         var picture = new Image { Width = 34, Height = 34, VerticalAlignment = VerticalAlignment.Center };
         picture.Bind(Image.SourceProperty, new Binding(nameof(RecipeRow.Picture)));
         picture.Bind(OpacityProperty, new Binding(nameof(RecipeRow.Known)) { Converter = Faded });
+        HomeUi.SetItemTip(picture, () => picture.DataContext is RecipeRow row ? new Item(row.ItemId) : null);
         g.Children.Add(picture);
 
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };

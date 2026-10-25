@@ -188,9 +188,44 @@ public static class HomeUi
         foreach (var item in items.Where(z => !z.IsNone).Take(max))
         {
             var img = new Image { Source = ItemSprite.GetItemSprite(item), Width = size, Height = size };
-            ToolTip.SetTip(img, GameInfo.Strings.GetItemName(item));
+            SetItemTip(img, () => item);
             p.Children.Add(img);
         }
         return p;
+    }
+
+    /// <summary>
+    /// Big tooltip of an item: its picture large, the name and what kind of thing it is.
+    /// </summary>
+    public static Control ItemTip(Item item)
+    {
+        var p = new StackPanel { Spacing = 4, Width = 190, Margin = new Thickness(4) };
+        p.Children.Add(new Image { Source = ItemSprite.GetItemSprite(item), Width = 150, Height = 150, HorizontalAlignment = HorizontalAlignment.Center });
+        p.Children.Add(new TextBlock
+        {
+            Text = GameInfo.Strings.GetItemName(item),
+            FontSize = 15,
+            FontWeight = FontWeight.SemiBold,
+            TextWrapping = TextWrapping.Wrap,
+            TextAlignment = TextAlignment.Center,
+        });
+        var kind = ItemSearchBox.GetName(ItemSearchBox.GetCategory(item.ItemId));
+        if (item.Count > 0 && ItemInfo.TryGetMaxStackCount(item, out var max) && max > 1)
+            kind = $"{kind} · {string.Format(HomeStrings.TipAmount, item.Count + 1)}";
+        p.Children.Add(new TextBlock { Text = kind, FontSize = 12, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center, Classes = { "subtle" } });
+        return p;
+    }
+
+    /// <summary>
+    /// Shows <see cref="ItemTip"/> when the pointer is over <paramref name="control"/>. The item is read at that moment,
+    /// so slots whose item changes keep an up-to-date tooltip; nothing is shown for an empty one.
+    /// </summary>
+    public static void SetItemTip(Control control, Func<Item?> item)
+    {
+        control.PointerEntered += (_, _) =>
+        {
+            var current = item();
+            ToolTip.SetTip(control, current is null || current.IsNone ? null : ItemTip(current));
+        };
     }
 }

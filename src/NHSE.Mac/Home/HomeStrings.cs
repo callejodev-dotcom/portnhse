@@ -183,6 +183,7 @@ public static class HomeStrings
     public static string ClearBugs { get; set; } = "Bugs";
     public static string ClearFish { get; set; } = "Fish";
     public static string ClearDive { get; set; } = "Sea creatures";
+    public static string TipAmount { get; set; } = "Amount: {0}";
     public static string More { get; set; } = "More";
     public static string ExportItems { get; set; } = "Export to a file…";
     public static string ImportItems { get; set; } = "Import from a file…";

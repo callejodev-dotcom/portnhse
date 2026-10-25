@@ -229,7 +229,9 @@ public sealed class MuseumWindow : NhseWindow
         text.Children.Add(detail);
 
         var g = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 10, Margin = new Thickness(6, 0, 0, 0) };
-        g.Children.Add(new Image { Source = ItemSprite.GetItemSprite(p.Id), Width = 36, Height = 36 });
+        var picture = new Image { Source = ItemSprite.GetItemSprite(p.Id), Width = 36, Height = 36 };
+        SetItemTip(picture, () => new Item(p.Id));
+        g.Children.Add(picture);
         Grid.SetColumn(text, 1);
         g.Children.Add(text);
 

@@ -155,6 +155,7 @@ ClearFurniture=Muebles
 ClearBugs=Bichos
 ClearFish=Peces
 ClearDive=Criaturas marinas
+TipAmount=Cantidad: {0}
 More=Más
 ExportItems=Exportar a un archivo…
 ImportItems=Importar de un archivo…

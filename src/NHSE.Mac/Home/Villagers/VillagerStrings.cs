@@ -70,4 +70,17 @@ public static class VillagerStrings
     public static string RoomSearch { get; set; } = "Search by name (wood, brick…)";
     public static string RoomShowAccent { get; set; } = "Show the accent wall";
     public static string RoomAdvancedHint { get; set; } = "The values of the room as the game stores them.";
+
+    // House
+    public static string HouseTitle { get; set; } = "{0}’s house";
+    public static string HouseHint { get; set; } = "How {0}’s house looks from outside and what hangs on its door.";
+    public static string HouseNotFound { get; set; } = "{0} has no house on the island yet.";
+    public static string HouseOutside { get; set; } = "From outside";
+    public static string DoorDecoration { get; set; } = "Door decoration";
+    public static string DoorDecorationHint { get; set; } = "What hangs on the door: wreaths, seasonal decorations…";
+    public static string NoDoorDecoration { get; set; } = "Nothing on the door.";
+    public static string ChangeDoorDecoration { get; set; } = "Choose something to hang on the door:";
+    public static string RemoveDoorDecoration { get; set; } = "Remove";
+    public static string HouseAdvancedHint { get; set; } = "The values of the house as the game stores them.";
+    public static string HouseWrongFile { get; set; } = "“{0}” is not a villager house file (.nhvh).";
 }

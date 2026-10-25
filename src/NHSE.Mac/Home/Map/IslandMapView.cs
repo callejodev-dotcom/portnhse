@@ -76,7 +76,7 @@ public sealed class IslandMapView : Control
     private bool Pressed;
     private bool Panning;
     private Point? HoverPoint;
-    private (Rect Area, string Text)? Hover;
+    private (Rect Area, string Text, IImage? Picture)? Hover;
     private bool FirstLayout = true;
 
     private static readonly Typeface LabelFont = new(FontFamily.Default, FontStyle.Normal, FontWeight.SemiBold);
@@ -429,15 +429,15 @@ public sealed class IslandMapView : Control
             var text = GridItems.GetName(item.Item);
             if (item.Item.IsBuried)
                 text += " · " + MapStrings.Buried;
-            Hover = (item.Area, text);
+            Hover = (item.Area, text, item.Picture);
         }
         else if (BuildingAt(map.X, map.Y) is { } b)
         {
-            Hover = (b.Bounds, b.Name);
+            Hover = (b.Bounds, b.Name, null);
         }
         else if (map.X >= 0 && map.Y >= 0 && map.X < MapWidth && map.Y < MapHeight)
         {
-            Hover = (new Rect(Math.Floor(map.X / 2) * 2, Math.Floor(map.Y / 2) * 2, 2, 2), string.Empty);
+            Hover = (new Rect(Math.Floor(map.X / 2) * 2, Math.Floor(map.Y / 2) * 2, 2, 2), string.Empty, null);
         }
         InvalidateVisual();
     }
@@ -488,7 +488,7 @@ public sealed class IslandMapView : Control
         if (Selection is { } sel)
             RoomView.DrawSelection(context, ToScreen(sel), SelectionFacing);
         if (Hover is { Text.Length: > 0 } tip && HoverPoint is { } at && !Panning)
-            DrawBubble(context, tip.Text, at, bounds);
+            RoomView.DrawBubble(context, tip.Text, tip.Picture, at, bounds.Size, ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark);
     }
 
     private void DrawItems(DrawingContext context, List<MapItem> items, Rect visible, bool onTop = false)
@@ -737,21 +737,5 @@ public sealed class IslandMapView : Control
         }
     }
 
-    private void DrawBubble(DrawingContext context, string text, Point at, Rect bounds)
-    {
-        var dark = ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
-        IBrush fg = dark ? Brushes.White : new SolidColorBrush(Color.FromRgb(0x22, 0x22, 0x22));
-        var bg = dark ? new SolidColorBrush(Color.FromArgb(0xF2, 0x2C, 0x2C, 0x2F)) : new SolidColorBrush(Color.FromArgb(0xF7, 0xFF, 0xFF, 0xFF));
-        var ft = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, LabelFont, 13, fg);
-        var w = ft.Width + 20;
-        var h = ft.Height + 10;
-        var x = Math.Min(at.X + 16, bounds.Width - w - 6);
-        var y = at.Y + 20;
-        if (y + h > bounds.Height - 6)
-            y = at.Y - h - 12;
-        var r = new Rect(x, y, w, h);
-        context.DrawRectangle(bg, new Pen(new SolidColorBrush(Color.FromArgb(0x40, 0, 0, 0)), 1), r, 8, 8, new BoxShadows(new BoxShadow { Blur = 10, OffsetY = 2, Color = Color.FromArgb(0x40, 0, 0, 0) }));
-        context.DrawText(ft, new Point(r.X + 10, r.Y + 5));
-    }
     #endregion
 }

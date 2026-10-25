@@ -59,7 +59,7 @@ public sealed class RoomView : Control
     public event Action<int, int>? TileClicked;
 
     private Point? HoverPoint;
-    private (Rect Area, string Text)? Hover;
+    private (Rect Area, string Text, IImage? Picture)? Hover;
 
     private static readonly Typeface Font = new(FontFamily.Default, FontStyle.Normal, FontWeight.SemiBold);
 
@@ -184,11 +184,11 @@ public sealed class RoomView : Control
             if (GridItems.TryGetRoot(layer, t.X, t.Y, out var root, out var rx, out var ry))
             {
                 var (w, h) = root.IsRoot ? GridItems.GetSize(root) : (1, 1);
-                Hover = (new Rect(rx, ry, w, h), GridItems.GetName(root));
+                Hover = (new Rect(rx, ry, w, h), GridItems.GetName(root), GridItems.GetPicture(root));
             }
             else
             {
-                Hover = (new Rect(t.X & ~1, t.Y & ~1, 2, 2), string.Empty);
+                Hover = (new Rect(t.X & ~1, t.Y & ~1, 2, 2), string.Empty, null);
             }
         }
         InvalidateVisual();
@@ -210,7 +210,7 @@ public sealed class RoomView : Control
         if (Selection is { } sel)
             DrawSelection(context, ToScreen(sel), SelectionFacing);
         if (Hover is { Text.Length: > 0 } tip && HoverPoint is { } at)
-            DrawBubble(context, tip.Text, at);
+            DrawBubble(context, tip.Text, tip.Picture, at);
     }
 
     /// <summary>
@@ -450,20 +450,39 @@ public sealed class RoomView : Control
         context.DrawImage(picture, new Rect(size), new Rect(dest.X + ((dest.Width - w) / 2), dest.Y + ((dest.Height - h) / 2), w, h));
     }
 
-    private void DrawBubble(DrawingContext context, string text, Point at)
+    private void DrawBubble(DrawingContext context, string text, IImage? picture, Point at)
+        => DrawBubble(context, text, picture, at, Bounds.Size, ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark);
+
+    private const double TipPicture = 128;
+
+    /// <summary>
+    /// Bubble next to the pointer with the name of what is under it and, for items, its picture in large.
+    /// </summary>
+    internal static void DrawBubble(DrawingContext context, string text, IImage? picture, Point at, Size area, bool dark)
     {
-        var dark = ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
         IBrush fg = dark ? Brushes.White : new SolidColorBrush(Color.FromRgb(0x22, 0x22, 0x22));
         IBrush bg = dark ? new SolidColorBrush(Color.FromArgb(0xF2, 0x2C, 0x2C, 0x2F)) : new SolidColorBrush(Color.FromArgb(0xF7, 0xFF, 0xFF, 0xFF));
-        var ft = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Font, 13, fg);
-        var w = ft.Width + 20;
-        var h = ft.Height + 10;
-        var x = Math.Min(at.X + 16, Bounds.Width - w - 6);
+        var ft = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Font, picture is null ? 13 : 14, fg)
+        {
+            MaxTextWidth = picture is null ? double.PositiveInfinity : 200,
+            TextAlignment = picture is null ? TextAlignment.Left : TextAlignment.Center,
+        };
+        var pictureHeight = picture is null ? 0 : TipPicture + 6;
+        var w = Math.Max(ft.Width, picture is null ? 0 : TipPicture) + 20;
+        var h = ft.Height + pictureHeight + (picture is null ? 10 : 16);
+        var x = Math.Max(6, Math.Min(at.X + 16, area.Width - w - 6));
         var y = at.Y + 20;
-        if (y + h > Bounds.Height - 6)
-            y = at.Y - h - 12;
+        if (y + h > area.Height - 6)
+            y = Math.Max(6, at.Y - h - 12);
         var r = new Rect(x, y, w, h);
-        context.DrawRectangle(bg, new Pen(new SolidColorBrush(Color.FromArgb(0x40, 0, 0, 0)), 1), r, 8, 8, new BoxShadows(new BoxShadow { Blur = 10, OffsetY = 2, Color = Color.FromArgb(0x40, 0, 0, 0) }));
+        context.DrawRectangle(bg, new Pen(new SolidColorBrush(Color.FromArgb(0x40, 0, 0, 0)), 1), r, 10, 10, new BoxShadows(new BoxShadow { Blur = 12, OffsetY = 3, Color = Color.FromArgb(0x48, 0, 0, 0) }));
+        if (picture is not null)
+        {
+            using (context.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = BitmapInterpolationMode.HighQuality }))
+                context.DrawImage(picture, new Rect(picture.Size), new Rect(r.X + ((w - TipPicture) / 2), r.Y + 8, TipPicture, TipPicture));
+            context.DrawText(ft, new Point(r.X + ((w - ft.Width) / 2), r.Y + 8 + pictureHeight));
+            return;
+        }
         context.DrawText(ft, new Point(r.X + 10, r.Y + 5));
     }
     #endregion

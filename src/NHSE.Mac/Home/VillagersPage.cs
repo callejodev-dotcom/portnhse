@@ -320,13 +320,7 @@ public sealed class VillagersPage : UserControl
                 Commit();
             }
         }));
-        actions.Children.Add(SmallButton(HomeStrings.VillagerHouse, async () =>
-        {
-            var villagers = Ctx.SAV.Main.GetVillagers();
-            var houses = Ctx.SAV.Main.GetVillagerHouses();
-            if (await Ctx.Edit(new VillagerHouseEditor(houses, villagers, Ctx.SAV.Main, Selected)))
-                Ctx.SAV.Main.SetVillagerHouses(houses);
-        }));
+        actions.Children.Add(SmallButton(HomeStrings.VillagerHouse, () => VillagerHouseWindow.Open(Ctx, Selected)));
 
         var portrait = new Image { Source = VillagerSprite.GetVillagerSprite(v.InternalName), Width = 120, Height = 120, VerticalAlignment = VerticalAlignment.Top };
         var text = new StackPanel();
@@ -395,7 +389,9 @@ public sealed class VillagersPage : UserControl
         foreach (var part in new[] { room.WallItem, room.FloorItem })
         {
             var item = part.ToItem();
-            line.Children.Add(new Image { Source = ItemSprite.GetItemSprite(item), Width = 26, Height = 26, VerticalAlignment = VerticalAlignment.Center });
+            var picture = new Image { Source = ItemSprite.GetItemSprite(item), Width = 26, Height = 26, VerticalAlignment = VerticalAlignment.Center };
+            SetItemTip(picture, () => item);
+            line.Children.Add(picture);
             line.Children.Add(new TextBlock { Text = GameInfo.Strings.GetItemName(item), VerticalAlignment = VerticalAlignment.Center });
         }
         line.Children.Add(SmallButton(HomeStrings.Edit, async () =>

@@ -171,6 +171,7 @@ public sealed class MailWindow : PlayerDialog
         right.Children.Add(date);
         var gift = new Image { Width = 26, Height = 26, HorizontalAlignment = HorizontalAlignment.Right };
         gift.Bind(Image.SourceProperty, new Binding(nameof(LetterRow.GiftPicture)));
+        HomeUi.SetItemTip(gift, () => gift.DataContext is LetterRow row ? row.Gift : null);
         right.Children.Add(gift);
         Grid.SetColumn(right, 2);
         g.Children.Add(right);
@@ -734,11 +735,13 @@ public sealed class LetterRow(MailWindow owner, PostBox box, int slot) : RowMode
         }
     }
 
+    public Item Gift => Box.GetAttachedItem(Slot);
+
     public Bitmap? GiftPicture
     {
         get
         {
-            var item = Box.GetAttachedItem(Slot);
+            var item = Gift;
             return item.IsNone ? null : ItemSprite.GetItemSprite(item);
         }
     }

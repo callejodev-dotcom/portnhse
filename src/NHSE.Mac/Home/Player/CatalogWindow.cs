@@ -207,6 +207,7 @@ public sealed class CatalogWindow : PlayerDialog
         var picture = new Image { Width = 34, Height = 34, VerticalAlignment = VerticalAlignment.Center };
         picture.Bind(Image.SourceProperty, new Binding(nameof(CatalogRow.Picture)));
         picture.Bind(OpacityProperty, new Binding(nameof(CatalogRow.Received)) { Converter = Faded });
+        HomeUi.SetItemTip(picture, () => picture.DataContext is CatalogRow row ? new Item(row.Id) : null);
         g.Children.Add(picture);
 
         var name = new TextBlock { Text = r.Name, FontSize = 14, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
