@@ -275,3 +275,4 @@ LiveToastDetail=Lo he leído de vuelta de la consola y está todo. Lo que no vea
 LiveToastSame=✓ La consola ya lo tenía todo igual
 LiveStatusSent=✓ Mandado y comprobado a las {0}
 LiveStatusSame=✓ La consola lo tiene todo ({0})
+LiveOutOfStep=La consola contestó algo que no esperaba (estaba ocupada). Vuelve a intentarlo: NHSE se vuelve a conectar solo.

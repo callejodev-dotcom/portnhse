@@ -63,11 +63,16 @@ public sealed class LiveGame : IDisposable
         {
             try
             {
-                Send("getVersion");
-                ReadLine();
-                return;
+                // Something left from before (a late answer) means the connection is out of step.
+                if (Pending.Length == 0 && Client?.Available == 0)
+                {
+                    Send("getVersion");
+                    var version = ReadLine();
+                    if (version.Length is > 0 and < 16 && version.Contains('.') && Pending.Length == 0)
+                        return;
+                }
             }
-            catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException)
+            catch (IOException)
             {
                 // Connect again below.
             }
@@ -82,6 +87,7 @@ public sealed class LiveGame : IDisposable
 
     public void Dispose()
     {
+        Pending.Clear();
         Stream?.Dispose();
         Client?.Dispose();
         Stream = null;
@@ -91,26 +97,53 @@ public sealed class LiveGame : IDisposable
     private void Send(string command)
     {
         var bytes = Encoding.ASCII.GetBytes(command + "\r\n");
-        Stream!.Write(bytes);
+        try
+        {
+            Stream!.Write(bytes);
+        }
+        catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException or NullReferenceException)
+        {
+            throw Lost(ex);
+        }
+    }
+
+    /// <summary> What came after the last answer (an answer and part of the next can arrive together). </summary>
+    private readonly StringBuilder Pending = new();
+
+    /// <summary>
+    /// After a failure the console may still answer what was asked before, and those answers would be taken for the
+    /// next ones: the connection is dropped, so the next use starts a clean one.
+    /// </summary>
+    private IOException Lost(Exception ex)
+    {
+        Dispose();
+        return ex as IOException ?? new IOException(ex.Message, ex);
     }
 
     private string ReadLine()
     {
-        var sb = new StringBuilder();
         var buffer = new byte[0x10000];
-        while (true)
+        try
         {
-            var n = Stream!.Read(buffer);
-            if (n == 0)
-                throw new IOException("The console closed the connection.");
-            var text = Encoding.ASCII.GetString(buffer, 0, n);
-            var end = text.IndexOf('\n');
-            if (end >= 0)
+            while (true)
             {
-                sb.Append(text.AsSpan(0, end));
-                return sb.ToString().TrimEnd('\r');
+                for (int i = 0; i < Pending.Length; i++)
+                {
+                    if (Pending[i] != '\n')
+                        continue;
+                    var line = Pending.ToString(0, i).TrimEnd('\r');
+                    Pending.Remove(0, i + 1);
+                    return line;
+                }
+                var n = Stream!.Read(buffer);
+                if (n == 0)
+                    throw new IOException("The console closed the connection.");
+                Pending.Append(Encoding.ASCII.GetString(buffer, 0, n));
             }
-            sb.Append(text);
+        }
+        catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException or NullReferenceException)
+        {
+            throw Lost(ex);
         }
     }
 
@@ -122,7 +155,9 @@ public sealed class LiveGame : IDisposable
         {
             var size = Math.Min(ReadChunk, length - done);
             Send($"peek 0x{address + (uint)done:X8} {size}");
-            Convert.FromHexString(ReadLine()).CopyTo(result, done);
+            var line = ReadLine();
+            if (line.Length != size * 2 || Convert.FromHexString(line, result.AsSpan(done, size), out _, out _) != System.Buffers.OperationStatus.Done)
+                throw Lost(new IOException(HomeStrings.LiveOutOfStep));
             done += size;
             progress?.Invoke((double)done / length);
         }
@@ -276,12 +311,26 @@ public sealed class LiveGame : IDisposable
         // The game as it is now, in case it has to go back.
         if (!sav.Main.Data.SequenceEqual(MainBefore) || !personal.Data.SequenceEqual(PlayerBefore))
             LiveBackups.Save(MainBefore, PlayerBefore, personal, HomeStrings.LiveBackupBeforeSend);
-        var mainRuns = Send(MainAddress, sav.Main.Data, MainBefore);
-        var playerRuns = Send(PlayerAddress, personal.Data, PlayerBefore);
-        if (mainRuns.Count + playerRuns.Count == 0)
-            return SendResult.Nothing;
-        Sync();
-        var wrong = Verify(MainAddress, mainRuns, MainBefore) + Verify(PlayerAddress, playerRuns, PlayerBefore);
+        // If it fails half way, what was being sent is not known to be in the console: sending again sends it all.
+        var mainKnown = (byte[])MainBefore.Clone();
+        var playerKnown = (byte[])PlayerBefore.Clone();
+        List<(int Start, int Length)> mainRuns, playerRuns;
+        int wrong;
+        try
+        {
+            mainRuns = Send(MainAddress, sav.Main.Data, MainBefore);
+            playerRuns = Send(PlayerAddress, personal.Data, PlayerBefore);
+            if (mainRuns.Count + playerRuns.Count == 0)
+                return SendResult.Nothing;
+            Sync();
+            wrong = Verify(MainAddress, mainRuns, MainBefore) + Verify(PlayerAddress, playerRuns, PlayerBefore);
+        }
+        catch
+        {
+            MainBefore = mainKnown;
+            PlayerBefore = playerKnown;
+            throw;
+        }
         LiveBackups.SaveLatest(MainBefore, PlayerBefore, personal);
         var runs = mainRuns.Concat(playerRuns).ToList();
         return new SendResult(false, runs.Sum(z => z.Length), runs.Count, wrong);

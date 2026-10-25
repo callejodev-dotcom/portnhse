@@ -35,6 +35,9 @@ internal sealed class FakeConsole : IDisposable
     /// <summary> Closes the connection from the console's side. </summary>
     public void Drop() => Current?.Close();
 
+    /// <summary> Sends a line nobody asked for, as a late answer to something that timed out. </summary>
+    public void Stray(string line) => Current!.GetStream().Write(Encoding.ASCII.GetBytes(line + "\r\n"));
+
     public void Dispose()
     {
         Current?.Close();
