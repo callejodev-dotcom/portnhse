@@ -84,8 +84,8 @@ public sealed class ItemSlot : Control
     public override void Render(DrawingContext context)
     {
         var r = new Rect(Bounds.Size);
-        if (Back is not null)
-            context.FillRectangle(Back, r);
+        // Always painted (transparent when empty), so an empty space can be clicked and dropped on too.
+        context.FillRectangle(Back ?? Brushes.Transparent, r);
         if (Sprite is not null)
         {
             var size = Sprite.Size;

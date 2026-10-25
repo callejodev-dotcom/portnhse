@@ -30,6 +30,9 @@ public sealed class ItemsWindow : NhseWindow
 
     private int Page;
     private int Selected; // absolute index in Items
+
+    /// <summary> Space chosen (index in the items). </summary>
+    internal int SelectedIndex => Selected;
     private Item? Copied;
 
     // Drag and drop between spaces
