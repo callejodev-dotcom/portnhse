@@ -72,9 +72,15 @@ public sealed class VillagerHouseWindow : PlayerDialog
         var fields = new StackPanel { Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
         fields.Children.Add(Text(VillagerStrings.HouseOutside, "cardtitle"));
         // The "order" is what the house turns into the next day: set it too, so the change stays.
+        // Villager roofs have no pictures in the game list: they are chosen by name.
         fields.Children.Add(PlayerUi.Labeled(MapStrings.Roof, 80, Picker(house.RoofUniqueID, v => { house.RoofUniqueID = v; house.OrderRoofUniqueID = v; })));
-        fields.Children.Add(PlayerUi.Labeled(MapStrings.Walls, 80, Picker(house.WallUniqueID, v => { house.WallUniqueID = v; house.OrderWallUniqueID = v; })));
-        fields.Children.Add(PlayerUi.Labeled(MapStrings.Door, 80, Picker(house.DoorUniqueID, v => { house.DoorUniqueID = v; house.OrderDoorUniqueID = v; })));
+        var walls = new HousePartPicker<WallType>(HouseStyleNames.Offered<WallType>("HouseWallN"), house.WallUniqueID) { Width = 300 };
+        walls.Changed += v => { house.WallUniqueID = v; house.OrderWallUniqueID = v; };
+        fields.Children.Add(PlayerUi.Labeled(MapStrings.Walls, 80, walls));
+        var door = new DoorPicker(house.DoorUniqueID) { Width = 300 };
+        door.Changed += v => { house.DoorUniqueID = v; house.OrderDoorUniqueID = v; };
+        fields.Children.Add(PlayerUi.Labeled(MapStrings.Door, 80, door));
+        ExteriorPictures.EnsureDownloaded();
 
         var g = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 18 };
         g.Children.Add(new Image { Source = VillagerSprite.GetVillagerSprite(Portrait), Width = 104, Height = 104, VerticalAlignment = VerticalAlignment.Top });

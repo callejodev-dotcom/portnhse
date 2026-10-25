@@ -183,4 +183,8 @@ public static class MapStrings
     public static string Placing { get; set; } = "Putting down";
     public static string PlacingHint { get; set; } = "Click the room where you want it; each click puts one more. Esc or «Done» to stop.";
     public static string PlacingDone { get; set; } = "Done";
+
+    // Door shape
+    public static string DoorArched { get; set; } = "Arched";
+    public static string DoorSquare { get; set; } = "Square";
 }

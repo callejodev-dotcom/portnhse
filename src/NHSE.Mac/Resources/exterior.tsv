@@ -1,0 +1,371 @@
+# House roofs, walls and doors: internal name, picture, and the name in each game language (en es de fr it jp ko zhs zht).
+# From the Animal Crossing: New Horizons data spreadsheet, via github.com/Norviah/animal-crossing (MIT).
+HouseDoorCarvingAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCarvingAR.png	white fancy door	puerta elegante blanca	Weiß-Designtür	porte luxueuse blanche	porta elegante bianca	ホワイトリッチなドア	화이트 고급스러운 문	白色浮雕门	白色浮雕門
+HouseDoorCarvingBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCarvingBR.png	black fancy door	puerta elegante negra	Schwarz-Designtür	porte luxueuse noire	porta elegante nera	ブラックリッチなドア	블랙 고급스러운 문	黑色浮雕门	黑色浮雕門
+HouseDoorCarvingCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCarvingCR.png	red fancy door	puerta elegante roja	Rot-Designtür	porte luxueuse rouge	porta elegante rossa	レッドリッチなドア	레드 고급스러운 문	红色浮雕门	紅色浮雕門
+HouseDoorCarvingDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCarvingDR.png	pink fancy door	puerta elegante rosa	Rosa-Designtür	porte luxueuse rose	porta elegante rosa	ピンクリッチなドア	핑크 고급스러운 문	粉红色浮雕门	粉紅色浮雕門
+HouseDoorCarvingER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCarvingER.png	blue fancy door	puerta elegante azul	Blau-Designtür	porte luxueuse bleue	porta elegante blu	ブルーリッチなドア	블루 고급스러운 문	蓝色浮雕门	藍色浮雕門
+HouseDoorCarvingFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCarvingFR.png	yellow fancy door	puerta elegante naranja	Gelb-Designtür	porte luxueuse jaune	porta elegante gialla	イエローリッチなドア	옐로 고급스러운 문	黄色浮雕门	黃色浮雕門
+HouseDoorCercleWindowAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCercleWindowAR.png	basic door	puerta círculo	Standardtür	porte à hublot	porta cerchio	まるまどのドア	둥근 창문이 달린 문	圆窗木门	圓窗木門
+HouseDoorCercleWindowBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCercleWindowBR.png	green basic door	puerta círculo verde	Grün-Standardtür	porte à hublot verte	porta cerchio verde	みどりのまるまどのドア	초록색 둥근 창문이 달린 문	绿色圆窗木门	綠色圓窗木門
+HouseDoorCercleWindowCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCercleWindowCR.png	yellow basic door	puerta círculo ocre	Gelb-Standardtür	porte à hublot jaune	porta cerchio gialla	きいろいまるまどのドア	노란색 둥근 창문이 달린 문	黄色圆窗木门	黃色圓窗木門
+HouseDoorCercleWindowDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCercleWindowDR.png	burgundy basic door	puerta círculo magenta	Lila-Standardtür	porte à hublot violette	porta cerchio viola	むらさきのまるまどのドア	보라색 둥근 창문이 달린 문	紫色圆窗木门	紫色圓窗木門
+HouseDoorCercleWindowER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCercleWindowER.png	blue basic door	puerta círculo azul	Blau-Standardtür	porte à hublot bleue	porta cerchio blu	あおいまるまどのドア	파란색 둥근 창문이 달린 문	蓝色圆窗木门	藍色圓窗木門
+HouseDoorCercleWindowFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCercleWindowFR.png	pale-blue basic door	puerta círculo celeste	Hellblau-Standardtür	porte à hublot bleu clair	porta cerchio turchese	みずいろのまるまどのドア	하늘색 둥근 창문이 달린 문	水蓝色圆窗木门	水藍色圓窗木門
+HouseDoorCercleWindowGR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCercleWindowGR.png	beige basic door	puerta círculo beis	Beige-Standardtür	porte à hublot beige	porta cerchio beige	ベージュなまるまどのドア	베이지색 둥근 창문이 달린 문	米色圆窗木门	米色圓窗木門
+HouseDoorCercleWindowHR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCercleWindowHR.png	white basic door	puerta círculo blanca	Weiß-Standardtür	porte à hublot blanche	porta cerchio bianca	しろいまるまどのドア	하얀색 둥근 창문이 달린 문	白色圆窗木门	白色圓窗木門
+HouseDoorCercleWindowIR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCercleWindowIR.png	pink basic door	puerta círculo rosa	Rosa-Standardtür	porte à hublot rose	porta cerchio rosa	ピンクなまるまどのドア	핑크색 둥근 창문이 달린 문	粉红色圆窗木门	粉紅色圓窗木門
+HouseDoorCercleWindowJR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorCercleWindowJR.png	green-apple basic door	puerta círculo lima	Apfelgrün-Standardtür	porte à hublot vert pomme	porta cerchio mela	きみどりのまるまどのドア	연두색 둥근 창문이 달린 문	黄绿色圆窗木门	黃綠色圓窗木門
+HouseDoorChineseAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorChineseAR.png	imperial door	puerta imperial	Fernost-Tür	porte impériale	porta cinese	ちゅうかなドア	중국풍 문	中式门	中式門
+HouseDoorChineseBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorChineseBR.png	brown imperial door	puerta imperial marrón	Braun-Fernost-Tür	porte impériale marron	porta cinese marrone	ちゃいろいちゅうかなドア	갈색 중국풍 문	茶色中式门	茶色中式門
+HouseDoorChineseCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorChineseCR.png	red imperial door	puerta imperial roja	Rot-Fernost-Tür	porte impériale rouge	porta cinese rossa	あかいちゅうかなドア	빨간색 중국풍 문	红色中式门	紅色中式門
+HouseDoorChineseDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorChineseDR.png	yellow imperial door	puerta imperial ocre	Gelb-Fernost-Tür	porte impériale jaune	porta cinese gialla	きいろいちゅうかなドア	노란색 중국풍 문	黄色中式门	黃色中式門
+HouseDoorChineseER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorChineseER.png	green imperial door	puerta imperial verde	Grün-Fernost-Tür	porte impériale verte	porta cinese verde	みどりのちゅうかなドア	초록색 중국풍 문	绿色中式门	綠色中式門
+HouseDoorChineseFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorChineseFR.png	red-green imperial door	puerta imperial roja y verde	Rot-grün-Fernost-Tür	porte impériale rouge vert	porta cinese rossoverde	あかとみどりのちゅうかなドア	빨강 초록 중국풍 문	红绿色中式门	紅配綠中式門
+HouseDoorChineseGR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorChineseGR.png	white imperial door	puerta imperial blanca	Weiß-Fernost-Tür	porte impériale blanche	porta cinese bianca	しろいちゅうかなドア	하얀색 중국풍 문	白色中式门	白色中式門
+HouseDoorChineseHR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorChineseHR.png	black imperial door	puerta imperial negra	Schwarz-Fernost-Tür	porte impériale noire	porta cinese nera	くろいちゅうかなドア	검은색 중국풍 문	黑色中式门	黑色中式門
+HouseDoorIronAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronAR.png	iron door	puerta de hierro	Eisentür	porte en métal	porta di metallo	てつのドア	철제 문	铁门	鐵門
+HouseDoorIronBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronBR.png	red iron door	puerta de hierro roja	Rot-Eisentür	porte en métal rouge	porta di metallo rossa	あかいてつのドア	빨간색 철제 문	红色铁门	紅色鐵門
+HouseDoorIronCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronCR.png	blue iron door	puerta de hierro azul	Blau-Eisentür	porte en métal bleue	porta di metallo blu	あおいてつのドア	파란색 철제 문	蓝色铁门	藍色鐵門
+HouseDoorIronDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronDR.png	yellow iron door	puerta de hierro ocre	Gelb-Eisentür	porte en métal jaune	porta di metallo gialla	きいろいてつのドア	노란색 철제 문	黄色铁门	黃色鐵門
+HouseDoorIronER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronER.png	green iron door	puerta de hierro verde	Grün-Eisentür	porte en métal verte	porta di metallo verde	みどりのてつのドア	초록색 철제 문	绿色铁门	綠色鐵門
+HouseDoorIronFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronFR.png	pink iron door	puerta de hierro rosa	Rosa-Eisentür	porte en métal rose	porta di metallo rosa	ピンクなてつのドア	핑크색 철제 문	粉红色铁门	粉紅色鐵門
+HouseDoorIronGR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronGR.png	gray iron door	puerta de hierro gris	Grau-Eisentür	porte en métal grise	porta di metallo grigia	グレーのてつのドア	회색 철제 문	灰色铁门	灰色鐵門
+HouseDoorIronGrillAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronGrillAR.png	iron grill door	puerta con forjado	Gitterdekotür	porte à grille	porta con grata	アイアングリルなドア	아이언 그릴 문	铸铁窗花门	鑄鐵窗花門
+HouseDoorIronGrillBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronGrillBR.png	maple iron grill door	puerta con forjado marrón	Ahorn-Gitterdekotür	porte à grille érable	porta con grata d'acero	メープルのアイアングリルなドア	메이플 아이언 그릴 문	枫叶色铸铁窗花门	楓葉色鑄鐵窗花門
+HouseDoorIronGrillCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronGrillCR.png	green iron grill door	puerta con forjado verde	Grün-Gitterdekotür	porte à grille verte	porta con grata verde	みどりのアイアングリルなドア	초록색 아이언 그릴 문	绿色铸铁窗花门	綠色鑄鐵窗花門
+HouseDoorIronGrillDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronGrillDR.png	pale-blue iron grill door	puerta con forjado celeste	Hellblau-Gitterdekotür	porte à grille bleu clair	porta con grata turchese	みずいろのアイアングリルなドア	하늘색 아이언 그릴 문	水蓝色铸铁窗花门	水藍色鑄鐵窗花門
+HouseDoorIronGrillER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronGrillER.png	pink iron grill door	puerta con forjado rosa	Rosa-Gitterdekotür	porte à grille rose	porta con grata rosa	ピンクのアイアングリルなドア	핑크색 아이언 그릴 문	粉红色铸铁窗花门	粉紅色鑄鐵窗花門
+HouseDoorIronGrillFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronGrillFR.png	white iron grill door	puerta con forjado blanca	Weiß-Gitterdekotür	porte à grille blanche	porta con grata bianca	しろいアイアングリルなドア	하얀색 아이언 그릴 문	白色铸铁窗花门	白色鑄鐵窗花門
+HouseDoorIronGrillGR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronGrillGR.png	dark-brown iron grill door	puerta con forjado nogal	Dunkelbraun-Gitterdekotür	porte à grille marron foncé	porta con grata marr. scuro	こげちゃのアイアングリルなドア	고동색 아이언 그릴 문	深棕色铸铁窗花门	深棕色鑄鐵窗花門
+HouseDoorIronGrillHR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronGrillHR.png	gray iron grill door	puerta con forjado gris	Grau-Gitterdekotür	porte à grille grise	porta con grata grigia	グレーのアイアングリルなドア	회색 아이언 그릴 문	灰色铸铁窗花门	灰色鑄鐵窗花門
+HouseDoorIronGrillIR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronGrillIR.png	red iron grill door	puerta con forjado roja	Rot-Gitterdekotür	porte à grille rouge	porta con grata rossa	あかいアイアングリルなドア	빨간색 아이언 그릴 문	红色铸铁窗花门	紅色鑄鐵窗花門
+HouseDoorIronGrillJR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronGrillJR.png	purple iron grill door	puerta con forjado lila	Lila-Gitterdekotür	porte à grille violette	porta con grata viola	むらさきのアイアングリルなドア	보라색 아이언 그릴 문	紫色铸铁窗花门	紫色鑄鐵窗花門
+HouseDoorIronHR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronHR.png	white iron door	puerta de hierro blanca	Weiß-Eisentür	porte en métal blanche	porta di metallo bianca	しろいてつのドア	하얀색 철제 문	白色铁门	白色鐵門
+HouseDoorIronpartsAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronpartsAR.png	metal-accent door	puerta de caserón	Beschlagtür	porte à pentures	porta rinforzata	かなぐのドア	금속 장식 문	金属配件门	金屬配件門
+HouseDoorIronpartsBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronpartsBR.png	red metal-accent door	puerta de caserón roja	Rot-Beschlagtür	porte à pentures rouge	porta rinforzata rossa	あかいかなぐのドア	빨간색 금속 장식 문	红色金属配件门	紅色金屬配件門
+HouseDoorIronpartsCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronpartsCR.png	blue metal-accent door	puerta de caserón azul	Blau-Beschlagtür	porte à pentures bleue	porta rinforzata blu	あおいかなぐのドア	파란색 금속 장식 문	蓝色金属配件门	藍色金屬配件門
+HouseDoorIronpartsDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronpartsDR.png	green metal-accent door	puerta de caserón verde	Grün-Beschlagtür	porte à pentures verte	porta rinforzata verde	みどりのかなぐのドア	초록색 금속 장식 문	绿色金属配件门	綠色金屬配件門
+HouseDoorIronpartsER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronpartsER.png	pink metal-accent door	puerta de caserón rosa	Rosa-Beschlagtür	porte à pentures rose	porta rinforzata rosa	ピンクなかなぐのドア	핑크색 금속 장식 문	粉红色金属配件门	粉紅色金屬配件門
+HouseDoorIronpartsFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronpartsFR.png	brown metal-accent door	puerta de caserón gris	Braun-Beschlagtür	porte à pentures marron	porta rinforzata marrone	グレーなかなぐのドア	회색 금속 장식 문	灰色金属配件门	灰色金屬配件門
+HouseDoorIronpartsGR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronpartsGR.png	purple metal-accent door	puerta de caserón lila	Lila-Beschlagtür	porte à pentures violette	porta rinforzata viola	むらさきのかなぐのドア	보라색 금속 장식 문	紫色金属配件门	紫色金屬配件門
+HouseDoorIronpartsHR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorIronpartsHR.png	white metal-accent door	puerta de caserón blanca	Weiß-Beschlagtür	porte à pentures blanche	porta rinforzata bianca	しろいかなぐのドア	하얀색 금속 장식 문	白色金属配件门	白色金屬配件門
+HouseDoorJapaneseAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorJapaneseAR.png	zen door	puerta oriental	Japan-Tür	porte zen	porta zen	わふうなドア	일본풍 문	和风门	和風門
+HouseDoorJapaneseBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorJapaneseBR.png	yellow zen door	puerta oriental ocre	Gelb-Japan-Tür	porte zen jaune	porta zen gialla	きいろいわふうなドア	노란색 일본풍 문	黄色和风门	黃色和風門
+HouseDoorJapaneseCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorJapaneseCR.png	brown zen door	puerta oriental marrón	Braun-Japan-Tür	porte zen marron	porta zen marrone	ちゃいろいわふうなドア	갈색 일본풍 문	茶色和风门	茶色和風門
+HouseDoorJapaneseDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorJapaneseDR.png	red zen door	puerta oriental roja	Rot-Japan-Tür	porte zen rouge	porta zen rossa	あかいわふうなドア	빨간색 일본풍 문	红色和风门	紅色和風門
+HouseDoorJapaneseER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorJapaneseER.png	black zen door	puerta oriental nogal	Schwarz-Japan-Tür	porte zen noire	porta zen nera	くろいわふうなドア	검은색 일본풍 문	黑色和风门	黑色和風門
+HouseDoorJapaneseFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorJapaneseFR.png	lacquered zen door	puerta oriental negra	Lack-Japan-Tür	porte zen laquée	porta zen laccata	うるしぬりのわふうなドア	옻칠한 일본풍 문	漆黑和风门	漆黑和風門
+HouseDoorJapaneseGR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorJapaneseGR.png	white zen door	puerta oriental blanca	Weiß-Japan-Tür	porte zen blanche	porta zen bianca	しろいわふうなドア	하얀색 일본풍 문	白色和风门	白色和風門
+HouseDoorLatticeAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorLatticeAR.png	brown latticework door	puerta celosía marrón	Braun-Gittertür	porte treillage marron	porta graticcio marrone	ちゃいろいこうしのドア	갈색 격자문	茶色格子门	茶色格子門
+HouseDoorLatticeBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorLatticeBR.png	walnut latticework door	puerta celosía nogal	Dunkelbraun-Gittertür	porte treillage marron foncé	porta graticcio marr. scuro	こげちゃのこうしのドア	고동색 격자문	深棕色格子门	深棕色格子門
+HouseDoorLatticeCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorLatticeCR.png	red latticework door	puerta celosía roja	Rot-Gittertür	porte treillage rouge	porta graticcio rossa	あかいこうしのドア	빨간색 격자문	红色格子门	紅色格子門
+HouseDoorLatticeDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorLatticeDR.png	latticework door	puerta celosía	Gittertür	porte treillage	porta graticcio	こうしのドア	격자문	格子门	格子門
+HouseDoorLatticeER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorLatticeER.png	gray latticework door	puerta celosía gris	Grau-Gittertür	porte treillage gris	porta graticcio grigia	グレーなこうしのドア	회색 격자문	灰色格子门	灰色格子門
+HouseDoorLatticeFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorLatticeFR.png	blue latticework door	puerta celosía azul	Blau-Gittertür	porte treillage bleu	porta graticcio blu	あおいこうしのドア	파란색 격자문	蓝色格子门	藍色格子門
+HouseDoorLatticeGR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorLatticeGR.png	white latticework door	puerta celosía blanca	Weiß-Gittertür	porte treillage blanc	porta graticcio bianca	しろいこうしのドア	하얀색 격자문	白色格子门	白色格子門
+HouseDoorLatticeHR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorLatticeHR.png	black latticework door	puerta celosía negra	Schwarz-Gittertür	porte treillage noir	porta graticcio nera	くろいこうしのドア	검은색 격자문	黑色格子门	黑色格子門
+HouseDoorReliefAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorReliefAR.png	common door	puerta con molduras	Feldertür	porte ordinaire	porta comune	よくあるドア	평범한 문	常见门	常見門
+HouseDoorReliefBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorReliefBR.png	red common door	puerta con molduras roja	Rot-Feldertür	porte ordinaire rouge	porta comune rossa	あかいよくあるドア	빨간색 평범한 문	红色常见门	紅色常見門
+HouseDoorReliefCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorReliefCR.png	blue common door	puerta con molduras azul	Blau-Feldertür	porte ordinaire bleue	porta comune blu	あおいよくあるドア	파란색 평범한 문	蓝色常见门	藍色常見門
+HouseDoorReliefDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorReliefDR.png	green common door	puerta con molduras verde	Grün-Feldertür	porte ordinaire verte	porta comune verde	みどりのよくあるドア	초록색 평범한 문	绿色常见门	綠色常見門
+HouseDoorReliefER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorReliefER.png	yellow common door	puerta con molduras ocre	Gelb-Feldertür	porte ordinaire jaune	porta comune gialla	きいろいよくあるドア	노란색 평범한 문	黄色常见门	黃色常見門
+HouseDoorReliefFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorReliefFR.png	gray common door	puerta con molduras gris	Grau-Feldertür	porte ordinaire grise	porta comune grigia	グレーなよくあるドア	회색 평범한 문	灰色常见门	灰色常見門
+HouseDoorReliefGR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorReliefGR.png	white common door	puerta con molduras blanca	Weiß-Feldertür	porte ordinaire blanche	porta comune bianca	しろいよくあるドア	하얀색 평범한 문	白色常见门	白色常見門
+HouseDoorReliefHR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorReliefHR.png	black common door	puerta con molduras negra	Schwarz-Feldertür	porte ordinaire noire	porta comune nera	くろいよくあるドア	검은색 평범한 문	黑色常见门	黑色常見門
+HouseDoorReliefIR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorReliefIR.png	green-apple common door	puerta con molduras lima	Apfelgrün-Feldertür	porte ordinaire vert pomme	porta comune mela	きみどりのよくあるドア	연두색 평범한 문	黄绿色常见门	黃綠色常見門
+HouseDoorReliefJR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorReliefJR.png	purple common door	puerta con molduras lila	Lila-Feldertür	porte ordinaire violette	porta comune viola	むらさきのよくあるドア	보라색 평범한 문	紫色常见门	紫色常見門
+HouseDoorSimpleAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimpleAR.png	white simple door	puerta sencilla blanca	Weiß-Einfachtür	porte simple blanche	porta semplice bianca	しろいシンプルなドア	하얀색 심플한 문	白色简约门	白色簡約門
+HouseDoorSimpleBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimpleBR.png	beige simple door	puerta sencilla beis	Beige-Einfachtür	porte simple beige	porta semplice beige	ベージュのシンプルなドア	베이지색 심플한 문	米色简约门	米色簡約門
+HouseDoorSimpleCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimpleCR.png	gray simple door	puerta sencilla gris	Grau-Einfachtür	porte simple grise	porta semplice grigia	グレーなシンプルなドア	회색 심플한 문	灰色简约门	灰色簡約門
+HouseDoorSimpleDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimpleDR.png	blue simple door	puerta sencilla azul	Blau-Einfachtür	porte simple bleue	porta semplice blu	あおいシンプルなドア	파란색 심플한 문	蓝色简约门	藍色簡約門
+HouseDoorSimpleER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimpleER.png	pink simple door	puerta sencilla rosa	Rosa-Einfachtür	porte simple rose	porta semplice marrone	ピンクのシンプルなドア	핑크색 심플한 문	粉红色简约门	粉紅色簡約門
+HouseDoorSimpleFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimpleFR.png	yellow simple door	puerta sencilla ocre	Gelb-Einfachtür	porte simple jaune	porta semplice gialla	きいろいシンプルなドア	노란색 심플한 문	黄色简约门	黃色簡約門
+HouseDoorSimpleGR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimpleGR.png	deep-green simple door	puerta sencilla verde alga	Dunkelgrün-Einfachtür	porte simple vert sombre	porta semplice verde scuro	ふかみどりのシンプルなドア	진녹색 심플한 문	深绿色简约门	深綠色簡約門
+HouseDoorSimpleHR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimpleHR.png	purple simple door	puerta sencilla lila	Lila-Einfachtür	porte simple violette	porta semplice viola	むらさきのシンプルなドア	보라색 심플한 문	紫色简约门	紫色簡約門
+HouseDoorSimplicityAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimplicityAR.png	rustic door	puerta rústica	Rustikaltür	porte rustique	porta grezza	そぼくなドア	소박한 문	朴素门	樸素門
+HouseDoorSimplicityBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimplicityBR.png	white rustic door	puerta rústica blanca	Weiß-Rustikaltür	porte rustique blanche	porta grezza bianca	しろいそぼくなドア	하얀색 소박한 문	白色朴素门	白色樸素門
+HouseDoorSimplicityCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimplicityCR.png	maple rustic door	puerta rústica marrón	Ahorn-Rustikaltür	porte rustique érable	porta grezza d'acero	メープルのそぼくなドア	메이플 소박한 문	枫叶色朴素门	楓葉色樸素門
+HouseDoorSimplicityDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimplicityDR.png	black rustic door	puerta rústica negra	Schwarz-Rustikaltür	porte rustique noire	porta grezza nera	くろいそぼくなドア	검은색 소박한 문	黑色朴素门	黑色樸素門
+HouseDoorSimplicityER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimplicityER.png	red rustic door	puerta rústica roja	Rot-Rustikaltür	porte rustique rouge	porta grezza rossa	あかいそぼくなドア	빨간색 소박한 문	红色朴素门	紅色樸素門
+HouseDoorSimplicityFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimplicityFR.png	blue rustic door	puerta rústica azul	Blau-Rustikaltür	porte rustique bleue	porta grezza azzurra	あおいそぼくなドア	파란색 소박한 문	蓝色朴素门	藍色樸素門
+HouseDoorSimplicityGR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimplicityGR.png	light-green rustic door	puerta rústica turquesa	Hellgrün-Rustikaltür	porte rustique vert clair	porta grezza verde chiaro	うすみどりのそぼくなドア	연녹색 소박한 문	淡绿色朴素门	淡綠色樸素門
+HouseDoorSimplicityHR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimplicityHR.png	pink rustic door	puerta rústica rosa	Rosa-Rustikaltür	porte rustique rose	porta grezza rosa	ピンクのそぼくなドア	핑크색 소박한 문	粉红色朴素门	粉紅色樸素門
+HouseDoorSimplicityIR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimplicityIR.png	pale-purple rustic door	puerta rústica violeta	Blasslila-Rustikaltür	porte rustique mauve	porta grezza viola chiaro	うすむらさきのそぼくなドア	연보라색 소박한 문	淡紫色朴素门	淡紫色樸素門
+HouseDoorSimplicityJR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorSimplicityJR.png	green rustic door	puerta rústica verde	Grün-Rustikaltür	porte rustique verte	porta grezza verde	みどりのそぼくなドア	초록색 소박한 문	绿色朴素门	綠色樸素門
+HouseDoorStandardAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorStandardAR.png	wooden door	puerta de madera	Holztür	porte en bois	porta di legno	きぐみのドア	목제 문	积木门	木門
+HouseDoorStandardBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorStandardBR.png	maple wooden door	puerta de madera marrón	Ahorn-Holztür	porte en bois d'érable	porta di legno d'acero	メープルなきぐみのドア	메이플 목제 문	枫叶色积木门	楓葉色木門
+HouseDoorStandardCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorStandardCR.png	red wooden door	puerta de madera roja	Rot-Holztür	porte en bois rouge	porta di legno rossa	あかいきぐみのドア	빨간색 목제 문	红色积木门	紅色木門
+HouseDoorStandardDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorStandardDR.png	green wooden door	puerta de madera verde	Grün-Holztür	porte en bois verte	porta di legno verde	みどりのきぐみのドア	초록색 목제 문	绿色积木门	綠色木門
+HouseDoorStandardER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorStandardER.png	blue wooden door	puerta de madera azul	Blau-Holztür	porte en bois bleue	porta di legno blu	あおいきぐみのドア	파란색 목제 문	蓝色积木门	藍色木門
+HouseDoorStandardFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorStandardFR.png	gray wooden door	puerta de madera gris	Grau-Holztür	porte en bois grise	porta di legno grigia	グレーなきぐみのドア	회색 목제 문	灰色积木门	灰色木門
+HouseDoorStandardGR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorStandardGR.png	beige wooden door	puerta de madera beis	Beige-Holztür	porte en bois beige	porta di legno beige	ベージュのきぐみのドア	베이지색 목제 문	米色积木门	米色木門
+HouseDoorStandardHR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorStandardHR.png	white wooden door	puerta de madera blanca	Weiß-Holztür	porte en bois blanche	porta di legno bianca	しろいきぐみのドア	하얀색 목제 문	白色积木门	白色木門
+HouseDoorStandardIR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorStandardIR.png	pink wooden door	puerta de madera rosa	Rosa-Holztür	porte en bois rose	porta di legno rosa	ピンクなきぐみのドア	핑크색 목제 문	粉红色积木门	粉紅色木門
+HouseDoorStandardJR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorStandardJR.png	purple wooden door	puerta de madera lila	Lila-Holztür	porte en bois violette	porta di legno viola	むらさきのきぐみのドア	보라색 목제 문	紫色积木门	紫色木門
+HouseDoorVerticalWindowAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorVerticalWindowAR.png	vertical-panes door	puerta con vidriera	Langfenstertür	porte vitrée	porta vetri verticali	たてながまどのドア	긴 창문이 달린 문	长窗木门	長窗木門
+HouseDoorVerticalWindowBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorVerticalWindowBR.png	maple vertical-panes door	puerta con vidriera marrón	Ahorn-Langfenstertür	porte vitrée érable	porta vetri verticali d'acero	メープルなたてながまどのドア	메이플 긴 창문이 달린 문	枫叶色长窗木门	楓葉色長窗木門
+HouseDoorVerticalWindowCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorVerticalWindowCR.png	green vertical-panes door	puerta con vidriera verde	Grün-Langfenstertür	porte vitrée verte	porta vetri verticali verde	みどりのたてながまどのドア	초록색 긴 창문이 달린 문	绿色长窗木门	綠色長窗木門
+HouseDoorVerticalWindowDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorVerticalWindowDR.png	blue vertical-panes door	puerta con vidriera azul	Blau-Langfenstertür	porte vitrée bleue	porta vetri verticali blu	あおいたてながまどのドア	파란색 긴 창문이 달린 문	蓝色长窗木门	藍色長窗木門
+HouseDoorVerticalWindowER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorVerticalWindowER.png	yellow vertical-panes door	puerta con vidriera ocre	Gelb-Langfenstertür	porte vitrée jaune	porta vetri verticali gialla	きいろいたてながまどのドア	노란색 긴 창문이 달린 문	黄色长窗木门	黃色長窗木門
+HouseDoorVerticalWindowFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorVerticalWindowFR.png	red vertical-panes door	puerta con vidriera roja	Rot-Langfenstertür	porte vitrée rouge	porta vetri verticali rossa	あかいたてながまどのドア	빨간색 긴 창문이 달린 문	红色长窗木门	紅色長窗木門
+HouseDoorVerticalWindowGR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorVerticalWindowGR.png	white vertical-panes door	puerta con vidriera blanca	Weiß-Langfenstertür	porte vitrée blanche	porta vetri verticali bianca	しろいたてながまどのドア	하얀색 긴 창문이 달린 문	白色长窗木门	白色長窗木門
+HouseDoorVerticalWindowHR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorVerticalWindowHR.png	black vertical-panes door	puerta con vidriera negra	Schwarz-Langfenstertür	porte vitrée noire	porta vetri verticali nera	くろいたてながまどのドア	검은색 긴 창문이 달린 문	黑色长窗木门	黑色長窗木門
+HouseDoorVerticalWindowIR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorVerticalWindowIR.png	purple vertical-panes door	puerta con vidriera lila	Lila-Langfenstertür	porte vitrée violette	porta vetri verticali viola	むらさきのたてながまどのドア	보라색 긴 창문이 달린 문	紫色长窗木门	紫色長窗木門
+HouseDoorVerticalWindowJR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorVerticalWindowJR.png	cyan vertical-panes door	puerta con vidriera cian	Türkis-Langfenstertür	porte vitrée bleu-vert	porta vetri verticali ciano	きみどりのたてながまどのドア	연두색 긴 창문이 달린 문	青绿色长窗木门	黃綠色長窗木門
+HouseDoorWindowAR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorWindowAR.png	windowed door	puerta clásica	Fenstertür	porte à fenêtre	porta con finestra	まどつきのドア	창문이 달린 문	有窗木门	有窗木門
+HouseDoorWindowBR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorWindowBR.png	maple windowed door	puerta clásica marrón	Ahorn-Fenstertür	porte à fenêtre érable	porta con finestra d'acero	メープルなまどつきのドア	메이플 창문이 달린 문	枫叶色有窗木门	楓葉色有窗木門
+HouseDoorWindowCR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorWindowCR.png	red windowed door	puerta clásica roja	Rot-Fenstertür	porte à fenêtre rouge	porta con finestra rossa	あかいまどつきのドア	빨간색 창문이 달린 문	红色有窗木门	紅色有窗木門
+HouseDoorWindowDR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorWindowDR.png	green windowed door	puerta clásica verde	Grün-Fenstertür	porte à fenêtre verte	porta con finestra verde	みどりのまどつきのドア	초록색 창문이 달린 문	绿色有窗木门	綠色有窗木門
+HouseDoorWindowER	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorWindowER.png	blue windowed door	puerta clásica azul	Blau-Fenstertür	porte à fenêtre bleue	porta con finestra blu	あおいまどつきのドア	파란색 창문이 달린 문	蓝色有窗木门	藍色有窗木門
+HouseDoorWindowFR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorWindowFR.png	gray windowed door	puerta clásica gris	Grau-Fenstertür	porte à fenêtre grise	porta con finestra grigia	グレーなまどつきのドア	회색 창문이 달린 문	灰色有窗木门	灰色有窗木門
+HouseDoorWindowGR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorWindowGR.png	beige windowed door	puerta clásica beis	Beige-Fenstertür	porte à fenêtre beige	porta con finestra beige	ベージュのまどつきのドア	베이지색 창문이 달린 문	米色有窗木门	米色有窗木門
+HouseDoorWindowHR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorWindowHR.png	white windowed door	puerta clásica blanca	Weiß-Fenstertür	porte à fenêtre blanche	porta con finestra bianca	しろいまどつきのドア	하얀색 창문이 달린 문	白色有窗木门	白色有窗木門
+HouseDoorWindowIR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorWindowIR.png	pink windowed door	puerta clásica rosa	Rosa-Fenstertür	porte à fenêtre rose	porta con finestra rosa	ピンクなまどつきのドア	핑크색 창문이 달린 문	粉红色有窗木门	粉紅色有窗木門
+HouseDoorWindowJR	https://acnhcdn.com/latest/HouseDoorIcon/HouseDoorWindowJR.png	purple windowed door	puerta clásica lila	Lila-Fenstertür	porte à fenêtre violette	porta con finestra viola	むらさきのまどつきのドア	보라색 창문이 달린 문	紫色有窗木门	紫色有窗木門
+HouseRoofPA04StandardA	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StandardA.png	red tile roof	tejado pizarra rojo	Rot-Ziegeldach	toit en tuiles rouges	tetto di tegole rosse	あかいかわらやね	빨간색 기와지붕	红色瓦屋顶	紅色瓦片屋頂
+HouseRoofPA04StandardB	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StandardB.png	pink tile roof	tejado pizarra rosa	Rosa-Ziegeldach	toit en tuiles roses	tetto di tegole rosa	ピンクのかわらやね	핑크색 기와지붕	粉红色瓦屋顶	粉紅色瓦片屋頂
+HouseRoofPA04StandardC	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StandardC.png	yellow tile roof	tejado pizarra ocre	Gelb-Ziegeldach	toit en tuiles jaunes	tetto di tegole gialle	きいろいかわらやね	노란색 기와지붕	黄色瓦屋顶	黃色瓦片屋頂
+HouseRoofPA04StandardD	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StandardD.png	green tile roof	tejado pizarra verde	Grün-Ziegeldach	toit en tuiles vertes	tetto di tegole verdi	みどりのかわらやね	초록색 기와지붕	绿色瓦屋顶	綠色瓦片屋頂
+HouseRoofPA04StandardE	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StandardE.png	aqua tile roof	tejado pizarra celeste	Hellblau-Ziegeldach	toit en tuiles turquoise	tetto di tegole turchesi	みずいろのかわらやね	하늘색 기와지붕	水蓝色瓦屋顶	水藍色瓦片屋頂
+HouseRoofPA04StandardF	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StandardF.png	blue tile roof	tejado pizarra azul	Blau-Ziegeldach	toit en tuiles bleues	tetto di tegole blu	あおいかわらやね	파란색 기와지붕	蓝色瓦屋顶	藍色瓦片屋頂
+HouseRoofPA04StandardG	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StandardG.png	purple tile roof	tejado pizarra lila	Lila-Ziegeldach	toit en tuiles violettes	tetto di tegole viola	むらさきのかわらやね	보라색 기와지붕	紫色瓦屋顶	紫色瓦片屋頂
+HouseRoofPA04StandardH	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StandardH.png	black tile roof	tejado pizarra negro	Schwarz-Ziegeldach	toit en tuiles noires	tetto di tegole nere	くろいかわらやね	검은색 기와지붕	黑色瓦屋顶	黑色瓦片屋頂
+HouseRoofPA04StoneA	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StoneA.png	gray stone roof	tejado piedra gris	Grau-Steindach	toit en pierre grise	tetto di pietra grigia	グレーのいしやね	회색 돌 지붕	灰色石屋顶	灰色石屋頂
+HouseRoofPA04StoneB	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StoneB.png	beige stone roof	tejado piedra beis	Beige-Steindach	toit en pierre beige	tetto di pietra beige	ベージュのいしやね	베이지색 돌 지붕	米色石屋顶	米色石屋頂
+HouseRoofPA04StoneC	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StoneC.png	orange stone roof	tejado piedra naranja	Orange-Steindach	toit en pierre orange	tetto di pietra arancione	オレンジのいしやね	오렌지색 돌 지붕	橘色石屋顶	橘色石屋頂
+HouseRoofPA04StoneD	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StoneD.png	red stone roof	tejado piedra rojo	Rot-Steindach	toit en pierre rouge	tetto di pietra rossa	あかのいしやね	빨간색 돌 지붕	红色石屋顶	紅色石屋頂
+HouseRoofPA04StoneE	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StoneE.png	blue stone roof	tejado piedra azul	Blau-Steindach	toit en pierre bleue	tetto di pietra blu	あおのいしやね	파란색 돌 지붕	蓝色石屋顶	藍色石屋頂
+HouseRoofPA04StoneF	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StoneF.png	green stone roof	tejado piedra verde	Grün-Steindach	toit en pierre verte	tetto di pietra verde	みどりのいしやね	초록색 돌 지붕	绿色石屋顶	綠色石屋頂
+HouseRoofPA04StoneG	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StoneG.png	brown stone roof	tejado piedra marrón	Braun-Steindach	toit en pierre brune	tetto di pietra marrone	ちゃいろのいしやね	갈색 돌 지붕	茶色石屋顶	茶色石屋頂
+HouseRoofPA04StoneH	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04StoneH.png	black stone roof	tejado piedra negro	Schwarz-Steindach	toit en pierre noire	tetto di pietra nera	くろのいしやね	검은색 돌 지붕	黑色石屋顶	黑色石屋頂
+HouseRoofPA04ThatchedA	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04ThatchedA.png	golden-brown thatch roof	tejado paja dorado	Goldbraun-Reetdach	toit de chaume jaune doré	tetto di paglia brunita	きつねいろのかやぶきやね	연갈색 초가지붕	黄褐色茅草屋顶	黃褐色茅草屋頂
+HouseRoofPA04ThatchedB	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04ThatchedB.png	brown thatch roof	tejado paja pardo	Braun-Reetdach	toit de chaume brun	tetto di paglia marrone	ちゃいろのかやぶきやね	갈색 초가지붕	茶色茅草屋顶	茶色茅草屋頂
+HouseRoofPA04ThatchedC	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04ThatchedC.png	orange thatch roof	tejado paja naranja	Orange-Reetdach	toit de chaume orange	tetto di paglia arancione	オレンジのかやぶきやね	오렌지색 초가지붕	橘色茅草屋顶	橘色茅草屋頂
+HouseRoofPA04ThatchedD	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04ThatchedD.png	fresh-grass thatch roof	tejado paja recién cortada	Gelb-Reetdach	toit de chaume frais	tetto di paglia fresca	わかくさいろのかやぶきやね	연두색 초가지붕	浅黄色茅草屋顶	嫩黃色茅草屋頂
+HouseRoofPA04ThatchedE	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04ThatchedE.png	gray thatch roof	tejado paja gris	Grau-Reetdach	toit de chaume gris	tetto di paglia grigia	グレーのかやぶきやね	회색 초가지붕	灰色茅草屋顶	灰色茅草屋頂
+HouseRoofPA04ThatchedF	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04ThatchedF.png	white thatch roof	tejado paja blanco	Weiß-Reetdach	toit de chaume blanc	tetto di paglia bianca	しろいかやぶきやね	하얀색 초가지붕	白色茅草屋顶	白色茅草屋頂
+HouseRoofPA04ThatchedG	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04ThatchedG.png	deep-green thatch roof	tejado paja verde oscuro	Dunkelgrün-Reetdach	toit de chaume vert sombre	tetto di paglia verde scuro	ふかみどりのかやぶきやね	진녹색 초가지붕	深绿色茅草屋顶	深綠色茅草屋頂
+HouseRoofPA04ThatchedH	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04ThatchedH.png	black thatch roof	tejado paja negro	Schwarz-Reetdach	toit de chaume noir	tetto di paglia nera	くろいかやぶきやね	검은색 초가지붕	黑色茅草屋顶	黑色茅草屋頂
+HouseRoofPA04WesterntileA	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04WesterntileA.png	orange curved shingles	tejado teja naranja	Orange-Rundziegeldach	toit en tuiles canal orange	tetto di coppi arancioni	オレンジのようがわらやね	오렌지색 서양식 기와지붕	橘色洋瓦屋顶	橘色洋瓦屋頂
+HouseRoofPA04WesterntileB	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04WesterntileB.png	pink curved shingles	tejado teja rosa	Rosa-Rundziegeldach	toit en tuiles canal roses	tetto di coppi rosa	ピンクのようがわらやね	핑크색 서양식 기와지붕	粉红色洋瓦屋顶	粉紅色洋瓦屋頂
+HouseRoofPA04WesterntileC	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04WesterntileC.png	yellow curved shingles	tejado teja ocre	Gelb-Rundziegeldach	toit en tuiles canal jaunes	tetto di coppi gialli	きいろいようがわらやね	노란색 서양식 기와지붕	黄色洋瓦屋顶	黃色洋瓦屋頂
+HouseRoofPA04WesterntileD	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04WesterntileD.png	green curved shingles	tejado teja verde	Grün-Rundziegeldach	toit en tuiles canal vertes	tetto di coppi verdi	みどりのようがわらやね	초록색 서양식 기와지붕	绿色洋瓦屋顶	綠色洋瓦屋頂
+HouseRoofPA04WesterntileE	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04WesterntileE.png	blue curved shingles	tejado teja azul	Blau-Rundziegeldach	toit en tuiles canal bleues	tetto di coppi blu	あおいようがわらやね	파란색 서양식 기와지붕	蓝色洋瓦屋顶	藍色洋瓦屋頂
+HouseRoofPA04WesterntileF	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04WesterntileF.png	beige curved shingles	tejado teja beis	Beige-Rundziegeldach	toit en tuiles canal beiges	tetto di coppi beige	ベージュのようがわらやね	베이지색 서양식 기와지붕	米色洋瓦屋顶	米色洋瓦屋頂
+HouseRoofPA04WesterntileG	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04WesterntileG.png	brown curved shingles	tejado teja marrón	Braun-Rundziegeldach	toit en tuiles canal brunes	tetto di coppi marroni	ちゃいろのようがわらやね	갈색 서양식 기와지붕	茶色洋瓦屋顶	茶色洋瓦屋頂
+HouseRoofPA04WesterntileH	https://acnhcdn.com/latest/HouseRoofIcon/HouseRoofPA04WesterntileH.png	black curved shingles	tejado teja negro	Schwarz-Rundziegeldach	toit en tuiles canal noires	tetto di coppi neri	くろいようがわらやね	검은색 서양식 기와지붕	黑色洋瓦屋顶	黑色洋瓦屋頂
+HouseWallNABrickA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNABrickACropped.png									
+HouseWallNABrickB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNABrickBCropped.png									
+HouseWallNABrickC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNABrickCCropped.png									
+HouseWallNABrickD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNABrickDCropped.png									
+HouseWallNABrickE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNABrickECropped.png									
+HouseWallNABrickF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNABrickFCropped.png									
+HouseWallNABrickG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNABrickGCropped.png									
+HouseWallNABrickH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNABrickHCropped.png									
+HouseWallNAMetalA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAMetalACropped.png									
+HouseWallNAMetalB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAMetalBCropped.png									
+HouseWallNAMetalC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAMetalCCropped.png									
+HouseWallNAMetalD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAMetalDCropped.png									
+HouseWallNAMetalE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAMetalECropped.png									
+HouseWallNAMetalF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAMetalFCropped.png									
+HouseWallNAMetalG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAMetalGCropped.png									
+HouseWallNAMetalH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAMetalHCropped.png									
+HouseWallNAStuccoA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAStuccoACropped.png									
+HouseWallNAStuccoB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAStuccoBCropped.png									
+HouseWallNAStuccoC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAStuccoCCropped.png									
+HouseWallNAStuccoD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAStuccoDCropped.png									
+HouseWallNAStuccoE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAStuccoECropped.png									
+HouseWallNAStuccoF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAStuccoFCropped.png									
+HouseWallNAStuccoG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAStuccoGCropped.png									
+HouseWallNAStuccoH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAStuccoHCropped.png									
+HouseWallNAWoodsidingA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAWoodsidingACropped.png									
+HouseWallNAWoodsidingB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAWoodsidingBCropped.png									
+HouseWallNAWoodsidingC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAWoodsidingCCropped.png									
+HouseWallNAWoodsidingD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAWoodsidingDCropped.png									
+HouseWallNAWoodsidingE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAWoodsidingECropped.png									
+HouseWallNAWoodsidingF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAWoodsidingFCropped.png									
+HouseWallNAWoodsidingG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAWoodsidingGCropped.png									
+HouseWallNAWoodsidingH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAWoodsidingHCropped.png									
+HouseWallNAWoodsidingI	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAWoodsidingICropped.png									
+HouseWallNAWoodsidingJ	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNAWoodsidingJCropped.png									
+HouseWallNBLogA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBLogACropped.png									
+HouseWallNBLogB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBLogBCropped.png									
+HouseWallNBLogC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBLogCCropped.png									
+HouseWallNBLogD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBLogDCropped.png									
+HouseWallNBLogE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBLogECropped.png									
+HouseWallNBLogF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBLogFCropped.png									
+HouseWallNBLogG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBLogGCropped.png									
+HouseWallNBLogH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBLogHCropped.png									
+HouseWallNBStoneA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStoneACropped.png									
+HouseWallNBStoneB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStoneBCropped.png									
+HouseWallNBStoneC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStoneCCropped.png									
+HouseWallNBStoneD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStoneDCropped.png									
+HouseWallNBStoneE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStoneECropped.png									
+HouseWallNBStoneF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStoneFCropped.png									
+HouseWallNBStoneG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStoneGCropped.png									
+HouseWallNBStoneH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStoneHCropped.png									
+HouseWallNBStuccoA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStuccoACropped.png									
+HouseWallNBStuccoB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStuccoBCropped.png									
+HouseWallNBStuccoC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStuccoCCropped.png									
+HouseWallNBStuccoD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStuccoDCropped.png									
+HouseWallNBStuccoE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStuccoECropped.png									
+HouseWallNBStuccoF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStuccoFCropped.png									
+HouseWallNBStuccoG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStuccoGCropped.png									
+HouseWallNBStuccoH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNBStuccoHCropped.png									
+HouseWallNCJapaneseA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCJapaneseACropped.png									
+HouseWallNCJapaneseB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCJapaneseBCropped.png									
+HouseWallNCJapaneseC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCJapaneseCCropped.png									
+HouseWallNCJapaneseD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCJapaneseDCropped.png									
+HouseWallNCJapaneseE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCJapaneseECropped.png									
+HouseWallNCJapaneseF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCJapaneseFCropped.png									
+HouseWallNCJapaneseG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCJapaneseGCropped.png									
+HouseWallNCJapaneseH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCJapaneseHCropped.png									
+HouseWallNCOrientalA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCOrientalACropped.png									
+HouseWallNCOrientalB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCOrientalBCropped.png									
+HouseWallNCOrientalC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCOrientalCCropped.png									
+HouseWallNCOrientalD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCOrientalDCropped.png									
+HouseWallNCOrientalE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCOrientalECropped.png									
+HouseWallNCOrientalF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCOrientalFCropped.png									
+HouseWallNCOrientalG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCOrientalGCropped.png									
+HouseWallNCOrientalH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCOrientalHCropped.png									
+HouseWallNCWoodA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCWoodACropped.png									
+HouseWallNCWoodB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCWoodBCropped.png									
+HouseWallNCWoodC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCWoodCCropped.png									
+HouseWallNCWoodD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCWoodDCropped.png									
+HouseWallNCWoodE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCWoodECropped.png									
+HouseWallNCWoodF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCWoodFCropped.png									
+HouseWallNCWoodG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCWoodGCropped.png									
+HouseWallNCWoodH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNCWoodHCropped.png									
+HouseWallNDSoilA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDSoilACropped.png									
+HouseWallNDSoilB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDSoilBCropped.png									
+HouseWallNDSoilC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDSoilCCropped.png									
+HouseWallNDSoilD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDSoilDCropped.png									
+HouseWallNDSoilE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDSoilECropped.png									
+HouseWallNDSoilF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDSoilFCropped.png									
+HouseWallNDSoilG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDSoilGCropped.png									
+HouseWallNDSoilH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDSoilHCropped.png									
+HouseWallNDStuccoA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDStuccoACropped.png									
+HouseWallNDStuccoB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDStuccoBCropped.png									
+HouseWallNDStuccoC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDStuccoCCropped.png									
+HouseWallNDStuccoD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDStuccoDCropped.png									
+HouseWallNDStuccoE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDStuccoECropped.png									
+HouseWallNDStuccoF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDStuccoFCropped.png									
+HouseWallNDStuccoG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDStuccoGCropped.png									
+HouseWallNDStuccoH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDStuccoHCropped.png									
+HouseWallNDWoodA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDWoodACropped.png									
+HouseWallNDWoodB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDWoodBCropped.png									
+HouseWallNDWoodC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDWoodCCropped.png									
+HouseWallNDWoodD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDWoodDCropped.png									
+HouseWallNDWoodE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDWoodECropped.png									
+HouseWallNDWoodF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDWoodFCropped.png									
+HouseWallNDWoodG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDWoodGCropped.png									
+HouseWallNDWoodH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallNDWoodHCropped.png									
+HouseWallPA00StandardA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPA00StandardACropped.png									
+HouseWallPA01StandardA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPA01StandardACropped.png									
+HouseWallPA02StandardA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPA02StandardACropped.png									
+HouseWallPA03StandardA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPA03StandardACropped.png									
+HouseWallPA04StandardA	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StandardA.png	common exterior	fachada clásica	Standardfassade	façade ordinaire	esterno comune	よくあるかべ	평범한 외벽	常见墙	常見牆
+HouseWallPA04StandardB	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StandardB.png	red-trim common exterior	fachada clásica roja	Standardfassade mit Rot	façade à poutres rouges	esterno comune rosso	あかいわくのよくあるかべ	빨간 틀 평범한 외벽	红色框常见墙	紅色框常見牆
+HouseWallPA04StandardC	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StandardC.png	blue-trim common exterior	fachada clásica azul	Standardfassade mit Blau	façade à poutres bleues	esterno comune blu	あおいわくのよくあるかべ	파란 틀 평범한 외벽	蓝色框常见墙	藍色框常見牆
+HouseWallPA04StandardD	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StandardD.png	gray-trim common exterior	fachada clásica gris	Standardfassade mit Grau	façade à poutres grises	esterno comune grigio	グレーなよくあるかべ	회색 평범한 외벽	灰色常见墙	灰色常見牆
+HouseWallPA04StandardE	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StandardE.png	yellow common exterior	fachada clásica ocre	Gelb-Standardfassade	façade ordinaire jaune	esterno comune giallo	きいろいよくあるかべ	노란색 평범한 외벽	黄色常见墙	黃色常見牆
+HouseWallPA04StandardF	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StandardF.png	pink common exterior	fachada clásica rosa	Rosa-Standardfassade	façade ordinaire rose	esterno comune rosa	ピンクのよくあるかべ	핑크색 평범한 외벽	粉红色常见墙	粉紅色常見牆
+HouseWallPA04StandardG	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StandardG.png	red common exterior	fachada clásica carmesí	Rot-Standardfassade	façade ordinaire rouge	esterno comune cremisi	あかいよくあるかべ	빨간색 평범한 외벽	红色常见墙	紅色常見牆
+HouseWallPA04StandardH	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StandardH.png	black common exterior	fachada clásica negra	Schwarz-Standardfassade	façade ordinaire noire	esterno comune nero	くろいよくあるかべ	검은색 평범한 외벽	黑色常见墙	黑色常見牆
+HouseWallPA04StoneA	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StoneA.png	cobblestones								
+HouseWallPA04StoneB	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StoneB.png	chic cobblestones	fachada adoquines chic	Schick-Granitfassade	façade à pierres chic	esterno in pietra chic	シックないしかべ	시크한 돌 외벽	雅致石墙	典雅石牆
+HouseWallPA04StoneC	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StoneC.png	brown cobblestones	fachada adoquines marrón	Braun-Granitfassade	façade à pierres brune	esterno in pietra marrone	ちゃいろのいしかべ	갈색 돌 외벽	茶色石墙	茶色石牆
+HouseWallPA04StoneD	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StoneD.png	red cobblestones	fachada adoquines roja	Rot-Granitfassade	façade à pierres rouge	esterno in pietra rosso	あかいいしかべ	빨간색 돌 외벽	红色石墙	紅色石牆
+HouseWallPA04StoneE	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StoneE.png	orange cobblestones	fachada adoquines naranja	Orange-Granitfassade	façade à pierres orange	esterno in pietra arancione	オレンジのいしかべ	오렌지색 돌 외벽	橘色石墙	橘色石牆
+HouseWallPA04StoneF	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StoneF.png	blue cobblestones	fachada adoquines azul	Blau-Granitfassade	façade à pierres bleue	esterno in pietra blu	あおのいしかべ	파란색 돌 외벽	蓝色石墙	藍色石牆
+HouseWallPA04StoneG	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StoneG.png	green cobblestones	fachada adoquines verde	Grün-Granitfassade	façade à pierres verte	esterno in pietra verde	みどりのいしかべ	초록색 돌 외벽	绿色石墙	綠色石牆
+HouseWallPA04StoneH	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StoneH.png	gray cobblestones	fachada adoquines crema	Grau-Granitfassade	façade à pierres grise	esterno in pietra grigio	グレーのいしのかべ	회색 돌 외벽	灰色石墙	灰色石牆
+HouseWallPA04StuccoA	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StuccoA.png	white stucco exterior	fachada estuco blanca	Weiß-Lehmfassade	façade en stuc blanc	esterno di stucco bianco	しろのしっくいかべ	하얀색 석회 외벽	白色灰泥墙	白色灰泥牆
+HouseWallPA04StuccoB	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StuccoB.png	beige stucco exterior	fachada estuco beis	Beige-Lehmfassade	façade en stuc beige	esterno di stucco beige	ベージュのしっくいかべ	베이지색 석회 외벽	米色灰泥墙	米色灰泥牆
+HouseWallPA04StuccoC	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StuccoC.png	gray stucco exterior	fachada estuco gris	Grau-Lehmfassade	façade en stuc gris	esterno di stucco grigio	グレーのしっくいかべ	회색 석회 외벽	灰色灰泥墙	灰色灰泥牆
+HouseWallPA04StuccoD	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StuccoD.png	red stucco exterior	fachada estuco roja	Rot-Lehmfassade	façade en stuc rouge	esterno di stucco rosso	あかのしっくいかべ	빨간색 석회 외벽	红色灰泥墙	紅色灰泥牆
+HouseWallPA04StuccoE	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StuccoE.png	blue stucco exterior	fachada estuco azul	Blau-Lehmfassade	façade en stuc bleu	esterno di stucco blu	ブルーのしっくいかべ	파란색 석회 외벽	蓝色灰泥墙	藍色灰泥牆
+HouseWallPA04StuccoF	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StuccoF.png	yellow stucco exterior	fachada estuco ocre	Gelb-Lehmfassade	façade en stuc jaune	esterno di stucco giallo	きいろのしっくいかべ	노란색 석회 외벽	黄色灰泥墙	黃色灰泥牆
+HouseWallPA04StuccoG	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StuccoG.png	pink stucco exterior	fachada estuco rosa	Rosa-Lehmfassade	façade en stuc rose	esterno di stucco rosa	ピンクなしっくいぬりのかべ	핑크색 석회 외벽	粉红色灰泥墙	粉紅色灰泥塗牆
+HouseWallPA04StuccoH	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04StuccoH.png	black stucco exterior	fachada estuco negra	Schwarz-Lehmfassade	façade en stuc noir	esterno di stucco nero	くろいしっくいぬりのかべ	검은색 석회 외벽	黑色灰泥墙	黑色灰泥塗牆
+HouseWallPA04WoodframeA	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04WoodframeA.png	chalet exterior	fachada chalé	Fachwerkfassade	façade chaumière	esterno chalet	きわくのかべ	나이테 외벽	木框墙	木框牆
+HouseWallPA04WoodframeB	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04WoodframeB.png	brown chalet exterior	fachada chalé marrón	Braun-Fachwerkfassade	façade chaumière marron	esterno chalet marrone	ちゃいろいきわくのかべ	갈색 나이테 외벽	茶色木框墙	茶色木框牆
+HouseWallPA04WoodframeC	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04WoodframeC.png	red chalet exterior	fachada chalé roja	Rot-Fachwerkfassade	façade chaumière rouge	esterno chalet rosso	あかいきわくのかべ	빨간색 나이테 외벽	红色框木框墙	紅色木框牆
+HouseWallPA04WoodframeD	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04WoodframeD.png	light-blue chalet exterior	fachada chalé celeste	Hellblau-Fachwerkfassade	façade chaumière bleu clair	esterno chalet blu chiaro	みずいろのきわくのかべ	하늘색 나이테 외벽	水蓝色木框墙	水藍色木框牆
+HouseWallPA04WoodframeE	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04WoodframeE.png	yellow chalet exterior	fachada chalé ocre	Gelb-Fachwerkfassade	façade chaumière jaune	esterno chalet giallo	きいろいきわくのかべ	노란색 나이테 외벽	黄色木框墙	黃色木框牆
+HouseWallPA04WoodframeF	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04WoodframeF.png	orange chalet exterior	fachada chalé naranja	Orange-Fachwerkfassade	façade chaumière orange	esterno chalet arancione	オレンジいろのきわくのかべ	오렌지색 나이테 외벽	橘色木框墙	橘色木框牆
+HouseWallPA04WoodframeG	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04WoodframeG.png	cream chalet exterior	fachada chalé crema	Weiß-Fachwerkfassade	façade chaumière crème	esterno chalet crema	しろいきわくのかべ	하얀색 나이테 외벽	白色框木框墙	白色木框牆
+HouseWallPA04WoodframeH	https://acnhcdn.com/latest/HouseWallIcon/HouseWallPA04WoodframeH.png	black chalet exterior	fachada chalé negra	Schwarz-Fachwerkfassade	façade chaumière noire	esterno chalet nero	くろいきわくのかべ	검은색 나이테 외벽	黑色木框墙	黑色木框牆
+HouseWallPB04BrickA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04BrickACropped.png									
+HouseWallPB04BrickB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04BrickBCropped.png									
+HouseWallPB04BrickC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04BrickCCropped.png									
+HouseWallPB04BrickD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04BrickDCropped.png									
+HouseWallPB04BrickE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04BrickECropped.png									
+HouseWallPB04BrickF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04BrickFCropped.png									
+HouseWallPB04BrickG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04BrickGCropped.png									
+HouseWallPB04BrickH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04BrickHCropped.png									
+HouseWallPB04LogA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04LogACropped.png									
+HouseWallPB04LogB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04LogBCropped.png									
+HouseWallPB04LogC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04LogCCropped.png									
+HouseWallPB04LogD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04LogDCropped.png									
+HouseWallPB04LogE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04LogECropped.png									
+HouseWallPB04LogF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04LogFCropped.png									
+HouseWallPB04LogG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04LogGCropped.png									
+HouseWallPB04LogH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04LogHCropped.png									
+HouseWallPB04WoodsidngA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04WoodsidngACropped.png									
+HouseWallPB04WoodsidngB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04WoodsidngBCropped.png									
+HouseWallPB04WoodsidngC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04WoodsidngCCropped.png									
+HouseWallPB04WoodsidngD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04WoodsidngDCropped.png									
+HouseWallPB04WoodsidngE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04WoodsidngECropped.png									
+HouseWallPB04WoodsidngF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04WoodsidngFCropped.png									
+HouseWallPB04WoodsidngG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04WoodsidngGCropped.png									
+HouseWallPB04WoodsidngH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPB04WoodsidngHCropped.png									
+HouseWallPC04JapaneseA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04JapaneseACropped.png									
+HouseWallPC04JapaneseB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04JapaneseBCropped.png									
+HouseWallPC04JapaneseC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04JapaneseCCropped.png									
+HouseWallPC04JapaneseD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04JapaneseDCropped.png									
+HouseWallPC04JapaneseE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04JapaneseECropped.png									
+HouseWallPC04JapaneseF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04JapaneseFCropped.png									
+HouseWallPC04JapaneseG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04JapaneseGCropped.png									
+HouseWallPC04JapaneseH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04JapaneseHCropped.png									
+HouseWallPC04OrientalA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04OrientalACropped.png									
+HouseWallPC04OrientalB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04OrientalBCropped.png									
+HouseWallPC04OrientalC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04OrientalCCropped.png									
+HouseWallPC04OrientalD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04OrientalDCropped.png									
+HouseWallPC04OrientalE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04OrientalECropped.png									
+HouseWallPC04OrientalF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04OrientalFCropped.png									
+HouseWallPC04OrientalG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04OrientalGCropped.png									
+HouseWallPC04OrientalH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04OrientalHCropped.png									
+HouseWallPC04StoneA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04StoneACropped.png									
+HouseWallPC04StoneB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04StoneBCropped.png									
+HouseWallPC04StoneC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04StoneCCropped.png									
+HouseWallPC04StoneD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04StoneDCropped.png									
+HouseWallPC04StoneE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04StoneECropped.png									
+HouseWallPC04StoneF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04StoneFCropped.png									
+HouseWallPC04StoneG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04StoneGCropped.png									
+HouseWallPC04StoneH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPC04StoneHCropped.png									
+HouseWallPD04SoilA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04SoilACropped.png									
+HouseWallPD04SoilB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04SoilBCropped.png									
+HouseWallPD04SoilC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04SoilCCropped.png									
+HouseWallPD04SoilD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04SoilDCropped.png									
+HouseWallPD04SoilE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04SoilECropped.png									
+HouseWallPD04SoilF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04SoilFCropped.png									
+HouseWallPD04SoilG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04SoilGCropped.png									
+HouseWallPD04SoilH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04SoilHCropped.png									
+HouseWallPD04StuccoA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04StuccoACropped.png									
+HouseWallPD04StuccoB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04StuccoBCropped.png									
+HouseWallPD04StuccoC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04StuccoCCropped.png									
+HouseWallPD04StuccoD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04StuccoDCropped.png									
+HouseWallPD04StuccoE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04StuccoECropped.png									
+HouseWallPD04StuccoF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04StuccoFCropped.png									
+HouseWallPD04StuccoG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04StuccoGCropped.png									
+HouseWallPD04StuccoH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04StuccoHCropped.png									
+HouseWallPD04WoodA	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04WoodACropped.png									
+HouseWallPD04WoodB	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04WoodBCropped.png									
+HouseWallPD04WoodC	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04WoodCCropped.png									
+HouseWallPD04WoodD	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04WoodDCropped.png									
+HouseWallPD04WoodE	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04WoodECropped.png									
+HouseWallPD04WoodF	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04WoodFCropped.png									
+HouseWallPD04WoodG	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04WoodGCropped.png									
+HouseWallPD04WoodH	https://acnhcdn.com/2.0/HouseWallIcon/HouseWallPD04WoodHCropped.png									

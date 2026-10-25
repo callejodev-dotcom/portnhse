@@ -109,3 +109,42 @@ public class GalleryHouseEdit
         Assert.Equal(chair.ItemId, floor.GetTile(small.X, small.Y).ItemId);
     }
 }
+
+/// <summary>
+/// Roofs, walls and doors chosen by their pictures (66-…). The pictures are only there when the test app data folder has
+/// them (img/exterior); otherwise the captures show empty squares.
+/// </summary>
+public class GalleryHouseLooks
+{
+    [AvaloniaFact]
+    public void Choices()
+    {
+        Assert.SkipUnless(TestSave.Available, "NHSE_TEST_SAVE is not set");
+        var sav = TestSave.LoadCopy(out _);
+        var house = sav.Main.GetPlayerHouses()[0];
+
+        var w = new HouseWindow(sav) { Width = 1240, Height = 1180 };
+        Gallery.Capture(w, "66-house-looks");
+
+        var roof = new HousePartPicker<RoofType>(HouseStyleNames.Offered<RoofType>("HouseRoofP"), house.RoofUniqueID);
+        Assert.Equal(33, roof.Choice() is Avalonia.Controls.ScrollViewer { Content: Avalonia.Controls.WrapPanel p } ? p.Children.Count : 0);
+        Gallery.Capture(new Avalonia.Controls.Window { Width = 600, Height = 520, Content = roof.Choice() }, "66-house-roofs");
+        var walls = new HousePartPicker<WallType>(HouseStyleNames.Offered<WallType>("HouseWallP"), house.WallUniqueID);
+        Gallery.Capture(new Avalonia.Controls.Window { Width = 600, Height = 520, Content = walls.Choice() }, "66-house-walls");
+        var door = new DoorPicker(house.DoorUniqueID);
+        Gallery.Capture(new Avalonia.Controls.Window { Width = 600, Height = 520, Content = door.Design.Choice() }, "66-house-doors");
+
+        // Every look of the game list has a name or a picture key the core knows.
+        foreach (var name in HouseStyleNames.Offered<RoofType>("HouseRoofP"))
+            Assert.False(string.IsNullOrEmpty(HousePartPicker<RoofType>.NameOf(name)));
+    }
+
+    [AvaloniaFact]
+    public void SquareDoorKeepsItsShape()
+    {
+        var square = Enum.GetValues<DoorKind>().First(z => z.ToString() is var n && n.StartsWith("HouseDoor") && n.EndsWith('S'));
+        var picker = new DoorPicker(square);
+        Assert.Equal(square, picker.Value);
+        Assert.True(ExteriorPictures.Has(square.ToString()));
+    }
+}

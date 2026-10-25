@@ -161,3 +161,5 @@ AddNewHint=Elígelo aquí y luego haz clic en la habitación donde lo quieras. T
 Placing=Poniendo
 PlacingHint=Haz clic en la habitación donde lo quieras; cada clic pone uno más. Esc o «Listo» para terminar.
 PlacingDone=Listo
+DoorArched=En arco
+DoorSquare=Recta

@@ -26,6 +26,7 @@ public static class TestApp
         Directory.CreateDirectory(appData);
         Environment.SetEnvironmentVariable("NHSE_APPDATA", appData);
         Environment.SetEnvironmentVariable("NHSE_LOGS", Path.Combine(Path.GetTempPath(), "nhse-mac-tests", "logs"));
+        Environment.SetEnvironmentVariable("NHSE_OFFLINE", "1"); // no downloads (e.g. the house pictures) while testing
 
         if (Enum.TryParse<ThemeSetting>(Environment.GetEnvironmentVariable("NHSE_TEMA"), true, out var theme))
             Program.Settings.Theme = theme;

@@ -718,10 +718,18 @@ public sealed class HouseWindow : NhseWindow
                 ShowRoom(VisibleRooms[0]);
         };
         p.Children.Add(Labeled(MapStrings.HouseSize, size));
+        // Chosen by their pictures, among the looks the game offers to the players (those of the finished house, «04»).
         // The "order" is what the house turns into the next day: set it too, so the change stays.
-        p.Children.Add(Labeled(MapStrings.Roof, StylePicker(house.RoofUniqueID, v => { house.RoofUniqueID = v; house.OrderRoofUniqueID = v; })));
-        p.Children.Add(Labeled(MapStrings.Walls, StylePicker(house.WallUniqueID, v => { house.WallUniqueID = v; house.OrderWallUniqueID = v; })));
-        p.Children.Add(Labeled(MapStrings.Door, StylePicker(house.DoorUniqueID, v => { house.DoorUniqueID = v; house.OrderDoorUniqueID = v; })));
+        var roof = new HousePartPicker<RoofType>(HouseStyleNames.Offered<RoofType>("HouseRoofP"), house.RoofUniqueID);
+        roof.Changed += v => { house.RoofUniqueID = v; house.OrderRoofUniqueID = v; };
+        var walls = new HousePartPicker<WallType>(HouseStyleNames.Offered<WallType>("HouseWallP"), house.WallUniqueID);
+        walls.Changed += v => { house.WallUniqueID = v; house.OrderWallUniqueID = v; };
+        var door = new DoorPicker(house.DoorUniqueID);
+        door.Changed += v => { house.DoorUniqueID = v; house.OrderDoorUniqueID = v; };
+        p.Children.Add(Labeled(MapStrings.Roof, roof));
+        p.Children.Add(Labeled(MapStrings.Walls, walls));
+        p.Children.Add(Labeled(MapStrings.Door, door));
+        ExteriorPictures.EnsureDownloaded();
 
         // Raw values and files, for those who know
         var advanced = new StackPanel { Spacing = 8 };
@@ -746,21 +754,6 @@ public sealed class HouseWindow : NhseWindow
         Grid.SetColumn(control, 1);
         g.Children.Add(control);
         return g;
-    }
-
-    private static ComboBox StylePicker<T>(T current, Action<T> set) where T : struct, Enum
-    {
-        var values = Enum.GetValues<T>().Where(v => HouseStyleNames.IsForPlayers(v) || EqualityComparer<T>.Default.Equals(v, current)).ToList();
-        if (!values.Contains(current))
-            values.Add(current);
-        var names = HouseStyleNames.GetNames(values);
-        var cb = new ComboBox { ItemsSource = names, SelectedIndex = values.IndexOf(current), HorizontalAlignment = HorizontalAlignment.Stretch, MaxDropDownHeight = 400 };
-        cb.SelectionChanged += (_, _) =>
-        {
-            if (cb.SelectedIndex >= 0)
-                set(values[cb.SelectedIndex]);
-        };
-        return cb;
     }
 
     private async Task EditFlags()
@@ -849,6 +842,15 @@ public static class HouseStyleNames
     private static readonly string[] Regions = ["PA00", "PA01", "PA02", "PA03", "PA04", "PB04", "NA", "NB", "NC", "ND"];
 
     private readonly record struct Parts(string Material, int Color, bool Round, string Family);
+
+    /// <summary>
+    /// Looks with a picture whose name starts with <paramref name="prefix"/> («HouseRoofP», «HouseWallN»…), in the
+    /// finished-house family («04») for the players' houses, sorted by their name in the game.
+    /// </summary>
+    public static IEnumerable<T> Offered<T>(string prefix) where T : struct, Enum => Enum.GetValues<T>()
+        .Where(v => v.ToString() is var n && n.StartsWith(prefix, StringComparison.Ordinal) && ExteriorPictures.Has(n)
+            && (prefix[^1] != 'P' || n.AsSpan(prefix.Length + 1).StartsWith("04")))
+        .OrderBy(v => ExteriorPictures.GetName(v.ToString()) ?? v.ToString(), StringComparer.CurrentCulture);
 
     /// <summary>
     /// Looks that a villager's house can have.
