@@ -195,8 +195,8 @@ public static class ActionPages
             Section(HomeStrings.WeatherSeed),
             Tiles(2,
                 Card(CardHeader("Syabon", HomeStrings.WeatherSeed, HomeStrings.WeatherSeedHint, Seed(main.WeatherSeed, v => main.WeatherSeed = v))),
-                Card(CardHeader("Syabon", "Tour", null, Seed(main.TourWeatherSeed, v => main.TourWeatherSeed = v)))),
-            Section("Flags"),
+                Card(CardHeader("Syabon", HomeStrings.TourWeatherSeed, HomeStrings.TourWeatherSeedHint, Seed(main.TourWeatherSeed, v => main.TourWeatherSeed = v)))),
+            Section(HomeStrings.ProgressSection),
             Tiles(2,
                 ActionCard("Book", HomeStrings.PlayerFlags, FlagStrings.PlayerHint, async () =>
                 {
@@ -210,16 +210,10 @@ public static class ActionPages
                     var edit = main.EventFlagLand.ToArray();
                     if (await ctx.Edit(new EventFlagsWindow(edit, true, FlagStrings.IslandTitle)))
                         edit.CopyTo(main.EventFlagLand);
-                }),
-                ActionCard("Book", HomeStrings.FieldGoods, null, async () =>
-                {
-                    var editor = new SingleObjectEditor<object>(main.SaveFg, PropertySort.NoSort, false);
-                    if (await ctx.Edit(editor))
-                        main.SaveFg = (GSaveFg)editor.Object;
                 })),
             Section(HomeStrings.AdvancedTitle),
             Tiles(2,
-                ActionCard("Cardboard", HomeStrings.DumpDecrypted, null, async () =>
+                ActionCard("Cardboard", HomeStrings.DumpDecrypted, HomeStrings.DumpDecryptedHint, async () =>
                 {
                     var path = await Pickers.OpenFolder(ctx.Owner);
                     if (path is null)
@@ -227,7 +221,7 @@ public static class ActionPages
                     ctx.SAV.Dump(path);
                     Sound.Asterisk();
                 }),
-                ActionCard("Cardboard", HomeStrings.LoadDecrypted, null, async () =>
+                ActionCard("Cardboard", HomeStrings.LoadDecrypted, HomeStrings.LoadDecryptedHint, async () =>
                 {
                     var path = await Pickers.OpenFile(ctx.Owner, "New Horizons Save File (main.dat)|main.dat", "main.dat");
                     var dir = path is null ? null : Path.GetDirectoryName(path);

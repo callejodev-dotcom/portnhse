@@ -143,12 +143,16 @@ public static class HomeStrings
     public static string ClassicEditor { get; set; } = "Classic editor";
     public static string ClassicEditorHint { get; set; } = "Every value as in the Windows version of NHSE.";
     public static string PlayerFlags { get; set; } = "Player flags";
+    public static string ProgressSection { get; set; } = "Progress (flags)";
     public static string IslandFlags { get; set; } = "Island flags";
-    public static string FieldGoods { get; set; } = "Field goods";
     public static string VerifyHashes { get; set; } = "Check the save";
     public static string VerifyHashesHint { get; set; } = "Verifies the checksums of every file.";
     public static string DumpDecrypted { get; set; } = "Export decrypted";
     public static string LoadDecrypted { get; set; } = "Import decrypted";
+    public static string DumpDecryptedHint { get; set; } = "Saves the game files unencrypted into a folder, for other tools.";
+    public static string LoadDecryptedHint { get; set; } = "Loads unencrypted game files from a folder into this save.";
+    public static string TourWeatherSeed { get; set; } = "Mystery islands";
+    public static string TourWeatherSeedHint { get; set; } = "Decides the weather of the islands you visit with a Nook Miles Ticket.";
     public static string RamEdit { get; set; } = "Live editing (SysBot)";
     public static string RamEditHint { get; set; } = "Reads and writes the game's memory over Wi-Fi. Needs sys-botbase on the console.";
     public static string ItemImages { get; set; } = "Item images";
