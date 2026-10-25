@@ -15,6 +15,7 @@ public sealed class ItemSlot : Control
     private static readonly Typeface Font = new(FontFamily.Default);
     private static readonly IPen Border = new Pen(new SolidColorBrush(Color.FromArgb(0x60, 0x80, 0x80, 0x80)));
     private static readonly IPen Highlight = new Pen(Brushes.DodgerBlue, 2);
+    private static readonly IPen Selection = new Pen(new SolidColorBrush(Color.FromRgb(0x2F, 0x9E, 0x62)), 3);
 
     private IBrush? Back;
     private Bitmap? Sprite;
@@ -29,6 +30,18 @@ public sealed class ItemSlot : Control
     /// Draws the values over the sprite (off for the single item preview of the item editor).
     /// </summary>
     public bool ShowMarkup { get; set; } = true;
+
+    /// <summary>
+    /// Show only the quantity of stackable items, bottom right, as the game does (the raw values are for the classic editors).
+    /// </summary>
+    public bool GameStyleMarkup { get; set; }
+
+    private bool _isSelected;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set { _isSelected = value; InvalidateVisual(); }
+    }
 
     private bool _isHovered;
     public bool IsHighlighted
@@ -47,7 +60,7 @@ public sealed class ItemSlot : Control
     {
         Back = ToBrush(ItemColor.GetItemColor(item));
         Sprite = ItemSprite.GetItemSprite(item);
-        Markup = ItemSprite.GetItemMarkup(item);
+        Markup = GameStyleMarkup ? GetQuantityMarkup(item) : ItemSprite.GetItemMarkup(item);
         InvalidateVisual();
     }
 
@@ -57,6 +70,13 @@ public sealed class ItemSlot : Control
         Sprite = ItemSprite.GetItemSprite(id, count);
         Markup = (string.Empty, string.Empty, string.Empty, string.Empty);
         InvalidateVisual();
+    }
+
+    private static (string, string, string, string) GetQuantityMarkup(Item item)
+    {
+        if (item.IsNone || !ItemInfo.TryGetMaxStackCount(item, out var max) || max <= 1)
+            return (string.Empty, string.Empty, string.Empty, string.Empty);
+        return (string.Empty, string.Empty, string.Empty, (item.Count + 1).ToString());
     }
 
     private static IBrush? ToBrush(System.Drawing.Color c) => c.A == 0 ? null : new SolidColorBrush(Color.FromArgb(c.A, c.R, c.G, c.B));
@@ -80,10 +100,16 @@ public sealed class ItemSlot : Control
             DrawText(context, Markup.Count, fs, 1, 0, false, false);
             DrawText(context, Markup.Uses, fs, r.Width / 2, r.Height / 2, true, true);
             DrawText(context, Markup.System, fs, r.Width - 1, 0, false, false, rightAlign: true);
-            DrawText(context, Markup.Additional, fs, 1, r.Height, false, false, bottomAlign: true);
+            if (GameStyleMarkup)
+                DrawText(context, Markup.Additional, fs + 2, r.Width - 3, r.Height - 1, false, false, rightAlign: true, bottomAlign: true);
+            else
+                DrawText(context, Markup.Additional, fs, 1, r.Height, false, false, bottomAlign: true);
         }
 
-        context.DrawRectangle(null, IsHighlighted ? Highlight : Border, r.Deflate(0.5));
+        if (IsSelected)
+            context.DrawRectangle(null, Selection, r.Deflate(1.5));
+        else
+            context.DrawRectangle(null, IsHighlighted ? Highlight : Border, r.Deflate(0.5));
     }
 
     private static void DrawText(DrawingContext context, string text, double size, double x, double y, bool centerX, bool centerY, bool rightAlign = false, bool bottomAlign = false)

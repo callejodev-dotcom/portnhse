@@ -163,7 +163,7 @@ public sealed class VillagersPage : UserControl
         actions.Children.Add(SmallButton(HomeStrings.VillagerFurniture, async () =>
         {
             var items = v.FtrStockList;
-            if (await Ctx.Edit(new PlayerItemEditor(items, 8, 4)))
+            if (await Ctx.Edit(new ItemsWindow(items, 8, 4, $"{GameInfo.Strings.GetVillager(v.InternalName)} · {HomeStrings.VillagerFurniture}")))
             {
                 v.FtrStockList = items;
                 Commit();
@@ -172,7 +172,7 @@ public sealed class VillagersPage : UserControl
         actions.Children.Add(SmallButton(HomeStrings.VillagerClothes, async () =>
         {
             var items = v.WearStockList;
-            if (await Ctx.Edit(new PlayerItemEditor(items, 8, 3)))
+            if (await Ctx.Edit(new ItemsWindow(items, 8, 3, $"{GameInfo.Strings.GetVillager(v.InternalName)} · {HomeStrings.VillagerClothes}")))
             {
                 v.WearStockList = items;
                 Commit();

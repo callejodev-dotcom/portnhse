@@ -191,7 +191,7 @@ public sealed class PlayerPage : UserControl
             {
                 var items = Pers.Pocket.Concat(Pers.Bag).ToArray();
                 var count = Pers.Pocket.Count;
-                if (await Ctx.Edit(new PlayerItemEditor(items, 10, 4, sysbot: true)))
+                if (await Ctx.Edit(new ItemsWindow(items, 10, 4, HomeStrings.Pockets)))
                 {
                     Pers.Pocket = items.AsSpan(0, count).ToArray();
                     Pers.Bag = items.AsSpan(count).ToArray();
@@ -200,8 +200,10 @@ public sealed class PlayerPage : UserControl
             }, ItemStrip(pockets)),
             ActionCard("Cardboard", HomeStrings.Storage, string.Format(HomeStrings.StorageHint, chest.Count(z => !z.IsNone), Pers.ItemChestCount), async () =>
             {
+                // Only the spaces the player has unlocked (the save keeps room for many more).
                 var items = Pers.ItemChest;
-                if (await Ctx.Edit(new PlayerItemEditor(items, 10, 5)))
+                var unlocked = items.Take((int)Math.Clamp(Pers.ItemChestCount, 50, (uint)items.Count)).ToArray();
+                if (await Ctx.Edit(new ItemsWindow(unlocked, 10, 5, HomeStrings.Storage)))
                 {
                     Pers.ItemChest = items;
                     Build();
@@ -210,7 +212,7 @@ public sealed class PlayerPage : UserControl
             ActionCard("Can", HomeStrings.RecycleBin, HomeStrings.RecycleBinHint, async () =>
             {
                 var items = Ctx.SAV.Main.RecycleBin;
-                if (await Ctx.Edit(new PlayerItemEditor(items, 10, 4)))
+                if (await Ctx.Edit(new ItemsWindow(items, 10, 4, HomeStrings.RecycleBin, HomeStrings.RecycleBinHint)))
                 {
                     Ctx.SAV.Main.RecycleBin = items;
                     Build();

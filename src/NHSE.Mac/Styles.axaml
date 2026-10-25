@@ -112,4 +112,10 @@
         <Setter Property="Height" Value="36" />
         <Setter Property="VerticalAlignment" Value="Top" />
     </Style>
+    <Style Selector="ToggleButton.chip">
+        <Setter Property="Padding" Value="8,1" />
+        <Setter Property="MinHeight" Value="24" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="CornerRadius" Value="12" />
+    </Style>
 </Styles>
