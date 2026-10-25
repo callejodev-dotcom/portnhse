@@ -1,0 +1,32 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.MiscPlayerEditor"
+        Title="Misc Player Detail Editor"
+        Width="460" Height="300" CanResize="False">
+    <Grid RowDefinitions="*,Auto" Margin="12">
+        <TabControl Name="tabControl1">
+            <TabItem Name="Tab_Misc" Header="Misc">
+                <StackPanel Orientation="Horizontal" Spacing="6" Margin="4,10" VerticalAlignment="Top">
+                    <TextBlock Name="L_Birthday" Text="Birthday (M/D):" VerticalAlignment="Center" Margin="0,0,2,0" />
+                    <NumericUpDown Name="NUD_BirthMonth" Value="12" Maximum="100" Width="70" />
+                    <NumericUpDown Name="NUD_BirthDay" Value="30" Maximum="100" Width="70" />
+                </StackPanel>
+            </TabItem>
+            <TabItem Name="Tab_Profile" Header="Profile">
+                <StackPanel Margin="4,10" Spacing="4">
+                    <TextBlock Name="L_ProfileTimestamp" Text="Timestamp" />
+                    <CalendarDatePicker Name="CAL_ProfileTimestamp" Width="233" />
+                    <TextBlock Name="L_ProfileSpecialtyFruit" Text="Fruit (Profile)" Margin="0,10,0,0" />
+                    <nh:RestrictedItemSelect Name="RIS_ProfileFruit" Width="233" HorizontalAlignment="Left" />
+                    <CheckBox Name="CHK_ProfileMadeVillage" Content="Made Village" Margin="0,8,0,0" />
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Margin="0,12,0,0">
+            <Button Name="B_Cancel" Content="Cancel" Width="84" IsCancel="True" Click="B_Cancel_Click" />
+            <Button Name="B_Save" Content="Save" Width="84" Classes="accent" Click="B_Save_Click" />
+        </StackPanel>
+    </Grid>
+</nh:NhseWindow>

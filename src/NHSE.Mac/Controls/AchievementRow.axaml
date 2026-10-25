@@ -1,0 +1,9 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="NHSE.Mac.AchievementRow">
+    <Grid ColumnDefinitions="80,Auto,Auto" Margin="0,2">
+        <TextBlock Name="L_Threshold" Text="1" TextAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0" />
+        <CalendarDatePicker Name="CAL_Date" Grid.Column="1" Width="200" />
+        <CheckBox Name="CHK_Read" Grid.Column="2" Content="Read" Margin="10,0,0,0" />
+    </Grid>
+</UserControl>

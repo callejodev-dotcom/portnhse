@@ -1,0 +1,33 @@
+<nh:NhseWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:nh="using:NHSE.Mac"
+        x:Class="NHSE.Mac.AchievementEditor"
+        Title="Record Editor"
+        Width="700" Height="400" MinWidth="640" MinHeight="400">
+    <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto" Margin="12">
+        <ListBox Name="LB_Counts" SelectionChanged="LB_Counts_SelectedIndexChanged" />
+
+        <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="2">
+            <TextBlock Name="L_Count" Text="Count:" Margin="0,0,0,2" />
+            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,4">
+                <NumericUpDown Name="NUD_Count" Value="0" Maximum="2147483647" Width="130" ValueChanged="NUD_Count_ValueChanged" />
+                <Button Name="B_Max" Content="Max" Width="72" Click="B_Max_Click" />
+                <Button Name="B_Clear" Content="Clear" Width="72" Click="B_Clear_Click" />
+            </StackPanel>
+            <nh:AchievementRow Name="AR_1" />
+            <nh:AchievementRow Name="AR_2" />
+            <nh:AchievementRow Name="AR_3" />
+            <nh:AchievementRow Name="AR_4" />
+            <nh:AchievementRow Name="AR_5" />
+            <nh:AchievementRow Name="AR_6" />
+            <NumericUpDown Name="NUD_Unk" Value="0" Maximum="255" Width="80" HorizontalAlignment="Left" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0" ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+            <Button Name="B_GiveAll" Content="Give All" Width="100" Click="B_GiveAll_Click" />
+            <Button Name="B_ClearAll" Grid.Column="1" Content="Clear All" Width="100" Margin="6,0,0,0" Click="B_ClearAll_Click" />
+            <Button Name="B_Cancel" Grid.Column="3" Content="Cancel" Width="80" IsCancel="True" Click="B_Cancel_Click" />
+            <Button Name="B_Save" Grid.Column="4" Content="Save" Width="80" Margin="6,0,0,0" Classes="accent" Click="B_Save_Click" />
+        </Grid>
+    </Grid>
+</nh:NhseWindow>
