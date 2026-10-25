@@ -192,16 +192,14 @@ public sealed class HouseWindow : NhseWindow
     };
 
     /// <summary>
-    /// The floor of a room in tiles of its 20×20 grid, as measured in the game (things placed by the game itself sit
-    /// inside): the main room 8×8 squares (6×6 before the first expansion), the back and side rooms 6×6, all centred,
-    /// and upstairs 10×6 squares (the whole width, from the fifth row). The basement is not measured yet: it is taken
-    /// as the whole grid.
+    /// The floor of a room in tiles of its 20×20 grid, as measured in the game (things put in its corners in the game):
+    /// the main room 8×8 squares (6×6 before the first expansion), the back and side rooms 6×6, all centred, and
+    /// upstairs and the basement 10×6 squares (the whole width, from the fifth row).
     /// </summary>
     internal static PixelRect GetRoomArea(uint level, int room) => room switch
     {
         0 => level >= 3 ? new PixelRect(2, 2, 16, 16) : new PixelRect(4, 4, 12, 12),
-        4 => new PixelRect(0, 4, 20, 12),
-        5 => new PixelRect(0, 0, 20, 20),
+        4 or 5 => new PixelRect(0, 4, 20, 12),
         _ => new PixelRect(4, 4, 12, 12),
     };
 
