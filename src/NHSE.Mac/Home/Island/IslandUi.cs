@@ -58,7 +58,9 @@ internal static class IslandUi
         DockPanel.SetDock(bottom, Dock.Bottom);
         root.Children.Add(header);
         root.Children.Add(bottom);
-        root.Children.Add(body);
+        // On a small screen the window stops at its edge (see NhseWindow): the content scrolls, the buttons stay.
+        root.Children.Add(body is ScrollViewer or TabControl ? body
+            : new ScrollViewer { Content = body, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled });
         w.Content = root;
         w.Bind(Window.BackgroundProperty, w.GetResourceObservable("NhWindowBrush"));
         return save;
