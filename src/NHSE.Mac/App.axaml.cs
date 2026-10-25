@@ -77,8 +77,8 @@ public partial class App : Application
         ItemSprite.Initialize(GameInfo.GetStrings("en").itemlist);
         TranslationUtil.SetLocalization(typeof(MessageStrings), lang);
         TranslationUtil.SetLocalization(GameInfo.Strings.InternalNameTranslation, lang);
-        TranslationUtil.SetLocalizationMac(typeof(MacStrings), lang);
-        TranslationUtil.SetLocalizationMac(typeof(HomeStrings), lang);
+        foreach (var t in LocalizedStringClasses)
+            TranslationUtil.SetLocalizationMac(t, lang);
         LanguageChanged?.Invoke(lang);
     }
 
@@ -106,6 +106,13 @@ public partial class App : Application
 
     private async void About_Click(object? sender, EventArgs e)
         => await Dialogs.Alert(false, $"NHSE {GetVersion()}", MacStrings.MsgAbout, "https://github.com/kwsch/NHSE · https://github.com/callejodev-dotcom/portnhse");
+
+    /// <summary>
+    /// Static classes of the port named *Strings (MacStrings, HomeStrings…), translated from Resources/[Name]_[lang].txt.
+    /// MessageStrings is NHSE's own and is translated from NHSE.Core.
+    /// </summary>
+    private static readonly Type[] LocalizedStringClasses = [.. typeof(App).Assembly.GetTypes()
+        .Where(t => t is { IsAbstract: true, IsSealed: true } && t.Namespace == "NHSE.Mac" && t.Name.EndsWith("Strings", StringComparison.Ordinal) && t != typeof(MessageStrings))];
 
     public static string GetVersion() => typeof(App).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
 }
