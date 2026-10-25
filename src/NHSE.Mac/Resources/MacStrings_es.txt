@@ -19,3 +19,5 @@ MsgAbout=Versión para macOS de NHSE, el editor de partidas de Animal Crossing: 
 HintItemGrid=Clic: ver · ⇧ Clic: poner · ⌥ Clic: borrar · ⌘⌥ Clic: copiar a todos · Clic derecho: menú
 MsgNotPorted=Este editor todavía no está portado a macOS.
 MsgLibUsbMissing=La inyección por USB necesita la biblioteca libusb, que no se ha encontrado. Instálala con Homebrew (brew install libusb) y vuelve a intentarlo, o conéctate por Wi-Fi.
+MsgUnexpectedError=Algo ha fallado. No se ha escrito nada en tu partida: puedes seguir o cerrar sin guardar.
+MsgErrorLog=Los detalles están en {0}.

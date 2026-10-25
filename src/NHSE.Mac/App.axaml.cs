@@ -28,6 +28,7 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        CrashLog.Install();
         RequestedThemeVariant = Program.Settings.Theme.ToVariant();
         SetLanguage(GameLanguage.GetLanguageIndex(Program.Settings.Language));
         TrackModifierKeys();

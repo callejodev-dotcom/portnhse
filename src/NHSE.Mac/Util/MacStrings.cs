@@ -32,6 +32,8 @@ public static class MacStrings
     public static string MsgAbout { get; set; } = "macOS port of NHSE, the Animal Crossing: New Horizons save editor by Kaphotics and contributors. Licensed under the GPLv3.";
 
     public static string HintItemGrid { get; set; } = "Click: view · ⇧ Click: set · ⌥ Click: delete · ⌘⌥ Click: clone to all · Right click: menu";
+    public static string MsgUnexpectedError { get; set; } = "Something went wrong. Your save has not been written; you can keep working or close without saving.";
+    public static string MsgErrorLog { get; set; } = "The details are in {0}.";
     public static string MsgNotPorted { get; set; } = "This editor has not been ported to macOS yet.";
     public static string MsgLibUsbMissing { get; set; } = "USB injection needs the libusb library, which was not found. Install it with Homebrew (brew install libusb) and try again, or connect over Wi-Fi.";
 }

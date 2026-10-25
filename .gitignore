@@ -8,3 +8,4 @@ dist/
 .DS_Store
 TestResults/
 galeria*/
+.claude/
