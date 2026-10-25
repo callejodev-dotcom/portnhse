@@ -1,9 +1,9 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="NHSE.Mac.VillagerEditor">
-    <Grid ColumnDefinitions="150,*" RowDefinitions="*,Auto">
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="*,Auto">
         <!-- Left: index and picture -->
-        <StackPanel Spacing="6">
+        <StackPanel Spacing="6" MinWidth="150">
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <TextBlock Name="L_VillagerID" Text="Villager Index:" VerticalAlignment="Center" />
                 <NumericUpDown Name="NUD_Villager" Maximum="9" Width="70" ValueChanged="LoadVillager" />

@@ -15,7 +15,7 @@
         <ScrollViewer Grid.Row="2" Grid.Column="1" Margin="10,8,0,0" VerticalScrollBarVisibility="Auto">
             <nh:ItemEditor Name="ItemEdit" />
         </ScrollViewer>
-        <Button Name="B_Tools" Grid.Row="3" Grid.Column="1" Content="Tools..." Width="96" Margin="10,8,0,0" HorizontalAlignment="Left">
+        <Button Name="B_Tools" Grid.Row="3" Grid.Column="1" Content="Tools..." MinWidth="96" Margin="10,8,0,0" HorizontalAlignment="Left">
             <Button.Flyout>
                 <MenuFlyout Placement="BottomEdgeAlignedLeft">
                     <MenuItem Name="B_Dump" Header="Dump" Click="B_Dump_Click" />

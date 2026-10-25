@@ -5,9 +5,12 @@ namespace NHSE.Mac;
 internal static class Program
 {
     /// <summary>
-    /// Folder for settings, backups and downloaded item images: ~/Library/Application Support/NHSE.
+    /// Folder for settings, backups and downloaded item images: ~/Library/Application Support/NHSE,
+    /// or the folder in NHSE_APPDATA (the tests use a temporary one).
     /// </summary>
-    public static string AppDataPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NHSE");
+    public static string AppDataPath { get; } = Environment.GetEnvironmentVariable("NHSE_APPDATA") is { Length: not 0 } custom
+        ? custom
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NHSE");
 
     /// <summary>
     /// Settings file name.

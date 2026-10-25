@@ -3,7 +3,7 @@
         xmlns:nh="using:NHSE.Mac"
         x:Class="NHSE.Mac.Editor"
         Title="NHSE"
-        Width="600" Height="470" MinWidth="560" MinHeight="440"
+        Width="660" Height="470" MinWidth="620" MinHeight="440"
         WindowStartupLocation="CenterScreen"
         Icon="/Assets/icon.png">
     <TabControl Name="TC_Editors" Margin="8,4,8,8">

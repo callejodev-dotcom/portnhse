@@ -13,8 +13,8 @@
                 <DockPanel Grid.Column="1">
                     <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Right" Spacing="6">
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Button Name="B_DumpHouse" Content="Dump" Width="76" Click="B_DumpHouse_Click" />
-                            <Button Name="B_LoadHouse" Content="Load" Width="76" Click="B_LoadHouse_Click" />
+                            <Button Name="B_DumpHouse" Content="Dump" MinWidth="76" Click="B_DumpHouse_Click" />
+                            <Button Name="B_LoadHouse" Content="Load" MinWidth="76" Click="B_LoadHouse_Click" />
                         </StackPanel>
                         <Button Name="B_EditFlags" Content="Edit Flags" HorizontalAlignment="Stretch" Click="B_EditFlags_Click" />
                     </StackPanel>
@@ -59,8 +59,8 @@
                     <CheckBox Name="CHK_NoOverwrite" Content="Prevent Writing Occupied Item Tiles" IsChecked="True" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top" Spacing="6">
-                    <Button Name="B_DumpRoom" Content="Dump" Width="76" Click="B_DumpRoom_Click" />
-                    <Button Name="B_LoadRoom" Content="Load" Width="76" Click="B_LoadRoom_Click" />
+                    <Button Name="B_DumpRoom" Content="Dump" MinWidth="76" Click="B_DumpRoom_Click" />
+                    <Button Name="B_LoadRoom" Content="Load" MinWidth="76" Click="B_LoadRoom_Click" />
                 </StackPanel>
             </Grid>
         </StackPanel>
