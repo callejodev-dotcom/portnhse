@@ -224,17 +224,16 @@ public sealed class PlayerPage : UserControl
 
     private Control Collections()
     {
-        var book = Pers.GetRecipeBook();
-        var recipes = RecipeList.Recipes;
-        var known = recipes.Keys.Count(z => book.GetIsKnown(z));
+        var (known, allRecipes) = RecipesWindow.Count(Pers.GetRecipeBook());
 
-        var reactions = Pers.Reactions;
-        var allReactions = Enum.GetValues<Reaction>().Count(z => z != 0 && !z.ToString().StartsWith("UNUSED", StringComparison.Ordinal));
-        var knownReactions = reactions.ManpuBit.Count(z => z != 0);
+        var learned = Pers.Reactions.ManpuBit;
+        var allReactions = ReactionsWindow.Valid.Length;
+        var knownReactions = ReactionsWindow.Valid.Count(z => Array.IndexOf(learned, z) >= 0);
 
         var mail = Ctx.Player.PostBox.GetUsedPostBoxSlots().Count;
+        var records = AchievementsWindow.CountCompleted(Pers.Achievements);
 
-        var recipeCard = Card(CardHeader("BookRecipe", HomeStrings.Recipes, string.Format(HomeStrings.RecipesHint, known, recipes.Count),
+        var recipeCard = Card(CardHeader("BookRecipe", HomeStrings.Recipes, string.Format(HomeStrings.RecipesHint, known.ToString("N0"), allRecipes.ToString("N0")),
             Row(SmallButton(HomeStrings.LearnAll, () =>
                 {
                     var b = Pers.GetRecipeBook();
@@ -247,7 +246,7 @@ public sealed class PlayerPage : UserControl
                 }),
                 SmallButton(HomeStrings.Open, async () =>
                 {
-                    if (await Ctx.Edit(new RecipeListEditor(Ctx.Player)))
+                    if (await Ctx.Edit(new RecipesWindow(Pers)))
                         Build();
                 }))));
 
@@ -264,7 +263,7 @@ public sealed class PlayerPage : UserControl
                 }),
                 SmallButton(HomeStrings.Open, async () =>
                 {
-                    if (await Ctx.Edit(new ReactionEditor(Pers)))
+                    if (await Ctx.Edit(new ReactionsWindow(Pers)))
                         Build();
                 }))));
 
@@ -273,14 +272,18 @@ public sealed class PlayerPage : UserControl
         panel.Children.Add(Tiles(3,
             recipeCard,
             reactionCard,
-            ActionCard("StarPiece", HomeStrings.Achievements, HomeStrings.AchievementsHint, () => Ctx.Edit(new AchievementEditor(Pers))),
+            ActionCard("StarPiece", HomeStrings.Achievements, string.Format(PlayerStrings.RecordsDone, records.Completed, records.Total), async () =>
+            {
+                if (await Ctx.Edit(new AchievementsWindow(Pers)))
+                    Build();
+            }),
             ActionCard("Post", HomeStrings.Mail, string.Format(HomeStrings.MailHint, mail), async () =>
             {
-                await Ctx.Edit(new PostBoxEditor(Ctx.Player, Ctx.Player.PostBox));
-                Build();
+                if (await Ctx.Edit(new MailWindow(Ctx.SAV, Ctx.Player)))
+                    Build();
             }),
-            ActionCard("Book", HomeStrings.Catalog, HomeStrings.CatalogHint, () => Ctx.Edit(new ItemReceivedEditor(Ctx.Player))),
-            ActionCard("BdayCupcake", HomeStrings.Profile, HomeStrings.ProfileHint, () => Ctx.Edit(new MiscPlayerEditor(Ctx.Player, Ctx.SAV.Main)))));
+            ActionCard("Book", HomeStrings.Catalog, HomeStrings.CatalogHint, () => Ctx.Edit(new CatalogWindow(Ctx.Player))),
+            ActionCard("BdayCupcake", HomeStrings.Profile, HomeStrings.ProfileHint, () => Ctx.Edit(new ProfileWindow(Ctx.Player)))));
         return panel;
     }
 }
