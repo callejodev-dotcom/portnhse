@@ -17,6 +17,7 @@ public static class MacStrings
     public static string LauncherOpenFile { get; set; } = "Open main.dat or .zip…";
     public static string LauncherReopen { get; set; } = "Reopen Last";
     public static string LauncherBackups { get; set; } = "Show Backups";
+    public static string LauncherImages { get; set; } = "Get Item Images…";
     public static string LauncherWarning { get; set; } = "Bring your own save data: this program does not dump it from your console. Keep a copy before editing.";
 
     public static string MenuFile { get; set; } = "File";

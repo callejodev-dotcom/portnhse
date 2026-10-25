@@ -47,6 +47,8 @@ public partial class MainWindow : Window
         L_Warning.Text = MacStrings.LauncherWarning;
         B_Reopen.IsEnabled = Directory.Exists(Program.Settings.LastFilePath);
         B_Backups.IsVisible = Directory.Exists(SaveFileLoader.BackupPath);
+        B_Images.Content = MacStrings.LauncherImages;
+        B_Images.IsVisible = !ItemSprite.SingleSpriteExists;
         BuildMenu();
     }
 
@@ -107,6 +109,17 @@ public partial class MainWindow : Window
     }
 
     private void B_Backups_Click(object? sender, RoutedEventArgs e) => UiUtil.OpenInFinder(SaveFileLoader.BackupPath);
+
+    /// <summary>
+    /// Without the item image pack the grids only show category icons, so the launcher offers it until it is installed.
+    /// </summary>
+    private void B_Images_Click(object? sender, RoutedEventArgs e)
+    {
+        var fetcher = UiUtil.FirstFormOfType<ImageFetcher>() ?? new ImageFetcher();
+        fetcher.Closed += (_, _) => LoadText();
+        fetcher.Show(this);
+        fetcher.Activate();
+    }
 
     public async Task MenuOpenFolder()
     {

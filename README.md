@@ -37,6 +37,9 @@ Require macOS 14 (Sonoma) ou posterior. Non fai falta instalar .NET: vai dentro 
    mesmo sitio.
 4. Copia a carpeta de volta á consola.
 
+Para ver as imaxes reais dos obxectos (e non só a icona da súa categoría), usa
+**Descargar imágenes de objetos…** no lanzador: son uns 92 MB e só fai falta unha vez.
+
 Cada partida que abres queda copiada en `~/Library/Application Support/NHSE/bak`
 (o botón **Ver copias de seguridad** do lanzador abre esa carpeta).
 

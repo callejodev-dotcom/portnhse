@@ -41,7 +41,10 @@
 
         <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,14,0,0">
             <TextBlock Name="L_Warning" Classes="hint" VerticalAlignment="Center" />
-            <Button Grid.Column="1" Name="B_Backups" Classes="hint" Margin="12,0,0,0" Click="B_Backups_Click" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0">
+                <Button Name="B_Images" Click="B_Images_Click" />
+                <Button Name="B_Backups" Click="B_Backups_Click" />
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>
