@@ -39,7 +39,9 @@ public sealed class ItemsWindow : NhseWindow
 
     private int PageCount => (Items.Count + PerPage - 1) / PerPage;
 
-    public ItemsWindow(IReadOnlyList<Item> items, int columns, int rows, string title, string? hint = null)
+    /// <param name="top">Shown between the explanation and the spaces (e.g. the connection to the console).</param>
+    /// <param name="closeOnly">Only a «Close» button at the bottom (the changes go somewhere else as they are made).</param>
+    public ItemsWindow(IReadOnlyList<Item> items, int columns, int rows, string title, string? hint = null, Control? top = null, bool closeOnly = false)
     {
         Items = items;
         PerPage = columns * rows;
@@ -83,8 +85,19 @@ public sealed class ItemsWindow : NhseWindow
         var cancel = new Button { Content = HomeStrings.Cancel, IsCancel = true, MinWidth = 100 };
         cancel.Click += (_, _) => Close(false);
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 16, 0, 0) };
-        buttons.Children.Add(cancel);
-        buttons.Children.Add(save);
+        if (closeOnly)
+        {
+            save.Content = HomeStrings.Close;
+            save.IsCancel = true;
+            buttons.Children.Add(save);
+        }
+        else
+        {
+            buttons.Children.Add(cancel);
+            buttons.Children.Add(save);
+        }
+        if (top is not null)
+            header.Children.Add(top);
 
         var body = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto") };
         body.Children.Add(left);
@@ -102,6 +115,13 @@ public sealed class ItemsWindow : NhseWindow
 
         ChangePage(0);
         Select(0);
+    }
+
+    /// <summary> Shows the items again after they were changed from outside (e.g. read from the game). </summary>
+    public void Reload()
+    {
+        ChangePage(Page);
+        Select(Selected);
     }
 
     #region Spaces

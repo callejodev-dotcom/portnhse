@@ -231,7 +231,12 @@ public static class ActionPages
                     ctx.MarkDirty();
                     Sound.Asterisk();
                 }),
-                ActionCard("GlowStick", HomeStrings.RamEdit, HomeStrings.RamEditHint, () =>
+                ActionCard("Pachinko", HomeStrings.LiveCard, HomeStrings.LiveCardHint, () =>
+                {
+                    LivePockets.Create().Show(ctx.Owner);
+                    return Task.CompletedTask;
+                }),
+                ActionCard("ToolChangeStick", HomeStrings.RawMemory, HomeStrings.RawMemoryHint, () =>
                 {
                     var exist = UiUtil.FirstFormOfType<SysBotRAMEdit>();
                     if (exist is not null)

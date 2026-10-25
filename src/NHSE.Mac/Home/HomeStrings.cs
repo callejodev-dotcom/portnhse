@@ -226,4 +226,25 @@ public static class HomeStrings
     public static string CatArt { get; set; } = "Art";
     public static string CatRecipes { get; set; } = "DIY recipes";
     public static string CatOther { get; set; } = "Other";
+
+    // Live pockets (Wi-Fi)
+    public static string Close { get; set; } = "Close";
+    public static string LiveTitle { get; set; } = "Pockets in the game (Wi-Fi)";
+    public static string LiveHint { get; set; } = "What you carry in the running game. First «Bring from the game», change what you like and «Send to the game»; then close and open the pockets in the game.";
+    public static string LiveCard { get; set; } = "Pockets live (Wi-Fi)";
+    public static string LiveCardHint { get; set; } = "Change what you carry with the game on. Needs sys-botbase on the console.";
+    public static string LiveConsole { get; set; } = "Console:";
+    public static string LiveConnect { get; set; } = "Connect";
+    public static string LiveRead { get; set; } = "Bring from the game";
+    public static string LiveWrite { get; set; } = "Send to the game";
+    public static string LiveNotConnected { get; set; } = "Not connected. Write the console's IP (Settings → Internet) and connect.";
+    public static string LiveConnecting { get; set; } = "Connecting…";
+    public static string LiveConnected { get; set; } = "Connected. Now bring the pockets from the game.";
+    public static string LiveReadDone { get; set; } = "These are your pockets in the game.";
+    public static string LiveWriteDone { get; set; } = "Sent. In the game, close and open the pockets to see them.";
+    public static string LiveSame { get; set; } = "Nothing to send: they are the same as in the game.";
+    public static string LiveNotFound { get; set; } = "Your pockets are not where they should be in the game's memory, so nothing was changed. Are you on your island with your character?";
+    public static string LiveError { get; set; } = "Could not talk to the console: {0}";
+    public static string RawMemory { get; set; } = "Game memory (raw)";
+    public static string RawMemoryHint { get; set; } = "Reads and writes bytes of the running game by address. Only if you know what you are doing.";
 }

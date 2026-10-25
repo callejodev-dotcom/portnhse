@@ -210,6 +210,15 @@ public sealed class PlayerPage : UserControl
                     Build();
                 }
             }, ItemStrip(chest)),
+            ActionCard("Pachinko", HomeStrings.LiveCard, HomeStrings.LiveCardHint, () =>
+            {
+                var exist = UiUtil.GetWindows().OfType<ItemsWindow>().FirstOrDefault(z => z.Title == HomeStrings.LiveTitle);
+                if (exist is not null)
+                    exist.Activate();
+                else
+                    LivePockets.Create().Show(Ctx.Owner);
+                return Task.CompletedTask;
+            }),
             ActionCard("Can", HomeStrings.RecycleBin, HomeStrings.RecycleBinHint, async () =>
             {
                 var items = Ctx.SAV.Main.RecycleBin;
