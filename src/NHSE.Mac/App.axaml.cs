@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using NHSE.Core;
 
 namespace NHSE.Mac;
@@ -51,6 +52,12 @@ public partial class App : Application
             desktop.Exit += (_, _) => ShuttingDown = true;
             TranslateAppMenu();
             LanguageChanged += _ => TranslateAppMenu();
+
+            // New versions: a while after opening, then every few hours.
+            DispatcherTimer.RunOnce(() => _ = Updater.Check(), TimeSpan.FromSeconds(8));
+            var updates = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
+            updates.Tick += (_, _) => _ = Updater.Check();
+            updates.Start();
 
             foreach (var path in Program.StartupPaths)
                 main.OpenWhenShown(path);
@@ -111,8 +118,29 @@ public partial class App : Application
     /// </summary>
     private void TranslateAppMenu()
     {
-        if (NativeMenu.GetMenu(this)?.Items.FirstOrDefault() is NativeMenuItem about)
-            about.Header = MacStrings.MenuAbout;
+        var items = NativeMenu.GetMenu(this)?.Items.OfType<NativeMenuItem>().ToArray() ?? [];
+        if (items.Length > 0)
+            items[0].Header = MacStrings.MenuAbout;
+        if (items.Length > 1)
+            items[1].Header = MacStrings.MenuCheckUpdates;
+    }
+
+    private async void CheckUpdates_Click(object? sender, EventArgs e)
+    {
+        if (Updater.Bundle is null)
+        {
+            await Dialogs.Alert(MacStrings.UpdateDev);
+            return;
+        }
+        await Updater.Check(force: true);
+        var text = Updater.State switch
+        {
+            Updater.Stage.Ready => string.Format(MacStrings.UpdateReady, Updater.Found?.ToString(3)),
+            Updater.Stage.UpToDate => string.Format(MacStrings.UpdateNone, Updater.Current.ToString(3)),
+            Updater.Stage.Downloading or Updater.Stage.Checking => string.Format(MacStrings.UpdateDownloading, Updater.Found?.ToString(3)),
+            _ => string.Format(MacStrings.UpdateFailed, Updater.Problem),
+        };
+        await Dialogs.Alert(text);
     }
 
     private async void About_Click(object? sender, EventArgs e)

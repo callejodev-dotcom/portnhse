@@ -482,7 +482,7 @@ public class GalleryHomeMap
         Assert.Equal(flowers, w.Count(IslandMapWindow.Tidy.Flowers));
 
         // One kind of flower, on the whole island.
-        var name = GridItems.GetName(flower.T);
+        var name = GridItems.GetName(flower.T!);
         var kind = w.Kinds().Single(k => k.Name == name);
         Assert.Equal(kind.Count, w.RemoveNamed(new HashSet<string> { name }));
         Assert.DoesNotContain(w.Kinds(), k => k.Name == name);

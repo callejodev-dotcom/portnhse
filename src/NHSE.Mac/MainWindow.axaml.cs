@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using NHSE.Core;
 
 namespace NHSE.Mac;
@@ -39,6 +40,11 @@ public partial class MainWindow : Window
                 await TryOpenSaveFile(path);
             Pending.Clear();
         };
+
+        void UpdateChanged() => Dispatcher.UIThread.Post(ShowUpdate);
+        Updater.Changed += UpdateChanged;
+        Closed += (_, _) => Updater.Changed -= UpdateChanged;
+        ShowUpdate();
     }
 
     private void LoadText()
@@ -112,6 +118,20 @@ public partial class MainWindow : Window
     }
 
     private void B_Backups_Click(object? sender, RoutedEventArgs e) => UiUtil.OpenInFinder(SaveFileLoader.BackupPath);
+
+    private void B_Restart_Click(object? sender, RoutedEventArgs e) => Updater.RestartNow();
+
+    /// <summary> Shows a new version being downloaded, or ready (it goes in when NHSE closes). </summary>
+    private void ShowUpdate()
+    {
+        var version = Updater.Found?.ToString(3);
+        UpdateBar.IsVisible = Updater.State is Updater.Stage.Downloading or Updater.Stage.Ready;
+        B_Restart.IsVisible = Updater.State == Updater.Stage.Ready;
+        B_Restart.Content = MacStrings.UpdateRestart;
+        L_Update.Text = Updater.State == Updater.Stage.Ready
+            ? string.Format(MacStrings.UpdateReady, version)
+            : string.Format(MacStrings.UpdateDownloading, version);
+    }
 
     private async void B_OpenLive_Click(object? sender, RoutedEventArgs e)
     {

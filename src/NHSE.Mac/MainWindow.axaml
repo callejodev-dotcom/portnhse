@@ -15,7 +15,7 @@
             <Setter Property="Fill" Value="#181E90FF" />
         </Style>
     </Window.Styles>
-    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="24,20,24,18">
+    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto" Margin="24,20,24,18">
         <StackPanel Orientation="Horizontal" Spacing="14">
             <Image Source="/Assets/icon.png" Width="56" Height="56" />
             <StackPanel VerticalAlignment="Center" Spacing="2">
@@ -47,5 +47,13 @@
                 <Button Name="B_Backups" Click="B_Backups_Click" />
             </StackPanel>
         </Grid>
+
+        <!-- A new version: downloading, or ready to go in when NHSE closes. -->
+        <Border Grid.Row="4" Name="UpdateBar" IsVisible="False" Margin="0,12,0,0" Padding="12,8" CornerRadius="8" Background="#262F9E62">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Name="L_Update" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12" />
+                <Button Grid.Column="1" Name="B_Restart" Classes="accent" Margin="10,0,0,0" IsVisible="False" Click="B_Restart_Click" />
+            </Grid>
+        </Border>
     </Grid>
 </Window>

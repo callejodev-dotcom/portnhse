@@ -26,6 +26,14 @@ public static class MacStrings
     public static string MenuCloseWindow { get; set; } = "Close Window";
     public static string MenuLanguage { get; set; } = "Language";
     public static string MenuAbout { get; set; } = "About NHSE";
+    public static string MenuCheckUpdates { get; set; } = "Check for Updates…";
+
+    public static string UpdateDownloading { get; set; } = "Downloading NHSE {0}…";
+    public static string UpdateReady { get; set; } = "NHSE {0} is ready: it installs itself when you close NHSE.";
+    public static string UpdateRestart { get; set; } = "Restart now";
+    public static string UpdateNone { get; set; } = "You have the newest version ({0}).";
+    public static string UpdateFailed { get; set; } = "Could not look for updates: {0}";
+    public static string UpdateDev { get; set; } = "This copy is not an installed NHSE.app, so it does not update itself.";
     public static string MenuQuit { get; set; } = "Quit NHSE";
 
     public static string MsgBackupMac { get; set; } = "NHSE can keep a copy of every save you open, in its backups folder ({0}).";

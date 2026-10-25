@@ -31,6 +31,11 @@ public sealed class ApplicationSettings
     public bool AutomaticBackup { get; set; } = true;
 
     /// <summary>
+    /// Whether NHSE looks for new versions on GitHub and installs them by itself when it closes.
+    /// </summary>
+    public bool AutoUpdate { get; set; } = true;
+
+    /// <summary>
     /// Whether the backup prompt has been shown.
     /// </summary>
     public bool BackupPrompted { get; set; }

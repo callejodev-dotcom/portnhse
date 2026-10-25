@@ -1,5 +1,6 @@
 #!/bin/bash
-# Crea NHSE.app (autónoma, co runtime de .NET dentro) e un .dmg por arquitectura.
+# Crea NHSE.app (autónoma, co runtime de .NET dentro), un .dmg e un .zip por arquitectura
+# (o .zip é o que descarga a propia app para actualizarse).
 #   tools/empaquetar.sh            → arm64 (Apple Silicon) e x64 (Intel)
 #   tools/empaquetar.sh arm64      → só unha
 # Saída en dist/. A app vai asinada ad hoc (sen conta de Apple Developer).
@@ -46,6 +47,11 @@ for ARQ in "${ARQUITECTURAS[@]}"; do
     sed "s/@VERSION@/$VERSION/g" tools/macos/Info.plist > "$APP/Contents/Info.plist"
     codesign --force --deep --sign - "$APP"
     codesign --verify --deep "$APP"
+
+    # Zip só coa app: o que descarga NHSE cando se actualiza só.
+    ZIP="$DIST/NHSE-$VERSION-macOS-$ARQ.zip"
+    rm -f "$ZIP"
+    ditto -c -k --keepParent "$APP" "$ZIP"
 
     # DMG coa app e un atallo a Aplicacións.
     DMG="$DIST/NHSE-$VERSION-macOS-$ARQ.dmg"

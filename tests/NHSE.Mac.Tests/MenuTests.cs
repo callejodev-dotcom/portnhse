@@ -13,10 +13,10 @@ public class MenuTests
     private static string[] Headers(NativeMenu? menu) => menu?.Items.OfType<NativeMenuItem>().Select(z => z.Header ?? "").ToArray() ?? [];
 
     [AvaloniaFact]
-    public void AppMenuHasAbout()
+    public void AppMenuHasAboutAndUpdates()
     {
         var menu = NativeMenu.GetMenu(Application.Current!);
-        Assert.Single(Headers(menu));
+        Assert.Equal(2, Headers(menu).Count());
     }
 
     [AvaloniaFact]

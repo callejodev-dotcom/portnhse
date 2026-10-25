@@ -14,6 +14,7 @@
     <NativeMenu.Menu>
         <NativeMenu>
             <NativeMenuItem Header="About NHSE" Click="About_Click" />
+            <NativeMenuItem Header="Check for Updates…" Click="CheckUpdates_Click" />
         </NativeMenu>
     </NativeMenu.Menu>
     <Application.Styles>
