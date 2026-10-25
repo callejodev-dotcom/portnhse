@@ -19,6 +19,9 @@ public static class TestApp
     /// </remarks>
     public static AppBuilder BuildAvaloniaApp()
     {
+        TestSave.DeleteCopies();
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => TestSave.DeleteCopies();
+
         var appData = Path.Combine(Path.GetTempPath(), "nhse-mac-tests", "appdata");
         Directory.CreateDirectory(appData);
         Environment.SetEnvironmentVariable("NHSE_APPDATA", appData);

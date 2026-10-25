@@ -20,11 +20,29 @@ public static class TestSave
     public static bool Available => SourceFolder is not null;
 
     /// <summary>
+    /// Temporary copies of the test save (each one is ~27 MB): emptied when the tests start and when they end.
+    /// </summary>
+    public static string SavesFolder { get; } = Path.Combine(Path.GetTempPath(), "nhse-mac-tests", "saves");
+
+    public static void DeleteCopies()
+    {
+        try
+        {
+            if (Directory.Exists(SavesFolder))
+                Directory.Delete(SavesFolder, true);
+        }
+        catch (IOException)
+        {
+            // Another test run is using them; the next run cleans up.
+        }
+    }
+
+    /// <summary>
     /// Copies the test save to a temporary folder and loads it.
     /// </summary>
     public static HorizonSave LoadCopy(out string folder)
     {
-        folder = Path.Combine(Path.GetTempPath(), "nhse-mac-tests", Guid.NewGuid().ToString("N"));
+        folder = Path.Combine(SavesFolder, Guid.NewGuid().ToString("N"));
         CopyFolder(SourceFolder!, folder);
         return HorizonSave.FromFolder(folder);
     }
