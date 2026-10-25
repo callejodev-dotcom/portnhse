@@ -58,8 +58,12 @@ public sealed class ItemSearchBox : UserControl
     /// </summary>
     public event Action<ushort, ushort>? ItemChosen;
 
-    public ItemSearchBox(double height = 260)
+    /// <param name="height">Height of the result list.</param>
+    /// <param name="only">Show only this category, without the category chips (e.g. walls and floors for a room).</param>
+    public ItemSearchBox(double height = 260, ItemCategory? only = null)
     {
+        if (only is { } fixedCategory)
+            Category = fixedCategory;
         Search = new TextBox { PlaceholderText = HomeStrings.SearchItem };
         Results = new ListBox
         {
@@ -102,7 +106,8 @@ public sealed class ItemSearchBox : UserControl
         };
 
         var panel = new StackPanel();
-        panel.Children.Add(Chips());
+        if (only is null)
+            panel.Children.Add(Chips());
         panel.Children.Add(Search);
         panel.Children.Add(Results);
         Content = panel;
