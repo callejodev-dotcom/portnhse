@@ -72,6 +72,27 @@ public sealed class RoomView : Control
     /// <summary> Raised with the tile clicked (layer coordinates). </summary>
     public event Action<int, int>? TileClicked;
 
+    /// <summary> Raised when an item of the layer being edited is dragged elsewhere: its corner tile, then the new one. </summary>
+    public event Action<int, int, int, int>? ItemDragged;
+
+    /// <summary> Raised in <see cref="Placing"/> mode with the corner tile where the new item should go. </summary>
+    public event Action<int, int>? PlaceRequested;
+
+    private Item? _placing;
+    /// <summary> New item being put down: it follows the pointer and each click puts one (null when not placing). </summary>
+    public Item? Placing { get => _placing; set { _placing = value; Ghost = null; InvalidateVisual(); } }
+
+    /// <summary> Whether an item would fit with its corner at a tile, to colour the item following the pointer. </summary>
+    public Func<Item, int, int, bool>? CanPut { get; set; }
+
+    /// <summary> Item under the pointer when the button went down, and where in it it was held. </summary>
+    private (int X, int Y, int HoldX, int HoldY, Item Item)? Pressed;
+    private Point PressPoint;
+    private bool Dragging;
+
+    /// <summary> Item following the pointer (being dragged or put) and its corner tile. </summary>
+    private (Item Item, int X, int Y)? Ghost;
+
     private Point? HoverPoint;
     private (Rect Area, string Text, IImage? Picture)? Hover;
 
@@ -165,11 +186,46 @@ public sealed class RoomView : Control
     #endregion
 
     #region Pointer
+    protected override void OnPointerPressed(PointerPressedEventArgs e)
+    {
+        base.OnPointerPressed(e);
+        Pressed = null;
+        Dragging = false;
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed || Placing is not null)
+            return;
+        var p = e.GetPosition(this);
+        if (ToTile(p) is not { } t || ActiveLayer is not { } layer || !GridItems.TryGetRoot(layer, t.X, t.Y, out var root, out var rx, out var ry) || !root.IsRoot)
+            return;
+        var copy = new Item();
+        copy.CopyFrom(root);
+        Pressed = (rx, ry, t.X - rx, t.Y - ry, copy);
+        PressPoint = p;
+        e.Pointer.Capture(this);
+    }
+
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
+        var pressed = Pressed;
+        var dragged = Dragging && Ghost is { } g ? g : ((Item Item, int X, int Y)?)null;
+        Pressed = null;
+        Dragging = false;
+        e.Pointer.Capture(null);
         if (e.InitialPressMouseButton != MouseButton.Left)
             return;
+
+        if (dragged is { } to && pressed is { } from)
+        {
+            Ghost = null;
+            ItemDragged?.Invoke(from.X, from.Y, to.X, to.Y);
+            return;
+        }
+        if (Placing is not null)
+        {
+            if (Ghost is { } spot)
+                PlaceRequested?.Invoke(spot.X, spot.Y);
+            return;
+        }
         if (ToTile(e.GetPosition(this)) is { } t)
             TileClicked?.Invoke(t.X, t.Y);
     }
@@ -177,7 +233,29 @@ public sealed class RoomView : Control
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
-        SetHover(e.GetPosition(this));
+        var p = e.GetPosition(this);
+        if (Pressed is { } held)
+        {
+            if (!Dragging && Math.Abs(p.X - PressPoint.X) + Math.Abs(p.Y - PressPoint.Y) > 6)
+                Dragging = true;
+            if (Dragging)
+            {
+                Ghost = ToTile(p) is { } t ? (held.Item, t.X - held.HoldX, t.Y - held.HoldY) : null;
+                Hover = null;
+                InvalidateVisual();
+                return;
+            }
+        }
+        if (Placing is { } placing)
+        {
+            // The pointer holds the new item by its middle.
+            var (w, h) = GridItems.GetSize(placing);
+            Ghost = ToTile(p) is { } t ? (placing, t.X - ((w - 1) / 2), t.Y - ((h - 1) / 2)) : null;
+            Hover = null;
+            InvalidateVisual();
+            return;
+        }
+        SetHover(p);
     }
 
     protected override void OnPointerExited(PointerEventArgs e)
@@ -185,6 +263,18 @@ public sealed class RoomView : Control
         base.OnPointerExited(e);
         Hover = null;
         HoverPoint = null;
+        if (!Dragging)
+            Ghost = null;
+        InvalidateVisual();
+    }
+
+    protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
+    {
+        base.OnPointerCaptureLost(e);
+        Pressed = null;
+        Dragging = false;
+        if (Placing is null)
+            Ghost = null;
         InvalidateVisual();
     }
 
@@ -223,10 +313,28 @@ public sealed class RoomView : Control
 
         if (Hover is { } hover)
             context.DrawRectangle(new SolidColorBrush(Color.FromArgb(0x30, 0xFF, 0xFF, 0xFF)), new Pen(new SolidColorBrush(Color.FromArgb(0xD0, 0xFF, 0xFF, 0xFF)), 1.5), ToScreen(hover.Area).Inflate(1), 4, 4);
-        if (Selection is { } sel)
+        if (Selection is { } sel && !Dragging)
             DrawSelection(context, ToScreen(sel), SelectionFacing);
+        if (Ghost is { } ghost)
+            DrawGhost(context, ghost.Item, ghost.X, ghost.Y);
         if (Hover is { Text.Length: > 0 } tip && HoverPoint is { } at)
             DrawBubble(context, tip.Text, tip.Picture, at);
+    }
+
+    /// <summary>
+    /// The item following the pointer on the spot it would take: green if it fits there, red if not.
+    /// </summary>
+    private void DrawGhost(DrawingContext context, Item item, int x, int y)
+    {
+        var (w, h) = GridItems.GetSize(item);
+        var r = ToScreen(new Rect(x, y, w, h)).Deflate(1.5);
+        var fits = CanPut?.Invoke(item, x, y) ?? true;
+        var color = fits ? Color.FromRgb(0x2F, 0x9E, 0x62) : Color.FromRgb(0xD0, 0x40, 0x40);
+        var radius = Math.Min(r.Width, r.Height) * 0.16;
+        context.DrawRectangle(new SolidColorBrush(color, 0.25), new Pen(new SolidColorBrush(color), 2.5), r, radius, radius);
+        using (context.PushOpacity(0.85))
+        using (context.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = BitmapInterpolationMode.HighQuality }))
+            DrawPicture(context, GridItems.GetPicture(item), r.Deflate(Math.Min(r.Width, r.Height) * 0.06));
     }
 
     /// <summary>
@@ -421,17 +529,13 @@ public sealed class RoomView : Control
                 DrawPicture(context, picture, r.Deflate(Math.Min(r.Width, r.Height) * 0.04));
                 continue;
             }
-            // Rugs lie flat: turned rugs are drawn turned.
-            if ((item.Rotation & 1) == 1)
-            {
-                var c = r.Center;
-                using (context.PushTransform(Matrix.CreateTranslation(-c.X, -c.Y) * Matrix.CreateRotation(Math.PI / 2) * Matrix.CreateTranslation(c.X, c.Y)))
-                    DrawPicture(context, picture, new Rect(c.X - (r.Height / 2), c.Y - (r.Width / 2), r.Height, r.Width).Inflate(2));
-            }
-            else
-            {
-                DrawPicture(context, picture, r.Inflate(2));
-            }
+            // Rugs lie flat: an area of their colour, the size they take, with their picture in the middle.
+            var rug = AverageColor(picture, new Rect(0.3, 0.3, 0.4, 0.4), Color.FromRgb(0xC8, 0xB4, 0x96));
+            var rr = r.Deflate(1);
+            var corner = Math.Min(rr.Width, rr.Height) * 0.12;
+            context.DrawRectangle(new SolidColorBrush(rug, 0.85), new Pen(new SolidColorBrush(Shade(rug, 0.6)), 1.5) { DashStyle = new DashStyle([5, 3], 0) }, rr, corner, corner);
+            var size = Math.Min(rr.Width, rr.Height) * 0.7;
+            DrawPicture(context, picture, new Rect(rr.Center.X - (size / 2), rr.Center.Y - (size / 2), size, size));
         }
     }
 
@@ -632,10 +736,10 @@ public sealed class RoomView : Control
     {
         IBrush fg = dark ? Brushes.White : new SolidColorBrush(Color.FromRgb(0x22, 0x22, 0x22));
         IBrush bg = dark ? new SolidColorBrush(Color.FromArgb(0xF2, 0x2C, 0x2C, 0x2F)) : new SolidColorBrush(Color.FromArgb(0xF7, 0xFF, 0xFF, 0xFF));
+        // Left aligned: centring is done below with the text's own width, so it never spills out of the bubble.
         var ft = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Font, picture is null ? 13 : 14, fg)
         {
             MaxTextWidth = picture is null ? double.PositiveInfinity : 200,
-            TextAlignment = picture is null ? TextAlignment.Left : TextAlignment.Center,
         };
         var pictureHeight = picture is null ? 0 : TipPicture + 6;
         var w = Math.Max(ft.Width, picture is null ? 0 : TipPicture) + 20;

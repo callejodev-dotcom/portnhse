@@ -65,6 +65,9 @@ public sealed class HouseWindow : NhseWindow
         MinHeight = 660;
 
         View.TileClicked += ClickTile;
+        View.ItemDragged += (x, y, toX, toY) => MoveItem(x, y, toX, toY);
+        View.PlaceRequested += (x, y) => PlaceNew(x, y);
+        View.CanPut = (item, x, y) => Fits(x, y, item) && (Placing is null || Layer.IsOccupied(item, x, y) == PlacedItemPermission.NoCollision);
 
         var header = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
         header.Children.Add(Text(MapStrings.HouseTitle, "title"));
@@ -247,6 +250,7 @@ public sealed class HouseWindow : NhseWindow
         Selected = null;
         Message = null;
         ChoosingWallpaper = ChoosingFlooring = false;
+        StopPlacing();
         var fw = GetFloorWall();
         View.SetRoom(Room.Layers, GetRoomSquares(HouseIndex, room), Picture(fw.FloorItem.UniqueID), Picture(fw.WallItem.UniqueID), GetDoors(room));
         View.Selection = null;
@@ -320,6 +324,7 @@ public sealed class HouseWindow : NhseWindow
         Selected = null;
         Message = null;
         View.Selection = null;
+        StopPlacing();
         BuildSpotCard();
     }
 
@@ -427,6 +432,99 @@ public sealed class HouseWindow : NhseWindow
         return result;
     }
 
+    /// <summary>
+    /// Moves an item from its corner tile to another (what dragging it does). Nothing moves if it doesn't fit there.
+    /// </summary>
+    public PlaceResult MoveItem(int x, int y, int toX, int toY)
+    {
+        var layer = Layer;
+        if (!GridItems.TryGetRoot(layer, x, y, out var root, out var rx, out var ry) || !root.IsRoot)
+            return PlaceResult.OutOfBounds;
+        if (rx == toX && ry == toY)
+        {
+            ClickTile(rx, ry);
+            return PlaceResult.Ok;
+        }
+        var item = new Item();
+        item.CopyFrom(root);
+        Message = null;
+        Item? blocker = null;
+        PlaceResult result;
+        if (!Fits(toX, toY, item))
+        {
+            result = PlaceResult.OutOfBounds;
+        }
+        else
+        {
+            GridItems.Remove(layer, rx, ry);
+            // Something else already at the new corner is in the way (placing there would replace it).
+            if (GridItems.TryGetRoot(layer, toX, toY, out var other, out _, out _))
+            {
+                blocker = other;
+                result = PlaceResult.Collision;
+            }
+            else
+            {
+                result = GridItems.Place(layer, item, toX, toY, out blocker, false);
+            }
+            if (result != PlaceResult.Ok)
+                GridItems.Place(layer, item, rx, ry, out _, false);
+        }
+        Selected = result == PlaceResult.Ok ? (toX, toY) : (rx, ry);
+        AfterChange(result, blocker);
+        return result;
+    }
+
+    /// <summary> New item being put down with clicks on the room (null when not placing). </summary>
+    private Item? Placing;
+
+    /// <summary>
+    /// Starts putting down copies of an item: it follows the pointer over the room and each click puts one.
+    /// </summary>
+    public void StartPlacing(Item item)
+    {
+        Placing = new Item();
+        Placing.CopyFrom(item);
+        Selected = null;
+        Message = null;
+        View.Selection = null;
+        View.Placing = Placing;
+        BuildSpotCard();
+    }
+
+    private void StopPlacing()
+    {
+        Placing = null;
+        View.Placing = null;
+    }
+
+    /// <summary>
+    /// Puts a copy of the item being placed with its corner at a tile, if the spot is free.
+    /// </summary>
+    public PlaceResult PlaceNew(int x, int y)
+    {
+        if (Placing is not { } item)
+            return PlaceResult.OutOfBounds;
+        var layer = Layer;
+        Item? blocker = null;
+        PlaceResult result;
+        if (!Fits(x, y, item))
+            result = PlaceResult.OutOfBounds;
+        else if (GridItems.TryGetRoot(layer, x, y, out var other, out _, out _))
+            (result, blocker) = (PlaceResult.Collision, other);
+        else
+            result = GridItems.Place(layer, item, x, y, out blocker, false);
+        Message = result switch
+        {
+            PlaceResult.Collision => string.Format(MapStrings.DoesNotFit, blocker is null ? "?" : GridItems.GetName(blocker)),
+            PlaceResult.OutOfBounds => MapStrings.OutOfRoom,
+            _ => null,
+        };
+        View.Refresh();
+        BuildSpotCard();
+        return result;
+    }
+
     private void AfterChange(PlaceResult result, Item? blocker)
     {
         Message = result switch
@@ -507,12 +605,42 @@ public sealed class HouseWindow : NhseWindow
             return;
         }
 
+        if (Placing is { } placing)
+        {
+            var p = new StackPanel { Spacing = 10 };
+            var head = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
+            var picture = new Border { Width = 64, Height = 64, CornerRadius = new CornerRadius(10), Child = new Image { Source = GridItems.GetPicture(placing), Margin = new Thickness(4) } };
+            picture.Bind(Border.BackgroundProperty, picture.GetResourceObservable("NhSelectedBrush"));
+            head.Children.Add(picture);
+            var names = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Spacing = 2 };
+            names.Children.Add(Text(MapStrings.Placing, "subtle"));
+            names.Children.Add(new TextBlock { Text = GridItems.GetName(placing), FontWeight = FontWeight.SemiBold, FontSize = 15, TextWrapping = TextWrapping.Wrap, MaxWidth = 250 });
+            head.Children.Add(names);
+            p.Children.Add(head);
+            p.Children.Add(Text(MapStrings.PlacingHint, "subtle"));
+            if (Message is { } m)
+                p.Children.Add(new TextBlock { Text = m, Foreground = Brushes.IndianRed, TextWrapping = TextWrapping.Wrap });
+            var done = new Button { Content = MapStrings.PlacingDone, Classes = { "accent" } };
+            done.Click += (_, _) =>
+            {
+                StopPlacing();
+                BuildSpotCard();
+            };
+            p.Children.Add(done);
+            SpotCard.Content = p;
+            return;
+        }
+
         if (Selected is not { } s)
         {
             var p = new StackPanel { Spacing = 8 };
-            p.Children.Add(Icon("Lantern", 44));
             p.Children.Add(Text(MapStrings.NothingSelected, "cardtitle"));
             p.Children.Add(Text(MapStrings.RoomPickHint, "subtle"));
+            p.Children.Add(Text(MapStrings.AddNew, "cardtitle"));
+            p.Children.Add(Text(MapStrings.AddNewHint, "subtle"));
+            var search = new ItemSearchBox(260);
+            search.ItemChosen += (id, count) => StartPlacing(new Item(id) { Count = count });
+            p.Children.Add(search);
             SpotCard.Content = p;
             return;
         }
@@ -692,6 +820,13 @@ public sealed class HouseWindow : NhseWindow
         if (e.Source is TextBox or ComboBox or NumericUpDown or ListBox or ListBoxItem)
         {
             base.OnKeyDown(e);
+            return;
+        }
+        if (e.Key == Key.Escape && Placing is not null)
+        {
+            StopPlacing();
+            BuildSpotCard();
+            e.Handled = true;
             return;
         }
         if (e.Key is Key.Delete or Key.Back && Selected is not null)

@@ -121,7 +121,7 @@ public static class MapStrings
     public static string Flooring { get; set; } = "Flooring";
     public static string Change { get; set; } = "Change";
     public static string ChooseWallpaper { get; set; } = "Choose a wallpaper or flooring";
-    public static string RoomPickHint { get; set; } = "Click anything in the room to change it, turn it or remove it, or an empty spot to put something there. Choose above what to work on: furniture, what is on the tables, rugs, walls or ceiling.";
+    public static string RoomPickHint { get; set; } = "Click something in the room to change it, turn it or remove it, or drag it to move it. Choose above what to work on: furniture, what is on the tables, rugs, walls or ceiling.";
     public static string OutOfRoom { get; set; } = "It doesn't fit here: it would stick out of the room.";
     public static string LevelTent { get; set; } = "Tent";
     public static string LevelHouse { get; set; } = "House";
@@ -176,4 +176,11 @@ public static class MapStrings
     public static string StyleOther { get; set; } = "Other";
     public static string ColorNumber { get; set; } = "color {0}";
     public static string DoorRound { get; set; } = "arched";
+
+    // Moving and adding things in a room
+    public static string AddNew { get; set; } = "Add something new";
+    public static string AddNewHint { get; set; } = "Choose it here, then click the room where you want it. You can also drag anything in the room to move it.";
+    public static string Placing { get; set; } = "Putting down";
+    public static string PlacingHint { get; set; } = "Click the room where you want it; each click puts one more. Esc or «Done» to stop.";
+    public static string PlacingDone { get; set; } = "Done";
 }
