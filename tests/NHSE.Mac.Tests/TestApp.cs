@@ -25,6 +25,7 @@ public static class TestApp
         var appData = Path.Combine(Path.GetTempPath(), "nhse-mac-tests", "appdata");
         Directory.CreateDirectory(appData);
         Environment.SetEnvironmentVariable("NHSE_APPDATA", appData);
+        Environment.SetEnvironmentVariable("NHSE_LOGS", Path.Combine(Path.GetTempPath(), "nhse-mac-tests", "logs"));
 
         if (Enum.TryParse<ThemeSetting>(Environment.GetEnvironmentVariable("NHSE_TEMA"), true, out var theme))
             Program.Settings.Theme = theme;

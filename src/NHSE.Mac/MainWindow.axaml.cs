@@ -67,10 +67,7 @@ public partial class MainWindow : Window
         var backups = AppMenus.Item(MacStrings.LauncherBackups, () => UiUtil.OpenInFinder(SaveFileLoader.BackupPath));
         backups.IsEnabled = B_Backups.IsVisible;
 
-        var menu = new NativeMenu();
-        menu.Items.Add(AppMenus.Sub(AppMenus.FileHeader, [.. AppMenus.OpenItems(), reopen, new NativeMenuItemSeparator(), backups]));
-        menu.Items.Add(AppMenus.Options(this));
-        NativeMenu.SetMenu(this, menu);
+        AppMenus.SetWindowMenu(this, AppMenus.Sub(AppMenus.FileHeader, [.. AppMenus.OpenItems(), reopen, new NativeMenuItemSeparator(), backups]), AppMenus.Options(this));
     }
 
     /// <summary>

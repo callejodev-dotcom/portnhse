@@ -87,11 +87,7 @@ public sealed partial class Editor : NhseWindow
             AppMenus.Item("Menu_RAMEdit", "RAM Edit", Menu_RAMEdit_Click),
             AppMenus.Item("Menu_ItemImages", "Item Images", Menu_ItemImages_Click));
 
-        var menu = new NativeMenu();
-        menu.Items.Add(file);
-        menu.Items.Add(tools);
-        menu.Items.Add(AppMenus.Options(this));
-        NativeMenu.SetMenu(this, menu);
+        AppMenus.SetWindowMenu(this, file, tools, AppMenus.Options(this));
     }
 
     private async void Menu_Save_Click()

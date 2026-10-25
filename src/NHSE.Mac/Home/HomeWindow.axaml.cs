@@ -190,9 +190,6 @@ public sealed partial class HomeWindow : NhseWindow
             new NativeMenuItemSeparator(),
             AppMenus.Item(MacStrings.MenuCloseWindow, Close, new KeyGesture(Key.W, cmd)),
         ]);
-        var menu = new NativeMenu();
-        menu.Items.Add(file);
-        menu.Items.Add(AppMenus.Options(this));
-        NativeMenu.SetMenu(this, menu);
+        AppMenus.SetWindowMenu(this, file, AppMenus.Options(this));
     }
 }

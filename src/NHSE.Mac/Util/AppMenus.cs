@@ -39,6 +39,26 @@ public static class AppMenus
         return new NativeMenuItem(header) { Menu = menu };
     }
 
+    /// <summary>
+    /// Sets the menu bar items of a window. The window keeps the same <see cref="NativeMenu"/> and only its items change:
+    /// giving an exported window a new NativeMenu fails in Avalonia.Native ("The menu being updated does not match").
+    /// </summary>
+    public static void SetWindowMenu(Window window, params NativeMenuItemBase[] items)
+    {
+        var menu = NativeMenu.GetMenu(window);
+        if (menu is null)
+        {
+            menu = new NativeMenu();
+            foreach (var i in items)
+                menu.Items.Add(i);
+            NativeMenu.SetMenu(window, menu);
+            return;
+        }
+        menu.Items.Clear();
+        foreach (var i in items)
+            menu.Items.Add(i);
+    }
+
     public static string FileHeader => Translator.Tr("Editor.Menu_File", "File");
 
     /// <summary>

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Avalonia.Threading;
 
 namespace NHSE.Mac;
@@ -8,7 +9,17 @@ namespace NHSE.Mac;
 /// </summary>
 public static class CrashLog
 {
-    public static string Folder { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Logs", "NHSE");
+    /// <summary>
+    /// ~/Library/Logs/NHSE, or the folder in NHSE_LOGS (the tests use a temporary one).
+    /// </summary>
+    public static string Folder { get; } = Environment.GetEnvironmentVariable("NHSE_LOGS") is { Length: not 0 } custom
+        ? custom
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Logs", "NHSE");
+
+    /// <summary>
+    /// Errors already written: an async handler's exception also comes back later as an unobserved task exception.
+    /// </summary>
+    private static readonly ConditionalWeakTable<Exception, object> Logged = [];
 
     private static bool Showing;
 
@@ -24,7 +35,8 @@ public static class CrashLog
         AppDomain.CurrentDomain.UnhandledException += (_, e) => Write(e.ExceptionObject as Exception);
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
-            Write(e.Exception);
+            if (!e.Exception.InnerExceptions.All(z => Logged.TryGetValue(z, out _)))
+                Write(e.Exception);
             e.SetObserved();
         };
     }
@@ -36,6 +48,7 @@ public static class CrashLog
     {
         if (ex is null)
             return null;
+        Logged.AddOrUpdate(ex, true);
         try
         {
             Directory.CreateDirectory(Folder);
