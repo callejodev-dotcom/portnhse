@@ -361,7 +361,7 @@ public sealed class RoomView : Control
             new BoxShadows(new BoxShadow { Blur = 18, OffsetY = 4, Color = Color.FromArgb(0x50, 0, 0, 0) }));
         using (context.PushClip(face))
         {
-            PaintWall(context, WallPicture, face, u * 2.6);
+            PaintWall(context, WallPicture, face);
             var grid = new Pen(new SolidColorBrush(Color.FromArgb(0x1C, 0x30, 0x20, 0x10)), 1);
             for (int i = 1; i < Span; i++)
             {
@@ -546,20 +546,28 @@ public sealed class RoomView : Control
     private const double WallLowerShare = 0.36;
 
     /// <summary>
-    /// Paints a wall as its wallpaper looks: the pattern above, repeated in rows no taller than <paramref name="rowHeight"/>,
-    /// and the lower part in one row below, with a thin rail between them.
+    /// Scale of the wallpaper's pattern on a wall: about twice the size it has in its picture, so it is repeated
+    /// many times instead of blown up (the pictures are small).
     /// </summary>
-    private static void PaintWall(DrawingContext context, IImage? picture, Rect wall, double rowHeight)
+    private const double WallPatternScale = 2;
+
+    /// <summary>
+    /// Paints a wall as its wallpaper looks: the pattern above, repeated in small rows, and the lower part (often
+    /// panelling) below, with a thin rail between them.
+    /// </summary>
+    private static void PaintWall(DrawingContext context, IImage? picture, Rect wall)
     {
         if (picture is null)
             return;
         var lowerHeight = wall.Height * WallLowerShare;
         var upper = new Rect(wall.X, wall.Y, wall.Width, wall.Height - lowerHeight);
         var lower = new Rect(wall.X, upper.Bottom, wall.Width, lowerHeight);
-        var rows = Math.Max(1, Math.Ceiling(upper.Height / Math.Max(1, rowHeight)));
-        TileTexture(context, picture, upper, Width(picture, WallPatternCrop, upper.Height / rows), WallPatternCrop);
-        TileTexture(context, picture, lower, Width(picture, WallLowerCrop, lower.Height), WallLowerCrop);
+        TileTexture(context, picture, upper, Width(picture, WallPatternCrop, RowHeight(upper.Height, picture.Size.Height * WallPatternCrop.Height * WallPatternScale)), WallPatternCrop);
+        TileTexture(context, picture, lower, Width(picture, WallLowerCrop, RowHeight(lower.Height, picture.Size.Height * WallLowerCrop.Height * WallPatternScale * 1.4)), WallLowerCrop);
         context.FillRectangle(new SolidColorBrush(Color.FromArgb(0x48, 0x20, 0x14, 0x08)), new Rect(wall.X, lower.Y - 1, wall.Width, 2.5));
+
+        // Rows of about the wanted height that fill the area exactly.
+        static double RowHeight(double area, double wanted) => area / Math.Max(1, Math.Round(area / Math.Max(1, wanted)));
 
         static double Width(IImage picture, Rect crop, double height)
             => height * (picture.Size.Width * crop.Width) / (picture.Size.Height * crop.Height);
