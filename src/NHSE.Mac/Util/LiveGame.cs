@@ -196,8 +196,10 @@ public sealed class LiveGame : IDisposable
             done += size;
             // sys-botbase reads the commands a byte at a time, so a lot of them queued up take longer than the wait for
             // an answer (three villagers in both copies of the island timed out): wait every so often.
+            // Each command also costs its time (many small changes, such as 800 flowers, timed out too).
             Unsynced += size;
-            if (Unsynced >= SyncEvery)
+            UnsyncedCommands++;
+            if (Unsynced >= SyncEvery || UnsyncedCommands >= SyncEveryCommands)
                 Sync();
         }
     }
@@ -207,10 +209,14 @@ public sealed class LiveGame : IDisposable
 
     private const int SyncEvery = 0x10000;
 
+    private int UnsyncedCommands;
+    private const int SyncEveryCommands = 32;
+
     /// <summary> sys-botbase answers nothing to a write: asks something small, to know the writes before are all done. </summary>
     private void Sync()
     {
         Unsynced = 0;
+        UnsyncedCommands = 0;
         Send("getVersion");
         ReadLine();
     }

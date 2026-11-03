@@ -225,6 +225,12 @@ public static class MapStrings
     public static string ByKind { get; set; } = "Each kind on its own ({0})";
     public static string SearchKinds { get; set; } = "Search…";
     public static string ReplaceWith { get; set; } = "Change for…";
+    public static string ReplaceHint { get; set; } = "Choose one or more: with several, they are mixed.";
+    public static string ReplaceApply { get; set; } = "Change";
+    public static string MixAlternate { get; set; } = "Alternating";
+    public static string MixAlternateHint { get; set; } = "In a pattern: diagonal stripes, or a chessboard with two";
+    public static string MixRandom { get; set; } = "At random";
+    public static string MixRandomHint { get; set; } = "Each flower one of the chosen, at random";
     public static string AskReplace { get; set; } = "Change the {0} in {1} for {2}? ⌘Z undoes it.";
     public static string Replaced { get; set; } = "Done: {0} changed for {1}. ⌘Z undoes it.";
     public static string AskRemoveNamed { get; set; } = "Remove «{0}» ({1}) from {2}? You can undo it with ⌘Z.";

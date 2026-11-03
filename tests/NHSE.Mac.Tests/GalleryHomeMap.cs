@@ -548,6 +548,24 @@ public class GalleryHomeMap
         Assert.Equal(flowers, w.Kinds().Single(k => k.Name == name).Count);
         w.Undo();
         Assert.Equal(before, w.Kinds().FirstOrDefault(k => k.Name == name)?.Count ?? 0);
+
+        // Two colours alternating: all the flowers are one of the two, about half each.
+        const ushort whiteHyacinth = 0xEBE4;
+        w.ReplaceAll(IslandMapWindow.Tidy.Flowers, [purpleHyacinth, whiteHyacinth], false);
+        var kinds = w.Kinds();
+        var purple = kinds.Single(k => k.Name == name).Count;
+        var white = kinds.Single(k => k.Name == GridItems.GetName(new Item(whiteHyacinth))).Count;
+        Assert.Equal(flowers, purple + white);
+        Assert.True(purple > flowers / 5 && white > flowers / 5);
+
+        // The picker, with two chosen.
+        var button = w.GetVisualDescendants().OfType<Button>().First(z => Equals(z.Content, MapStrings.ReplaceWith));
+        button.Flyout!.ShowAt(button);
+        Dispatcher.UIThread.RunJobs();
+        var picker = TopLevel.GetTopLevel(button)!.GetVisualDescendants().OfType<FieldItemPicker>().FirstOrDefault()
+            ?? w.GetVisualDescendants().OfType<FieldItemPicker>().First();
+        Assert.NotNull(picker);
+        Gallery.Capture(w, "60-map-replace", false);
         w.Close();
     }
 }

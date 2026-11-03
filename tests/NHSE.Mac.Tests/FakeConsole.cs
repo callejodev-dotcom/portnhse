@@ -27,6 +27,10 @@ internal sealed class FakeConsole : IDisposable
     public int MostQueued { get; private set; }
     private int Queued;
 
+    /// <summary> Most writes sent before waiting for an answer. </summary>
+    public int MostQueuedCommands { get; private set; }
+    private int QueuedCommands;
+
     /// <summary> Commands longer than sys-botbase can take (they would overrun its buffer). </summary>
     public int TooLong { get; private set; }
 
@@ -101,7 +105,9 @@ internal sealed class FakeConsole : IDisposable
         {
             case "getVersion":
                 MostQueued = Math.Max(MostQueued, Queued);
+                MostQueuedCommands = Math.Max(MostQueuedCommands, QueuedCommands);
                 Queued = 0;
+                QueuedCommands = 0;
                 return "2.6";
             case "peek":
                 {
@@ -111,6 +117,7 @@ internal sealed class FakeConsole : IDisposable
             case "poke":
                 {
                     Queued += (c[2].Length - 2) / 2;
+                    QueuedCommands++;
                     if (IgnorePokes)
                         return null;
                     var (block, at) = Find(Convert.ToUInt32(c[1], 16));

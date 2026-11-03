@@ -641,18 +641,28 @@ public sealed class IslandMapWindow : NhseWindow
     /// Puts another plant (purple hyacinths…) in the place of every thing of a kind, in the chosen area or the whole island.
     /// </summary>
     /// <returns>How many were changed.</returns>
-    public int ReplaceAll(Tidy kind, ushort id, Rect? area = null)
+    public int ReplaceAll(Tidy kind, ushort id, Rect? area = null) => ReplaceAll(kind, [id], false, area);
+
+    /// <summary>
+    /// The same with several plants mixed: in a pattern by position (diagonal stripes; with two, a chessboard), or at random.
+    /// </summary>
+    public int ReplaceAll(Tidy kind, IReadOnlyList<ushort> ids, bool random, Rect? area = null)
     {
-        var found = Find(t => IsKind(t, kind) && t.ItemId != id, LayerArea(area));
+        if (ids.Count == 0)
+            return 0;
+        var found = Find(t => IsKind(t, kind) && (ids.Count > 1 || t.ItemId != ids[0]), LayerArea(area));
         if (found.Count == 0)
             return 0;
         Remember();
+        var rng = new Random();
         foreach (var (x, y) in found)
         {
+            var id = random ? ids[rng.Next(ids.Count)] : ids[((x / 2) + (y / 2)) % ids.Count];
             GridItems.Remove(Layer, x, y);
             GridItems.Place(Layer, new Item(id), x, y, out _);
         }
-        AfterTidy(string.Format(MapStrings.Replaced, found.Count, GridItems.GetName(new Item(id))));
+        var names = string.Join(", ", ids.Select(z => GridItems.GetName(new Item(z))));
+        AfterTidy(string.Format(MapStrings.Replaced, found.Count, names));
         return found.Count;
     }
 
@@ -741,17 +751,56 @@ public sealed class IslandMapWindow : NhseWindow
         }
         Button ReplaceButton(Tidy kind, int count, Rect? where)
         {
-            // All of them for one kind of flower (or plant), chosen from the same list as when planting.
+            // One or several kinds of flower (or plant), chosen from the same list as when planting, mixed in a pattern
+            // or at random.
             var b = new Button { Content = MapStrings.ReplaceWith, Padding = new Thickness(8, 2), FontSize = 12, IsEnabled = count != 0 };
-            var picker = new FieldItemPicker(260) { Width = 280 };
-            var flyout = new Flyout { Content = picker, Placement = PlacementMode.BottomEdgeAlignedRight };
-            picker.ItemChosen += async id =>
+            var chosen = new List<ushort>();
+            var picker = new FieldItemPicker(220) { Width = 300 };
+            var chips = new WrapPanel { ItemSpacing = 4, LineSpacing = 4, MaxWidth = 300 };
+            var random = false;
+            var (mix, _) = TilePanel.Segmented([MapStrings.MixAlternate, MapStrings.MixRandom], 0, i => random = i == 1, [MapStrings.MixAlternateHint, MapStrings.MixRandomHint]);
+            var apply = new Button { Content = MapStrings.ReplaceApply, Classes = { "accent" }, IsEnabled = false, HorizontalAlignment = HorizontalAlignment.Right };
+            var hint = Text(MapStrings.ReplaceHint, "subtle");
+            hint.MaxWidth = 300;
+            void Show()
+            {
+                chips.Children.Clear();
+                foreach (var id in chosen.ToArray())
+                {
+                    var chip = new Button { Padding = new Thickness(6, 2), FontSize = 12 };
+                    var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+                    row.Children.Add(new Image { Source = GridItems.GetPicture(new Item(id)), Width = 18, Height = 18 });
+                    row.Children.Add(new TextBlock { Text = GridItems.GetName(new Item(id)) + "  ✕", VerticalAlignment = VerticalAlignment.Center });
+                    chip.Content = row;
+                    chip.Click += (_, _) =>
+                    {
+                        chosen.Remove(id);
+                        Show();
+                    };
+                    chips.Children.Add(chip);
+                }
+                apply.IsEnabled = chosen.Count != 0;
+            }
+            picker.ItemChosen += id =>
+            {
+                if (!chosen.Contains(id))
+                    chosen.Add(id);
+                Show();
+            };
+            var panel = new StackPanel { Spacing = 8, Margin = new Thickness(4) };
+            panel.Children.Add(hint);
+            panel.Children.Add(picker);
+            panel.Children.Add(chips);
+            panel.Children.Add(mix);
+            panel.Children.Add(apply);
+            var flyout = new Flyout { Content = panel, Placement = PlacementMode.BottomEdgeAlignedRight };
+            apply.Click += async (_, _) =>
             {
                 flyout.Hide();
-                var name = GridItems.GetName(new Item(id));
+                var names = string.Join(", ", chosen.Select(z => GridItems.GetName(new Item(z))));
                 var place = where is null ? MapStrings.WholeIsland : MapStrings.ChosenArea;
-                if (await Dialogs.Prompt(MessageBoxButtons.YesNo, string.Format(MapStrings.AskReplace, count, place, name)) == DialogResult.Yes)
-                    ReplaceAll(kind, id, where);
+                if (await Dialogs.Prompt(MessageBoxButtons.YesNo, string.Format(MapStrings.AskReplace, count, place, names)) == DialogResult.Yes)
+                    ReplaceAll(kind, chosen, random, where);
             };
             b.Flyout = flyout;
             return b;
