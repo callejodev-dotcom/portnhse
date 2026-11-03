@@ -1,0 +1,20 @@
+name: Compilar NHSE Puente
+
+# O homebrew da Switch (puente/), coa imaxe oficial de devkitPro. Deixa nhse-puente.nro como artefacto.
+on:
+  push:
+    paths: ["puente/**", ".github/workflows/puente.yml"]
+  workflow_dispatch:
+
+jobs:
+  nro:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkita64:latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compilar
+        run: make -C puente -j"$(nproc)"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nhse-puente
+          path: puente/nhse-puente.nro
