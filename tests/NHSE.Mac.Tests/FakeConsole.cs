@@ -21,6 +21,11 @@ internal sealed class FakeConsole : IDisposable
     /// <summary> Takes the writes without doing them, as a write that went wrong. </summary>
     public bool IgnorePokes { get; set; }
 
+    public const int MaxLine = 344 * 32 * 2;
+
+    /// <summary> Commands longer than sys-botbase can take (they would overrun its buffer). </summary>
+    public int TooLong { get; private set; }
+
     public FakeConsole(byte[] main, byte[] player)
     {
         Memory[LiveGame.MainAddress] = main;
@@ -65,6 +70,12 @@ internal sealed class FakeConsole : IDisposable
                 var stream = client.GetStream();
                 while (await reader.ReadLineAsync() is { } line)
                 {
+                    // sys-botbase reads each command into a buffer of this size (MAX_LINE_LENGTH) and goes wrong past it.
+                    if (line.Length + 2 > MaxLine)
+                    {
+                        TooLong++;
+                        continue;
+                    }
                     var answer = Answer(line.Split(' '));
                     if (answer is not null)
                         await stream.WriteAsync(Encoding.ASCII.GetBytes(answer + "\r\n"));

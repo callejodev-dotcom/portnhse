@@ -18,7 +18,12 @@ public sealed class LiveGame : IDisposable
     public const uint PlayerAddress = 0xB2783AB0;
 
     private const int ReadChunk = 0x40000;
-    private const int WriteChunk = 0x4000;
+    /// <summary>
+    /// Bytes per write. sys-botbase reads each command into a buffer of 22016 characters (MAX_LINE_LENGTH) without
+    /// checking its size: a longer command overruns it (big changes, such as villagers, timed out). 8 KB is 16 KB of
+    /// hex plus the command.
+    /// </summary>
+    private const int WriteChunk = 0x2000;
 
     private TcpClient? Client;
     private string Ip = string.Empty;
