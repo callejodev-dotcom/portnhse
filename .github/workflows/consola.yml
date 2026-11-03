@@ -1,0 +1,22 @@
+name: Compilar NHSE para Switch
+
+# O editor que se abre na propia consola (consola/), coa imaxe oficial de devkitPro. Deixa NHSE.nro como artefacto.
+on:
+  push:
+    paths: ["consola/**", ".github/workflows/consola.yml"]
+  workflow_dispatch:
+
+jobs:
+  nro:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkita64:latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Bibliotecas (SDL2)
+        run: dkp-pacman -Sy --noconfirm --needed switch-sdl2 switch-sdl2_ttf || true
+      - name: Compilar
+        run: make -C consola -j"$(nproc)"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: NHSE-switch
+          path: consola/NHSE.nro
