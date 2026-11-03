@@ -26,8 +26,10 @@ internal sealed class FakeConsole : IDisposable
     /// <summary> Commands longer than sys-botbase can take (they would overrun its buffer). </summary>
     public int TooLong { get; private set; }
 
-    public FakeConsole(byte[] main, byte[] player)
+    /// <param name="shadow">The second copy of the island (by default the same as the first, as in the game).</param>
+    public FakeConsole(byte[] main, byte[] player, byte[]? shadow = null)
     {
+        Memory[LiveGame.MainShadowAddress] = shadow ?? main.ToArray();
         Memory[LiveGame.MainAddress] = main;
         Memory[LiveGame.PlayerAddress] = player;
         Listener.Start();
@@ -35,6 +37,7 @@ internal sealed class FakeConsole : IDisposable
     }
 
     public byte[] Main => Memory[LiveGame.MainAddress];
+    public byte[] Shadow => Memory[LiveGame.MainShadowAddress];
     public byte[] Player => Memory[LiveGame.PlayerAddress];
 
     /// <summary> Closes the connection from the console's side. </summary>

@@ -14,6 +14,13 @@ public sealed class LiveGame : IDisposable
     /// <summary> Where the island (main.dat) starts in the game's memory. </summary>
     public const uint MainAddress = 0xB19FC270;
 
+    /// <summary>
+    /// A second copy of the island just before the first one (found on 3.0.3: identical except for four counters). The
+    /// game saves from it the villagers that walk around the island, so a villager changed only in the first copy came
+    /// back as it was after saving. What is sent to the island goes to both.
+    /// </summary>
+    public const uint MainShadowAddress = 0xB104B3C0;
+
     /// <summary> Where the first player (personal.dat) starts in the game's memory. </summary>
     public const uint PlayerAddress = 0xB2783AB0;
 
@@ -31,6 +38,9 @@ public sealed class LiveGame : IDisposable
     private NetworkStream? Stream;
 
     private byte[]? MainBefore;
+
+    /// <summary> Whether the second copy of the island is there (it looked like the first one when brought). </summary>
+    private bool Shadow;
     private byte[]? PlayerBefore;
 
     public bool Connected => Client?.Connected == true;
@@ -285,7 +295,20 @@ public sealed class LiveGame : IDisposable
         gamePlayer.CopyTo(player);
         MainBefore = gameMain;
         PlayerBefore = gamePlayer;
+        // Only where the second copy really is a copy (the villagers, at the start, and the end of the island).
+        Shadow = ShadowMatches(gameMain);
         return null;
+    }
+
+    private bool ShadowMatches(byte[] main)
+    {
+        const int Size = 0x4000;
+        foreach (var at in new[] { 0x120, main.Length - Size })
+        {
+            if (!Read(MainShadowAddress + (uint)at, Size).AsSpan().SequenceEqual(main.AsSpan(at, Size)))
+                return false;
+        }
+        return true;
     }
 
     /// <summary>
@@ -324,11 +347,19 @@ public sealed class LiveGame : IDisposable
         try
         {
             mainRuns = Send(MainAddress, sav.Main.Data, MainBefore);
+            if (Shadow)
+            {
+                foreach (var (start, length) in mainRuns)
+                    Poke(MainShadowAddress + (uint)start, sav.Main.Data.Slice(start, length));
+            }
             playerRuns = Send(PlayerAddress, personal.Data, PlayerBefore);
             if (mainRuns.Count + playerRuns.Count == 0)
                 return SendResult.Nothing;
             Sync();
             wrong = Verify(MainAddress, mainRuns, MainBefore) + Verify(PlayerAddress, playerRuns, PlayerBefore);
+            // A place missing in the second copy is sent again (to both) the next time.
+            if (Shadow)
+                wrong += Verify(MainShadowAddress, mainRuns, MainBefore);
         }
         catch
         {
