@@ -199,3 +199,6 @@ ByKind=Cada cosa por separado ({0})
 SearchKinds=Buscar…
 AskRemoveArea=¿Quitar todo lo que hay en la zona elegida ({0} cosas)? ⌘Z lo deshace.
 AskRemoveNamed=¿Quitar «{0}» ({1}) de {2}? Puedes deshacerlo con ⌘Z.
+ReplaceWith=Cambiar por…
+AskReplace=¿Cambiar las {0} de {1} por {2}? ⌘Z lo deshace.
+Replaced=Hecho: {0} cambiadas por {1}. ⌘Z lo deshace.

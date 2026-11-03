@@ -637,6 +637,25 @@ public sealed class IslandMapWindow : NhseWindow
     }
     #endregion
 
+    /// <summary>
+    /// Puts another plant (purple hyacinths…) in the place of every thing of a kind, in the chosen area or the whole island.
+    /// </summary>
+    /// <returns>How many were changed.</returns>
+    public int ReplaceAll(Tidy kind, ushort id, Rect? area = null)
+    {
+        var found = Find(t => IsKind(t, kind) && t.ItemId != id, LayerArea(area));
+        if (found.Count == 0)
+            return 0;
+        Remember();
+        foreach (var (x, y) in found)
+        {
+            GridItems.Remove(Layer, x, y);
+            GridItems.Place(Layer, new Item(id), x, y, out _);
+        }
+        AfterTidy(string.Format(MapStrings.Replaced, found.Count, GridItems.GetName(new Item(id))));
+        return found.Count;
+    }
+
     /// <summary> Waters every flower in the chosen area or the whole island. </summary>
     public int WaterFlowers(Rect? area = null)
     {
@@ -701,11 +720,14 @@ public sealed class IslandMapWindow : NhseWindow
             grid.Children.Add(c);
             var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
             if (water)
+            {
                 buttons.Children.Add(Small(MapStrings.Water, count, () =>
                 {
                     WaterFlowers(area);
                     return Task.CompletedTask;
                 }));
+                buttons.Children.Add(ReplaceButton(kind, count, area));
+            }
             buttons.Children.Add(Small(action, count, async () =>
             {
                 var where = area is null ? MapStrings.WholeIsland : MapStrings.ChosenArea;
@@ -716,6 +738,23 @@ public sealed class IslandMapWindow : NhseWindow
             Grid.SetColumn(buttons, 3);
             grid.Children.Add(buttons);
             row++;
+        }
+        Button ReplaceButton(Tidy kind, int count, Rect? where)
+        {
+            // All of them for one kind of flower (or plant), chosen from the same list as when planting.
+            var b = new Button { Content = MapStrings.ReplaceWith, Padding = new Thickness(8, 2), FontSize = 12, IsEnabled = count != 0 };
+            var picker = new FieldItemPicker(260) { Width = 280 };
+            var flyout = new Flyout { Content = picker, Placement = PlacementMode.BottomEdgeAlignedRight };
+            picker.ItemChosen += async id =>
+            {
+                flyout.Hide();
+                var name = GridItems.GetName(new Item(id));
+                var place = where is null ? MapStrings.WholeIsland : MapStrings.ChosenArea;
+                if (await Dialogs.Prompt(MessageBoxButtons.YesNo, string.Format(MapStrings.AskReplace, count, place, name)) == DialogResult.Yes)
+                    ReplaceAll(kind, id, where);
+            };
+            b.Flyout = flyout;
+            return b;
         }
         Button Small(string text, int count, Func<Task> act)
         {

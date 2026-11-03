@@ -224,6 +224,9 @@ public static class MapStrings
     public static string RemoveSame { get; set; } = "Remove all of these ({0})";
     public static string ByKind { get; set; } = "Each kind on its own ({0})";
     public static string SearchKinds { get; set; } = "Search…";
+    public static string ReplaceWith { get; set; } = "Change for…";
+    public static string AskReplace { get; set; } = "Change the {0} in {1} for {2}? ⌘Z undoes it.";
+    public static string Replaced { get; set; } = "Done: {0} changed for {1}. ⌘Z undoes it.";
     public static string AskRemoveNamed { get; set; } = "Remove «{0}» ({1}) from {2}? You can undo it with ⌘Z.";
     public static string AskRemoveArea { get; set; } = "Remove everything in the chosen area ({0} things)? ⌘Z undoes it.";
 }

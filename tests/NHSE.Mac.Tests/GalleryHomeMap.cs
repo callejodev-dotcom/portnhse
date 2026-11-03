@@ -531,4 +531,23 @@ public class GalleryHomeMap
         Assert.Equal("BridgeLog", diagonal.Material);
         Assert.True(diagonal.Length > 10);
     }
+
+    /// <summary> Every flower of the island changed for one kind (purple hyacinths, 0xEBED): same places, same number. </summary>
+    [AvaloniaFact]
+    public void MapReplaceAllFlowers()
+    {
+        var sav = Save();
+        var w = ShowMap(sav, out _);
+        var flowers = w.Count(IslandMapWindow.Tidy.Flowers);
+        Assume(flowers > 0, "the test save has flowers");
+        const ushort purpleHyacinth = 0xEBED;
+        var name = GridItems.GetName(new Item(purpleHyacinth));
+        var before = w.Kinds().FirstOrDefault(k => k.Name == name)?.Count ?? 0;
+        Assert.Equal(flowers - before, w.ReplaceAll(IslandMapWindow.Tidy.Flowers, purpleHyacinth));
+        Assert.Equal(flowers, w.Count(IslandMapWindow.Tidy.Flowers));
+        Assert.Equal(flowers, w.Kinds().Single(k => k.Name == name).Count);
+        w.Undo();
+        Assert.Equal(before, w.Kinds().FirstOrDefault(k => k.Name == name)?.Count ?? 0);
+        w.Close();
+    }
 }
