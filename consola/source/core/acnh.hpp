@@ -63,4 +63,18 @@ int cambiarFlores(std::vector<uint8_t>& main, const std::vector<uint16_t>& nueva
 // Quita todas las malas hierbas. Devuelve cuántas.
 int quitarMalasHierbas(std::vector<uint8_t>& main);
 
+// Los vecinos (main.dat 3.0.x): 10 huecos, y sus casas (cada casa dice qué vecino vive en ella).
+constexpr uint32_t POS_VECINOS = 0x120;
+constexpr uint32_t TAM_VECINO = 0x13230;
+constexpr uint32_t CASAS = 0x481D20;
+constexpr uint32_t TAM_CASA = 0x12E8;
+constexpr int NUM_VECINOS = 10;
+
+// Nombre interno del vecino de un hueco («kal09»), o vacío si el hueco está libre.
+std::string vecinoEn(const std::vector<uint8_t>& main, int hueco);
+
+// Cambia el vecino de un hueco por otro (por su nombre interno), en la misma casa, como hace NHSE. Los datos de cada
+// vecino van en vecinos.bin (consola/romfs). Devuelve el motivo si no puede.
+std::string cambiarVecino(std::vector<uint8_t>& main, int hueco, const std::string& interno, const std::vector<uint8_t>& vecinosBin);
+
 } // namespace acnh

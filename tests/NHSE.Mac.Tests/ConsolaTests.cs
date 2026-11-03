@@ -19,7 +19,7 @@ public class ConsolaTests
         if (!Directory.Exists(src))
             return null;
         var exe = Path.Combine(Path.GetTempPath(), "nhse-consola-prueba");
-        var p = Process.Start(new ProcessStartInfo("clang++", ["-std=c++17", "-O2", "-Wall", "-o", exe, Path.Combine(src, "prueba/prueba.cpp"), Path.Combine(src, "source/core/acnh.cpp")]) { RedirectStandardError = true });
+        var p = Process.Start(new ProcessStartInfo("clang++", ["-std=c++17", "-O2", "-Wall", "-o", exe, Path.Combine(src, "prueba/prueba.cpp"), Path.Combine(src, "source/core/acnh.cpp"), "-lz"]) { RedirectStandardError = true });
         if (p is null)
             return null;
         var err = p.StandardError.ReadToEnd();
@@ -107,6 +107,33 @@ public class ConsolaTests
         });
         var actual = after.Main.Data.Slice(after.Main.Offsets.FieldItem, expected.Length).ToArray();
         Assert.Equal(expected, actual);
+    }
+
+    /// <summary> A villager changed for another one, in the same house, exactly as NHSE does it (VillagerSwap). </summary>
+    [Fact]
+    public void VillagerSwappedLikeNhse()
+    {
+        Skip();
+        var sav = TestSave.LoadCopy(out var folder);
+        var bin = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../consola/romfs/vecinos.bin"));
+        var output = Run(folder, "vecino", "1", "wol08", bin);
+        Assert.Contains("ahora: wol08", output);
+        var after = HorizonSave.FromFolder(folder);
+        Assert.Empty(after.GetInvalidHashes());
+
+        var villagers = sav.Main.GetVillagers();
+        var v2 = (Villager2)villagers[1];
+        var houses = sav.Main.GetVillagerHouses();
+        var hi = Array.FindIndex(houses, z => z.NPC1 == 1);
+        var rep = NHSE.Villagers.VillagerSwap.GetReplacementVillager(new NHSE.Villagers.VillagerInfo(v2, houses[hi]), "wol08");
+        sav.Main.SetVillagerHouse(new VillagerHouse1(rep.House), hi);
+        villagers[1] = new Villager2(rep.Villager);
+        sav.Main.SetVillagers(villagers);
+        sav.Main.Hash();
+        var expected = sav.Main.Data.ToArray();
+        var actual = after.Main.Data.ToArray();
+        var first = Enumerable.Range(0, expected.Length).FirstOrDefault(i => expected[i] != actual[i], -1);
+        Assert.True(first < 0, $"first difference at 0x{first:X}");
     }
 
     [Fact]

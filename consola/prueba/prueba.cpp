@@ -4,6 +4,7 @@
 //   prueba <carpeta> flores <id,id,...> alterna|azar
 //   prueba <carpeta> hierbas
 //   prueba <carpeta> dinero <monedero> <banco> <millas>
+//   prueba <carpeta> vecino <hueco> <interno> <vecinos.bin>
 #include "../source/core/acnh.hpp"
 #include <cstdio>
 #include <cstdlib>
@@ -64,6 +65,17 @@ int main(int argc, char** argv)
     }
     else if (orden == "hierbas")
         printf("quitadas %d\n", quitarMalasHierbas(main.datos));
+    else if (orden == "vecino")
+    {
+        printf("antes: %s\n", vecinoEn(main.datos, atoi(argv[3])).c_str());
+        std::string mal = cambiarVecino(main.datos, atoi(argv[3]), argv[4], leer(argv[5]));
+        if (!mal.empty())
+        {
+            printf("%s\n", mal.c_str());
+            return 1;
+        }
+        printf("ahora: %s\n", vecinoEn(main.datos, atoi(argv[3])).c_str());
+    }
     else if (orden == "dinero")
     {
         escribirNumero(pers.datos.data() + MONEDERO, strtoul(argv[3], nullptr, 10));

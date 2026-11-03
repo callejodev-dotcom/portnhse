@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -14,6 +15,7 @@
 
 #include "../core/acnh.hpp"
 #include "../core/tablas.hpp"
+#include "../core/vecinos.hpp"
 
 using namespace acnh;
 
@@ -218,6 +220,46 @@ void dibujar(const Boton& b, bool foco)
     texto(b.texto, b.r.x + b.r.w / 2, b.r.y + b.r.h / 2, BLANCO, nullptr, true);
 }
 
+// Nombre en español de un vecino por su nombre interno.
+std::string nombreVecino(const std::string& interno)
+{
+    for (const auto& v : LISTA_VECINOS)
+        if (interno == v.interno)
+            return v.nombre;
+    return interno.empty() ? "(libre)" : interno;
+}
+
+// La letra por la que empieza un nombre, sin tildes (para buscar por letra).
+char inicial(const char* nombre)
+{
+    const unsigned char a = nombre[0], b = nombre[1];
+    if (a == 0xC3)
+    {
+        if (b == 0x81 || b == 0xA1) return 'A';
+        if (b == 0x89 || b == 0xA9) return 'E';
+        if (b == 0x8D || b == 0xAD) return 'I';
+        if (b == 0x93 || b == 0xB3) return 'O';
+        if (b == 0x9A || b == 0xBA) return 'U';
+        if (b == 0x91 || b == 0xB1) return 'N';
+    }
+    return (char)toupper(a);
+}
+
+std::vector<uint8_t> leerRomfs(const char* ruta)
+{
+    std::vector<uint8_t> datos;
+    FILE* f = fopen(ruta, "rb");
+    if (!f)
+        return datos;
+    fseek(f, 0, SEEK_END);
+    datos.resize(ftell(f));
+    fseek(f, 0, SEEK_SET);
+    if (fread(datos.data(), 1, datos.size(), f) != datos.size())
+        datos.clear();
+    fclose(f);
+    return datos;
+}
+
 std::string numero(uint32_t n)
 {
     std::string s = std::to_string(n);
@@ -254,6 +296,7 @@ bool pedirNumero(const char* titulo, uint32_t& valor, uint32_t maximo)
 // ------------------------------------------------------------------------------------------------------------ main
 int main(int, char**)
 {
+    romfsInit();
     plInitialize(PlServiceType_User);
     padConfigureInput(1, HidNpadStyleSet_NpadStandard);
     PadState pad;
@@ -274,7 +317,11 @@ int main(int, char**)
     bool avisoMalo = false;
     bool cambios = false;
 
-    enum Pantalla { Inicio, Dinero, Flores, Salir } pantalla = Inicio;
+    enum Pantalla { Inicio, Dinero, Flores, Vecinos, ElegirVecino, Salir } pantalla = Inicio;
+    const std::vector<uint8_t> vecinosBin = leerRomfs("romfs:/vecinos.bin");
+    int hueco = 0;      // the villager being changed
+    char letra = 'A';   // letter of the list of villagers
+    int primerVecino = 0;
     int foco = 0;
     std::vector<uint16_t> elegidas;
     bool alAzar = false;
@@ -298,11 +345,12 @@ int main(int, char**)
             botones.push_back({{490, 560, 300, 80}, "Salir"});
         else if (pantalla == Inicio)
         {
-            botones.push_back({{100, 220, 520, 110}, "Dinero y millas"});
-            botones.push_back({{660, 220, 520, 110}, "Flores"});
-            botones.push_back({{100, 360, 520, 110}, "Quitar malas hierbas (" + std::to_string(rec.malasHierbas) + ")", false, rec.malasHierbas > 0});
-            botones.push_back({{660, 360, 520, 110}, "Guardar en la partida", false, cambios});
-            botones.push_back({{380, 520, 520, 90}, cambios ? "Salir sin guardar" : "Salir"});
+            botones.push_back({{100, 200, 520, 100}, "Dinero y millas"});
+            botones.push_back({{660, 200, 520, 100}, "Flores"});
+            botones.push_back({{100, 320, 520, 100}, "Quitar malas hierbas (" + std::to_string(rec.malasHierbas) + ")", false, rec.malasHierbas > 0});
+            botones.push_back({{660, 320, 520, 100}, "Guardar en la partida", false, cambios});
+            botones.push_back({{380, 530, 520, 80}, cambios ? "Salir sin guardar" : "Salir"});
+            botones.push_back({{100, 440, 1080, 80}, "Vecinos", false, !vecinosBin.empty()});
         }
         else if (pantalla == Dinero)
         {
@@ -326,6 +374,33 @@ int main(int, char**)
             botones.push_back({{430, 590, 260, 70}, alAzar ? "Mezcla: al azar" : "Mezcla: alternando"});
             botones.push_back({{710, 590, 260, 70}, "Cambiar " + std::to_string(rec.flores), false, !elegidas.empty()});
             botones.push_back({{990, 590, 210, 70}, "Volver"});
+        }
+        else if (pantalla == Vecinos)
+        {
+            for (int i = 0; i < NUM_VECINOS; i++)
+                botones.push_back({{80 + (i / 5) * 570, 150 + (i % 5) * 82, 540, 70}, nombreVecino(vecinoEn(g_main.datos, i)), false, !vecinoEn(g_main.datos, i).empty()});
+            botones.push_back({{440, 590, 400, 80}, "Volver"});
+        }
+        else if (pantalla == ElegirVecino)
+        {
+            // Those of one letter, 3 columns of 6; the letters below.
+            std::vector<int> deLetra;
+            for (int i = 0; i < (int)(sizeof(LISTA_VECINOS) / sizeof(LISTA_VECINOS[0])); i++)
+                if (inicial(LISTA_VECINOS[i].nombre) == letra)
+                    deLetra.push_back(i);
+            for (int k = 0; k < 18 && primerVecino + k < (int)deLetra.size(); k++)
+            {
+                const auto& v = LISTA_VECINOS[deLetra[primerVecino + k]];
+                bool yaEsta = false;
+                for (int j = 0; j < NUM_VECINOS; j++)
+                    yaEsta |= vecinoEn(g_main.datos, j) == v.interno;
+                botones.push_back({{60 + (k / 6) * 390, 150 + (k % 6) * 64, 370, 56}, v.nombre, false, !yaEsta});
+            }
+            for (int l = 0; l < 26; l++)
+                botones.push_back({{40 + l * 46, 545, 42, 50}, std::string(1, (char)('A' + l)), 'A' + l == letra});
+            botones.push_back({{80, 620, 260, 70}, "Anteriores", false, primerVecino > 0});
+            botones.push_back({{360, 620, 260, 70}, "Siguientes", false, primerVecino + 18 < (int)deLetra.size()});
+            botones.push_back({{900, 620, 300, 70}, "Volver"});
         }
         else if (pantalla == Salir)
         {
@@ -357,6 +432,8 @@ int main(int, char**)
                 pantalla = Dinero, foco = 0, aviso.clear();
             else if (pulsado == 1)
                 pantalla = Flores, foco = 0, aviso.clear();
+            else if (pulsado == 5)
+                pantalla = Vecinos, foco = 0, aviso.clear();
             else if (pulsado == 2)
             {
                 int n = quitarMalasHierbas(g_main.datos);
@@ -429,6 +506,40 @@ int main(int, char**)
             else if (pulsado == visibles + 4 || atras)
                 pantalla = Inicio, foco = 1;
         }
+        else if (pantalla == Vecinos)
+        {
+            if (pulsado >= 0 && pulsado < NUM_VECINOS)
+                hueco = pulsado, pantalla = ElegirVecino, primerVecino = 0, foco = 0;
+            else if (pulsado == NUM_VECINOS || atras)
+                pantalla = Inicio, foco = 5;
+        }
+        else if (pantalla == ElegirVecino)
+        {
+            const int nombres = (int)botones.size() - 29; // villager buttons before the 26 letters and 3 buttons
+            if (pulsado >= 0 && pulsado < nombres)
+            {
+                std::vector<int> deLetra;
+                for (int i = 0; i < (int)(sizeof(LISTA_VECINOS) / sizeof(LISTA_VECINOS[0])); i++)
+                    if (inicial(LISTA_VECINOS[i].nombre) == letra)
+                        deLetra.push_back(i);
+                const auto& v = LISTA_VECINOS[deLetra[primerVecino + pulsado]];
+                const std::string antes = nombreVecino(vecinoEn(g_main.datos, hueco));
+                std::string mal = cambiarVecino(g_main.datos, hueco, v.interno, vecinosBin);
+                avisoMalo = !mal.empty();
+                aviso = mal.empty() ? antes + " se va y llega " + v.nombre + ". Falta guardar." : mal;
+                if (mal.empty())
+                    cambios = true;
+                pantalla = Inicio, foco = 3;
+            }
+            else if (pulsado >= nombres && pulsado < nombres + 26)
+                letra = (char)('A' + pulsado - nombres), primerVecino = 0;
+            else if (pulsado == nombres + 26)
+                primerVecino = std::max(0, primerVecino - 18);
+            else if (pulsado == nombres + 27)
+                primerVecino += 18;
+            else if (pulsado == nombres + 28 || atras)
+                pantalla = Vecinos, foco = hueco;
+        }
         else if (pantalla == Salir)
         {
             if (pulsado == 0)
@@ -459,6 +570,10 @@ int main(int, char**)
             texto("Toca un número para cambiarlo.", 100, 140, MARRON);
         else if (pantalla == Flores)
             texto("Elige una o varias flores: todas las de la isla (" + std::to_string(rec.flores) + ") se cambian por esas.", 80, 115, MARRON, nullptr, false, 1120);
+        else if (pantalla == Vecinos)
+            texto("Elige el vecino que se va: el nuevo vivirá en su casa.", 80, 115, MARRON);
+        else if (pantalla == ElegirVecino)
+            texto("¿Quién viene en lugar de " + nombreVecino(vecinoEn(g_main.datos, hueco)) + "? Elige la letra abajo.", 60, 115, MARRON, nullptr, false, 1160);
         else if (pantalla == Salir)
             texto("Hay cambios sin guardar. Si sales ahora, la partida se queda como estaba.", 140, 250, MARRON, g_grande, false, 1000);
         for (size_t i = 0; i < botones.size(); i++)
@@ -477,5 +592,6 @@ int main(int, char**)
     SDL_DestroyWindow(win);
     SDL_Quit();
     plExit();
+    romfsExit();
     return 0;
 }

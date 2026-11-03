@@ -1,5 +1,7 @@
 #include "acnh.hpp"
 #include "tablas.hpp"
+#include "vecinos.hpp"
+#include <zlib.h>
 #include <algorithm>
 #include <cstring>
 
@@ -336,6 +338,59 @@ int quitarMalasHierbas(std::vector<uint8_t>& main)
         n++;
     });
     return n;
+}
+
+// ---------------------------------------------------------------------------------------------------------- vecinos
+std::string vecinoEn(const std::vector<uint8_t>& main, int hueco)
+{
+    const uint8_t* v = main.data() + POS_VECINOS + hueco * TAM_VECINO;
+    const int especies = sizeof(ESPECIES) / sizeof(ESPECIES[0]);
+    if (v[0] >= especies || !strcmp(ESPECIES[v[0]], "non") || !ESPECIES[v[0]][0])
+        return "";
+    char nombre[16];
+    snprintf(nombre, sizeof(nombre), "%s%02d", ESPECIES[v[0]], v[1]);
+    return nombre;
+}
+
+std::string cambiarVecino(std::vector<uint8_t>& main, int hueco, const std::string& interno, const std::vector<uint8_t>& bin)
+{
+    if (hueco < 0 || hueco >= NUM_VECINOS || bin.size() < 8 || memcmp(bin.data(), "VECI", 4))
+        return "Faltan los datos de los vecinos.";
+    int casa = -1;
+    for (int j = 0; j < NUM_VECINOS && casa < 0; j++)
+        if ((int8_t)main[CASAS + j * TAM_CASA + 0x1C4] == hueco)
+            casa = j;
+    if (casa < 0)
+        return "Ese vecino no tiene casa.";
+
+    const uint32_t n = le32(bin.data() + 4);
+    std::vector<uint8_t> nuevo(TAM_VECINO + TAM_CASA);
+    bool hallado = false;
+    for (uint32_t i = 0; i < n && !hallado; i++)
+    {
+        const uint8_t* e = bin.data() + 8 + i * 16;
+        if (strncmp((const char*)e, interno.c_str(), 8) != 0)
+            continue;
+        uLongf tam = nuevo.size();
+        if (uncompress(nuevo.data(), &tam, bin.data() + le32(e + 8), le32(e + 12)) != Z_OK || tam != nuevo.size())
+            return "Los datos de ese vecino están mal.";
+        hallado = true;
+    }
+    if (!hallado)
+        return "No tengo los datos de ese vecino.";
+
+    // Como NHSE (VillagerSwap): el recuerdo del jugador del vecino anterior, salvo su identificador (los primeros
+    // 0x38 bytes), y la casa nueva con quién vive en ella y quién la construyó.
+    uint8_t* v = main.data() + POS_VECINOS + hueco * TAM_VECINO;
+    uint8_t* c = main.data() + CASAS + casa * TAM_CASA;
+    memcpy(nuevo.data() + 4 + 0x38, v + 4 + 0x38, 0x5F0 - 0x38);
+    uint8_t* nc = nuevo.data() + TAM_VECINO;
+    nc[0x1C4] = c[0x1C4];
+    nc[0x1C5] = c[0x1C5];
+    nc[0x1D0] = c[0x1D0];
+    memcpy(v, nuevo.data(), TAM_VECINO);
+    memcpy(c, nc, TAM_CASA);
+    return "";
 }
 
 } // namespace acnh

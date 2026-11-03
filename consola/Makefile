@@ -16,6 +16,7 @@ BUILD		:=	build
 SOURCES		:=	source/app source/core
 DATA		:=	data
 INCLUDES	:=	include
+ROMFS		:=	romfs
 
 APP_TITLE	:=	NHSE
 APP_AUTHOR	:=	NHSE para Mac
@@ -47,6 +48,9 @@ export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
 export APP_ICON := $(LIBNX)/default_icon.jpg
 export NROFLAGS += --icon=$(APP_ICON) --nacp=$(CURDIR)/$(TARGET).nacp
+ifneq ($(ROMFS),)
+	export NROFLAGS += --romfsdir=$(CURDIR)/$(ROMFS)
+endif
 
 .PHONY: $(BUILD) clean all
 
