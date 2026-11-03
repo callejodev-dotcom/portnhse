@@ -23,6 +23,10 @@ internal sealed class FakeConsole : IDisposable
 
     public const int MaxLine = 344 * 32 * 2;
 
+    /// <summary> Most bytes written before waiting for an answer (sys-botbase reads commands slowly). </summary>
+    public int MostQueued { get; private set; }
+    private int Queued;
+
     /// <summary> Commands longer than sys-botbase can take (they would overrun its buffer). </summary>
     public int TooLong { get; private set; }
 
@@ -96,6 +100,8 @@ internal sealed class FakeConsole : IDisposable
         switch (c[0])
         {
             case "getVersion":
+                MostQueued = Math.Max(MostQueued, Queued);
+                Queued = 0;
                 return "2.6";
             case "peek":
                 {
@@ -104,6 +110,7 @@ internal sealed class FakeConsole : IDisposable
                 }
             case "poke":
                 {
+                    Queued += (c[2].Length - 2) / 2;
                     if (IgnorePokes)
                         return null;
                     var (block, at) = Find(Convert.ToUInt32(c[1], 16));

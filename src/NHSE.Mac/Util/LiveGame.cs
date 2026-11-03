@@ -194,12 +194,23 @@ public sealed class LiveGame : IDisposable
             var size = Math.Min(WriteChunk, data.Length - done);
             Send($"poke 0x{address + (uint)done:X8} 0x{Convert.ToHexString(data.Slice(done, size))}");
             done += size;
+            // sys-botbase reads the commands a byte at a time, so a lot of them queued up take longer than the wait for
+            // an answer (three villagers in both copies of the island timed out): wait every so often.
+            Unsynced += size;
+            if (Unsynced >= SyncEvery)
+                Sync();
         }
     }
+
+    /// <summary> Bytes written since the last <see cref="Sync"/>. </summary>
+    private int Unsynced;
+
+    private const int SyncEvery = 0x10000;
 
     /// <summary> sys-botbase answers nothing to a write: asks something small, to know the writes before are all done. </summary>
     private void Sync()
     {
+        Unsynced = 0;
         Send("getVersion");
         ReadLine();
     }
