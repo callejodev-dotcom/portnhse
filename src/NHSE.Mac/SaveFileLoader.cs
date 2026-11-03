@@ -39,8 +39,9 @@ public static class SaveFileLoader
         var ext = Path.GetExtension(path);
         if (ext.Equals(".zip", StringComparison.OrdinalIgnoreCase))
         {
+            // The saves of 3.0 are about 28 MB and hardly compress (JKSV backups of them are that big).
             var length = new FileInfo(path).Length;
-            const int maxSize = 20 * 1024 * 1024;
+            const int maxSize = 256 * 1024 * 1024;
             if (length < maxSize)
             {
                 var sav = HorizonSave.FromZip(path);
