@@ -595,13 +595,19 @@ std::vector<std::function<void()>>& liberadores()
 
 void alFaltarMemoria(std::function<void()> f) { liberadores().push_back(std::move(f)); }
 
+#ifdef __SWITCH__
+#include <malloc.h>
+extern "C" char* fake_heap_start;
+extern "C" char* fake_heap_end;
+#endif
 int memoriaLibre()
 {
 #ifdef __SWITCH__
-    u64 usada = 0, total = 0;
-    svcGetInfo(&usada, InfoType_UsedMemorySize, CUR_PROCESS_HANDLE, 0);
-    svcGetInfo(&total, InfoType_TotalMemorySize, CUR_PROCESS_HANDLE, 0);
-    return (int)((total - usada) >> 20);
+    // La app se queda con toda su memoria al empezar (el montón de malloc), así que lo que cuenta es lo libre del
+    // montón: su tamaño menos lo que está en uso.
+    const struct mallinfo m = mallinfo();
+    const size_t monton = (size_t)(fake_heap_end - fake_heap_start);
+    return (int)((monton - std::min(monton, (size_t)m.uordblks)) >> 20);
 #else
     return 4096;
 #endif
@@ -1124,10 +1130,7 @@ void bucle(Pantalla inicio)
             if (v.titulo != ultima)
             {
 #ifdef __SWITCH__
-                u64 usada = 0, total = 0;
-                svcGetInfo(&usada, InfoType_UsedMemorySize, CUR_PROCESS_HANDLE, 0);
-                svcGetInfo(&total, InfoType_TotalMemorySize, CUR_PROCESS_HANDLE, 0);
-                registro::apuntar("pantalla: %s (memoria %lu de %lu MB)", v.titulo.c_str(), (unsigned long)(usada >> 20), (unsigned long)(total >> 20));
+                registro::apuntar("pantalla: %s (%d MB libres)", v.titulo.c_str(), memoriaLibre());
 #else
                 registro::apuntar("pantalla: %s", v.titulo.c_str());
 #endif

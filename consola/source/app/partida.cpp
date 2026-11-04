@@ -2,6 +2,7 @@
 #include "registro.hpp"
 #include <algorithm>
 #include <cstdio>
+#include <cerrno>
 #include <ctime>
 #include <dirent.h>
 #include <map>
@@ -70,39 +71,100 @@ void mkdirs(const std::string& ruta)
         mkdir(ruta.substr(0, i).c_str(), 0777);
 }
 
+// Copia un archivo de la partida a la SD. Si falta y se puede saltar (callar), no es un error.
+bool copiarArchivo(const std::string& ruta, const std::string& destino, bool callar = false, bool* estaba = nullptr)
+{
+    std::vector<uint8_t> datos;
+    if (estaba)
+        *estaba = false;
+    if (!leer(ruta.c_str(), datos, callar))
+        return callar;
+    if (estaba)
+        *estaba = true;
+    mkdirs(destino);
+    FILE* f = fopen(destino.c_str(), "wb");
+    if (!f)
+    {
+        registro::apuntar("no se crea %s en la SD (errno %d)", destino.c_str(), errno);
+        return false;
+    }
+    const bool ok = fwrite(datos.data(), 1, datos.size(), f) == datos.size();
+    if (fclose(f) != 0 || !ok)
+    {
+        registro::apuntar("no se escribe %s en la SD (errno %d, la SD puede estar llena)", destino.c_str(), errno);
+        return false;
+    }
+    return true;
+}
+
 // Copia todo lo que hay en una carpeta de la partida a la SD.
 bool copiarCarpeta(const std::string& dentro, const std::string& sd)
 {
     FsDir dir;
-    if (R_FAILED(fsFsOpenDirectory(&g_fs, dentro.c_str(), FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir)))
+    if (Result rc = fsFsOpenDirectory(&g_fs, dentro.c_str(), FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir); R_FAILED(rc))
+    {
+        registro::apuntar("no se abre la carpeta %s de la partida (error 0x%x)", dentro.c_str(), rc);
         return false;
+    }
     std::vector<FsDirectoryEntry> entradas(64);
     bool ok = true;
+    int cuantos = 0;
     while (ok)
     {
         s64 n = 0;
-        if (R_FAILED(fsDirRead(&dir, &n, entradas.size(), entradas.data())) || n == 0)
+        if (Result rc = fsDirRead(&dir, &n, entradas.size(), entradas.data()); R_FAILED(rc))
+        {
+            registro::apuntar("no se lee la carpeta %s de la partida (error 0x%x)", dentro.c_str(), rc);
+            ok = false;
             break;
-        for (s64 i = 0; i < n && ok; i++)
+        }
+        if (n == 0)
+            break;
+        for (s64 i = 0; i < n && ok; i++, cuantos++)
         {
             std::string nombre = entradas[i].name;
             std::string ruta = dentro + (dentro == "/" ? "" : "/") + nombre;
-            if (entradas[i].type == FsDirEntryType_Dir)
-                ok = copiarCarpeta(ruta, sd + nombre + "/");
-            else
-            {
-                std::vector<uint8_t> datos;
-                std::string destino = sd + nombre;
-                mkdirs(destino);
-                FILE* f = leer(ruta.c_str(), datos) ? fopen(destino.c_str(), "wb") : nullptr;
-                ok = f && fwrite(datos.data(), 1, datos.size(), f) == datos.size();
-                if (f)
-                    fclose(f);
-            }
+            ok = entradas[i].type == FsDirEntryType_Dir ? copiarCarpeta(ruta, sd + nombre + "/") : copiarArchivo(ruta, sd + nombre);
         }
     }
     fsDirClose(&dir);
+    if (ok && dentro == "/" && cuantos == 0)
+    {
+        registro::apuntar("la carpeta de la partida sale vacía");
+        return false;
+    }
     return ok;
+}
+
+// Si no se puede mirar qué hay en la partida, se copian los archivos que tiene (los que lee NHSE). Los que no estén se
+// saltan; main.dat y los de cada jugador tienen que estar.
+bool copiarConocidos(const std::string& sd)
+{
+    static const char* RAIZ[] = {"main", "landname", "wherearen"};
+    static const char* JUGADOR[] = {"personal", "photo_studio_island", "postbox", "profile"};
+    for (const char* n : RAIZ)
+        for (const char* fin : {".dat", "Header.dat"})
+        {
+            const std::string a = std::string("/") + n + fin;
+            if (!copiarArchivo(a, sd + a.substr(1), std::string(n) != "main"))
+                return false;
+        }
+    for (int i = 0; i < 8; i++)
+    {
+        const std::string c = "/Villager" + std::to_string(i);
+        bool hay = false;
+        if (!copiarArchivo(c + "/personal.dat", sd + c.substr(1) + "/personal.dat", true, &hay))
+            return false;
+        if (!hay)
+            continue;
+        for (const char* n : JUGADOR)
+            for (const char* fin : {".dat", "Header.dat"})
+                if (std::string(n) != "personal" || std::string(fin) != ".dat")
+                    if (!copiarArchivo(c + "/" + n + fin, sd + c.substr(1) + "/" + n + fin, std::string(n) != "personal"))
+                        return false;
+    }
+    registro::apuntar("copia hecha archivo a archivo");
+    return true;
 }
 
 // Prepara un archivo para escribirlo: comprobaciones al día y cifrado. Devuelve los datos sin cifrar que se guardan.
@@ -223,7 +285,7 @@ std::string abrir()
     strftime(fecha, sizeof(fecha), "%Y-%m-%d %H.%M.%S", localtime(&t));
     copia = std::string(CARPETA) + "copias/" + fecha + "/";
     registro::apuntar("copia de seguridad en %s", copia.c_str());
-    if (!copiarCarpeta("/", copia))
+    if (!copiarCarpeta("/", copia) && !copiarConocidos(copia))
         return "No he podido hacer la copia de seguridad en la SD: no toco nada.";
     return "";
 }
