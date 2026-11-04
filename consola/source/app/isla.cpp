@@ -100,8 +100,8 @@ void elegirFruta(bool hermana)
     int marcada = 5;
     for (int i = 0; i < 5; i++)
     {
-        op.push_back(FRUTAS[i].nombre);
-        if (FRUTAS[i].id == actual)
+        op.push_back(FRUTAS_ISLA[i].nombre);
+        if (FRUTAS_ISLA[i].id == actual)
             marcada = i;
     }
     op.push_back(marcada == 5 ? "Otra: objeto " + std::to_string(actual) + "…" : std::string("Otra (por su número de objeto)…"));
@@ -109,7 +109,7 @@ void elegirFruta(bool hermana)
         hermana ? "La de las islas misteriosas (billete Nook) y la que te manda tu madre."
                 : "La que tenían los árboles cuando llegaste. También sale en el pasaporte.",
         op, marcada, [hermana, actual](int i) {
-            uint32_t id = i < 5 ? FRUTAS[i].id : actual;
+            uint32_t id = i < 5 ? FRUTAS_ISLA[i].id : actual;
             if (i == 5 && !pedirNumero("Número de objeto de la fruta", id, 65534))
                 return;
             guardarFrutas([hermana, id](FrutasFlores& f) { (hermana ? f.frutaHermana : f.fruta) = (uint16_t)id; },
@@ -262,7 +262,7 @@ void camping(Vista& v)
     for (int i = 0; i < NUM_VECINOS && !quien.empty(); i++)
         vive = vive || vecinoEn(m, i) == quien;
     const std::string nombre = quien.empty() ? std::string("Nadie") : nombreVecino(quien);
-    const Fecha f = fechaCamping(m);
+    const FechaIsla f = fechaCamping(m);
     v.dibujo = [nombre, quien, vive] {
         texto(nombre, 60, 150, MARRON, g_grande);
         texto(quien.empty() ? "No hay nadie en la zona de acampada." : "Está en la zona de acampada.", 60, 205, MARRON_SUAVE, g_pequena);
@@ -272,7 +272,7 @@ void camping(Vista& v)
     v.b.push_back({{60, 280, 570, 80}, "Elegir campista…", [quien] {
         abrir(elegirVecino("Elegir campista", quien, [](const std::string& interno) {
             // Como NHSE para Mac: al elegir a alguien, la visita es hoy.
-            guardarCamping(partida::principal(), interno, hoy());
+            guardarCamping(partida::principal(), interno, hoyIsla());
             cambiaMain(nombreVecino(interno) + " está acampando");
         }));
     }});
@@ -282,10 +282,10 @@ void camping(Vista& v)
     }, !quien.empty()});
     if (!quien.empty())
     {
-        v.b.push_back({{60, 400, 570, 80}, "Día de la visita: " + (f.vacia() ? std::string("sin fecha") : textoFecha(f)), [quien] {
-            Fecha n = fechaCamping(partida::principal());
+        v.b.push_back({{60, 400, 570, 80}, "Día de la visita: " + (f.vacia() ? std::string("sin fecha") : textoFechaIsla(f)), [quien] {
+            FechaIsla n = fechaCamping(partida::principal());
             if (n.vacia())
-                n = hoy();
+                n = hoyIsla();
             uint32_t d = n.dia, mes = n.mes, a = n.anio;
             if (!pedirNumero("Día de la visita (1-31)", d, 31, 1) || !pedirNumero("Mes de la visita (1-12)", mes, 12, 1) ||
                 !pedirNumero("Año de la visita", a, 2099, 2000))
@@ -294,7 +294,7 @@ void camping(Vista& v)
             cambiaMain();
         }});
         v.b.push_back({{650, 400, 570, 80}, "Poner la visita hoy", [quien] {
-            guardarCamping(partida::principal(), quien, hoy());
+            guardarCamping(partida::principal(), quien, hoyIsla());
             cambiaMain("La visita es hoy");
         }});
         v.dibujo = [d = v.dibujo] {

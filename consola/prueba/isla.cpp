@@ -12,11 +12,11 @@ namespace {
 int num(const Contexto& c, size_t i) { return (int)strtol(c.arg(i).c_str(), nullptr, 0); }
 
 // «2026-05-03»
-Fecha fecha(const std::string& s)
+FechaIsla fecha(const std::string& s)
 {
-    Fecha f;
+    FechaIsla f;
     if (sscanf(s.c_str(), "%d-%d-%d", &f.anio, &f.mes, &f.dia) != 3)
-        return hoy();
+        return hoyIsla();
     return f;
 }
 
@@ -25,7 +25,7 @@ OrdenPrueba estado("isla-estado", [](Contexto& c) {
     const FrutasFlores f = leerFrutasFlores(m, c.pers());
     printf("hemisferio %d, aeropuerto %d\n", hemisferio(m), aeropuerto(m));
     printf("fruta %d %d, flor %d %d\n", f.fruta, f.frutaHermana, f.flor, f.florHermana);
-    printf("camping %d %s %s\n", estadoCamping(m), campista(m).c_str(), textoFecha(fechaCamping(m)).c_str());
+    printf("camping %d %s %s\n", estadoCamping(m), campista(m).c_str(), textoFechaIsla(fechaCamping(m)).c_str());
     for (int d = 0; d < 7; d++)
         printf("dia %d: %s%s%s\n", d, VISITANTES[visitante(m, d)], concierto(m, d, false) ? " +concierto" : "", concierto(m, d, true) ? " +cumple" : "");
     printf("nabos: %s, pico %u\n", TENDENCIAS[tendenciaNabos(m) % 4], picoNabos(m));
@@ -34,7 +34,7 @@ OrdenPrueba estado("isla-estado", [](Contexto& c) {
         n += d.donada();
     printf("museo %d de %d\n", n, NUM_PIEZAS);
     for (auto& t : notas(m))
-        printf("nota %d (%s, %s%s): %s\n", t.hueco, textoFecha(t.fecha).c_str(), t.autor.c_str(), t.aMano ? ", a mano" : "", t.texto.c_str());
+        printf("nota %d (%s, %s%s): %s\n", t.hueco, textoFechaIsla(t.fecha).c_str(), t.autor.c_str(), t.aMano ? ", a mano" : "", t.texto.c_str());
     c.guardar = false;
     return 0;
 });
@@ -66,7 +66,7 @@ OrdenPrueba frutas("isla-frutas", [](Contexto& c) {
 // isla-camping <interno|nadie> [aaaa-mm-dd]
 OrdenPrueba camping("isla-camping", [](Contexto& c) {
     const std::string quien = c.arg(0) == "nadie" ? "" : c.arg(0);
-    if (!guardarCamping(c.main.datos, quien, c.args.size() > 1 ? fecha(c.arg(1)) : hoy()))
+    if (!guardarCamping(c.main.datos, quien, c.args.size() > 1 ? fecha(c.arg(1)) : hoyIsla()))
     {
         printf("no se puede\n");
         return 1;
@@ -104,7 +104,7 @@ OrdenPrueba museoLista("isla-museo-lista", [](Contexto& c) {
 
 // isla-donar <objeto> <jugador> [aaaa-mm-dd]
 OrdenPrueba don("isla-donar", [](Contexto& c) {
-    printf("donado %d\n", donar(c.main.datos, (uint16_t)num(c, 0), num(c, 1), c.args.size() > 2 ? fecha(c.arg(2)) : hoy()));
+    printf("donado %d\n", donar(c.main.datos, (uint16_t)num(c, 0), num(c, 1), c.args.size() > 2 ? fecha(c.arg(2)) : hoyIsla()));
     return 0;
 });
 
@@ -119,7 +119,7 @@ OrdenPrueba donSala("isla-donar-sala", [](Contexto& c) {
     const bool todo = c.arg(0) == "todo";
     const int sala = todo ? 0 : num(c, 0);
     int n = 0;
-    const Fecha f = hoy();
+    const FechaIsla f = hoyIsla();
     for (int i = todo ? 0 : INICIO_SALAS[sala]; i < (todo ? NUM_PIEZAS : INICIO_SALAS[sala + 1]); i++)
         n += donar(c.main.datos, PIEZAS_MUSEO[i].id, num(c, 1), f);
     printf("donadas %d\n", n);

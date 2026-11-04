@@ -95,8 +95,8 @@ public sealed class IslaTablas : ITabla
         // Frutas, en el orden de las banderas de fruta (FruitsFlowersWindow.FruitOrder).
         ushort[] frutas = [2213, 2214, 2285, 2286, 2287];
         sb.AppendLine("// Las cinco frutas, en el orden de las banderas de fruta.");
-        sb.AppendLine("struct FrutaConNombre { uint16_t id; const char* nombre; };");
-        sb.AppendLine($"constexpr FrutaConNombre FRUTAS[] = {{{string.Join(", ", frutas.Select(z => $"{{{z}, {Comun.C(NombreObjeto(z))}}}"))}}};");
+        sb.AppendLine("struct FrutaIsla { uint16_t id; const char* nombre; };");
+        sb.AppendLine($"constexpr FrutaIsla FRUTAS_ISLA[] = {{{string.Join(", ", frutas.Select(z => $"{{{z}, {Comun.C(NombreObjeto(z))}}}"))}}};");
         sb.AppendLine();
 
         // Visitantes especiales.

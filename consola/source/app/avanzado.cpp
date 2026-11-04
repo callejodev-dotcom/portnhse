@@ -546,6 +546,20 @@ void cargarDe(const std::string& carpeta)
             else
                 anadir(mal, "personal.dat de " + partida::jugadores[j].nombre);
         }
+        // Los demás archivos de cada jugador (buzón, foto, perfil, wherearen), si están y tienen su tamaño.
+        for (int j = 0; j < (int)partida::jugadores.size(); j++)
+            for (const char* a : ARCHIVOS_JUGADOR)
+            {
+                const std::string archivo = a;
+                if (archivo == "personal.dat" || !partida::leerSd(orig + carpetaJugador(j) + "/" + archivo, leido))
+                    continue;
+                const std::string ruta = partida::jugadores[j].carpeta + "/" + archivo;
+                acnh::Archivo* o = partida::otro(ruta);
+                if (o && cargarDescifrado(o->datos, leido))
+                    partida::cambiaOtro(ruta), anadir(cargado, archivo + " de " + partida::jugadores[j].nombre);
+                else
+                    anadir(mal, archivo + " de " + partida::jugadores[j].nombre);
+            }
         if (!partida::jugadores.empty())
             partida::isla = nombreIsla(partida::personal(0));
         if (cargado.empty())
@@ -563,7 +577,7 @@ void importar()
         avisar("No hay ninguna partida descifrada en /switch/NHSE/descifrada/.", true);
         return;
     }
-    elegir("Importar descifrada", "Elige la carpeta (de /switch/NHSE/descifrada/). Se cargan main.dat y el personal.dat de cada jugador.",
+    elegir("Importar descifrada", "Elige la carpeta (de /switch/NHSE/descifrada/). Se cargan main.dat y los archivos de cada jugador.",
         carpetas, -1, [carpetas](int i) {
             const std::string c = carpetas[i];
             confirmar("Importar descifrada", "¿Cambiar la partida por la de «" + c + "»? No se escribe en la consola hasta que pulses «Guardar».",

@@ -154,7 +154,8 @@ void dibujar(const Boton& b, bool foco)
         return;
     }
     const int margen = std::min(24, w0 / 8);
-    TTF_Font* f = b.r.h < 40 ? g_pequena : g_fuente;
+    // Small letters if the button is low or the text does not fit with the normal ones.
+    TTF_Font* f = b.r.h < 40 || anchoTexto(b.texto) > w0 - margen ? g_pequena : g_fuente;
     if (b.detalle.empty())
         texto(encajar(b.texto, w0 - margen, f), x0 + w0 / 2, b.r.y + b.r.h / 2, letra, f, Centro);
     else

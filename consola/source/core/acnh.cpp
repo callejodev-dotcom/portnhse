@@ -174,6 +174,9 @@ const Region REGIONES_MAIN[] = {
 };
 const Region REGIONES_PERSONAL[] = {{0x00110, 0x37acc}, {0x37be0, 0x3ce5c}};
 const Region REGIONES_BUZON[] = {{0x100, 0x4732c}};
+const Region REGIONES_FOTO[] = {{0x100, 0x2f54c}};      // photo_studio_island.dat
+const Region REGIONES_PERFIL[] = {{0x100, 0x6945c}};    // profile.dat
+const Region REGIONES_DONDE[] = {{0x100, 0xB8A3DC}};    // wherearen.dat
 
 uint32_t murmur3(const uint8_t* data, size_t len)
 {
@@ -204,6 +207,12 @@ bool regiones(size_t tam, const Region*& r, size_t& n)
         r = REGIONES_PERSONAL, n = sizeof(REGIONES_PERSONAL) / sizeof(Region);
     else if (tam == TAM_BUZON)
         r = REGIONES_BUZON, n = 1;
+    else if (tam == TAM_FOTO)
+        r = REGIONES_FOTO, n = 1;
+    else if (tam == TAM_PERFIL)
+        r = REGIONES_PERFIL, n = 1;
+    else if (tam == TAM_DONDE)
+        r = REGIONES_DONDE, n = 1;
     else
         return false;
     return true;

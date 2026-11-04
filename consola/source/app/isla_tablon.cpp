@@ -47,7 +47,7 @@ bool leerNota(int hueco, Nota& n)
     return false;
 }
 
-std::string titulo(const Nota& n) { return n.autor + (n.fecha.vacia() ? "" : " · " + textoFecha(n.fecha)); }
+std::string titulo(const Nota& n) { return n.autor + (n.fecha.vacia() ? "" : " · " + textoFechaIsla(n.fecha)); }
 
 void guardarLineas(int hueco, const std::vector<std::string>& v, const std::string& que)
 {
@@ -152,7 +152,7 @@ std::string resumen()
     const auto v = notas(partida::principal());
     if (v.empty())
         return "Sin notas";
-    return std::to_string(v.size()) + " notas · la última del " + textoFecha(v[0].fecha);
+    return std::to_string(v.size()) + " notas · la última del " + textoFechaIsla(v[0].fecha);
 }
 
 Registro r({SeccionIsla, 80, [] { return std::string("Tablón de anuncios"); }, resumen, [] { abrir(tablon()); }});

@@ -347,8 +347,8 @@ constexpr PiezaMuseo PIEZAS_MUSEO[] = {
 constexpr int INICIO_SALAS[] = {0, 80, 160, 200, 273, 316};
 
 // Las cinco frutas, en el orden de las banderas de fruta.
-struct FrutaConNombre { uint16_t id; const char* nombre; };
-constexpr FrutaConNombre FRUTAS[] = {{2213, "Manzana"}, {2214, "Naranja"}, {2285, "Pera"}, {2286, "Melocotón"}, {2287, "Cereza"}};
+struct FrutaIsla { uint16_t id; const char* nombre; };
+constexpr FrutaIsla FRUTAS_ISLA[] = {{2213, "Manzana"}, {2214, "Naranja"}, {2285, "Pera"}, {2286, "Melocotón"}, {2287, "Cereza"}};
 
 // Los visitantes especiales por su número en la partida (0 = nadie).
 constexpr const char* VISITANTES[] = {"Nadie", "Gulliver", "Tili", "Alcatifa", "Buh", "Pili", "CJ", "Kamilo", "Betunio", "Gandulio", "Ladino", "Gullivarrr"};

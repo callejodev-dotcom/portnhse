@@ -10,13 +10,13 @@
 namespace acnh {
 
 // Una fecha de la partida (año, mes, día); todo 0 = sin fecha.
-struct Fecha {
+struct FechaIsla {
     int anio = 0, mes = 0, dia = 0;
     bool vacia() const { return anio == 0 && mes == 0 && dia == 0; }
 };
-Fecha hoy();
+FechaIsla hoyIsla();
 // «3 may 2026»; vacío si no hay fecha.
-std::string textoFecha(const Fecha& f);
+std::string textoFechaIsla(const FechaIsla& f);
 
 // ---------------------------------------------------------------------------------------- hemisferio y aeródromo
 constexpr int NUM_AEROPUERTOS = 4;
@@ -45,9 +45,9 @@ std::string nombreFruta(uint16_t id); // «Pera», o «Objeto 1234» si no es un
 int estadoCamping(const std::vector<uint8_t>& main);
 inline bool hayCamping(const std::vector<uint8_t>& main) { const int e = estadoCamping(main); return e == 2 || e == 3; }
 std::string campista(const std::vector<uint8_t>& main); // nombre interno («cat01»), o vacío si no hay nadie
-Fecha fechaCamping(const std::vector<uint8_t>& main);
+FechaIsla fechaCamping(const std::vector<uint8_t>& main);
 // Pone a alguien (nombre interno) en la zona de acampada ese día, o a nadie (""). No hace nada si no hay zona.
-bool guardarCamping(std::vector<uint8_t>& main, const std::string& interno, const Fecha& dia);
+bool guardarCamping(std::vector<uint8_t>& main, const std::string& interno, const FechaIsla& dia);
 
 // ---------------------------------------------------------------------------------------------------- visitantes
 // Los días van como en el juego: 0 domingo, 1 lunes... 6 sábado. Los visitantes, como VISITANTES (0 = nadie).
@@ -75,7 +75,7 @@ constexpr int HUECOS_MUSEO = 1024;
 // Una donación: en qué hueco de la lista del museo está, cuándo y quién (número de jugador, 255 = nadie).
 struct Donacion {
     int hueco = -1;
-    Fecha fecha;
+    FechaIsla fecha;
     int jugador = 255;
     bool donada() const { return hueco >= 0; }
 };
@@ -83,7 +83,7 @@ struct Donacion {
 std::vector<Donacion> donaciones(const std::vector<uint8_t>& main);
 // Dona una pieza (objeto) ese día a nombre de ese jugador, en el primer hueco libre, como MuseumWindow. Devuelve
 // false si ya estaba o no hay sitio.
-bool donar(std::vector<uint8_t>& main, uint16_t id, int jugador, const Fecha& dia);
+bool donar(std::vector<uint8_t>& main, uint16_t id, int jugador, const FechaIsla& dia);
 // La quita del museo: las donaciones que van detrás suben un hueco, como las guarda el juego.
 bool retirar(std::vector<uint8_t>& main, uint16_t id);
 
@@ -93,7 +93,7 @@ constexpr int LARGO_NOTA = 239;  // letras del texto
 constexpr int LARGO_FIRMA = 47;
 struct Nota {
     int hueco = 0;
-    Fecha fecha;
+    FechaIsla fecha;
     std::string texto, firma, autor; // autor: la firma, el jugador o «Servicios a residentes»
     bool aMano = false;              // escrita a mano: solo se ve en el juego
     uint16_t dibujo = 0;             // 1 cumpleaños, 2 pesca, 3 bichos...

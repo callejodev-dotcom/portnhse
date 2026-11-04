@@ -34,7 +34,7 @@ std::string detalle(const Donacion& d)
     const std::string quien = nombreJugador(d.jugador);
     if (d.fecha.vacia())
         return quien.empty() ? "Donado" : "Donado por " + quien;
-    return "Donado el " + textoFecha(d.fecha) + (quien.empty() ? "" : " por " + quien);
+    return "Donado el " + textoFechaIsla(d.fecha) + (quien.empty() ? "" : " por " + quien);
 }
 
 // Dona (hoy, a nombre del jugador que se edita) o retira una pieza.
@@ -42,7 +42,7 @@ void marcar(int i, bool si)
 {
     auto& m = partida::principal();
     const auto& p = PIEZAS_MUSEO[i];
-    const bool hecho = si ? donar(m, p.id, partida::yo, hoy()) : retirar(m, p.id);
+    const bool hecho = si ? donar(m, p.id, partida::yo, hoyIsla()) : retirar(m, p.id);
     if (!hecho)
     {
         avisar(si ? "No queda sitio en el museo" : "No estaba en el museo", true);
@@ -56,7 +56,7 @@ void marcar(int i, bool si)
 int donarTodas(int desde, int hasta)
 {
     const auto d = donadas();
-    const Fecha f = hoy();
+    const FechaIsla f = hoyIsla();
     int n = 0;
     for (int i = desde; i < hasta; i++)
         if (!d[i].donada())

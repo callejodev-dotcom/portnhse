@@ -16,8 +16,8 @@ void pon16(uint8_t* p, uint16_t v) { p[0] = (uint8_t)v; p[1] = (uint8_t)(v >> 8)
 void pon32(uint8_t* p, uint32_t v) { for (int i = 0; i < 4; i++) p[i] = (uint8_t)(v >> (8 * i)); }
 
 // GSaveDate: año (2 bytes), mes, día.
-Fecha leerFecha(const uint8_t* p) { return {le16(p), p[2], p[3]}; }
-void ponerFecha(uint8_t* p, const Fecha& f)
+FechaIsla leerFecha(const uint8_t* p) { return {le16(p), p[2], p[3]}; }
+void ponerFecha(uint8_t* p, const FechaIsla& f)
 {
     pon16(p, (uint16_t)f.anio);
     p[2] = (uint8_t)f.mes;
@@ -89,24 +89,24 @@ void ponerUtf16(uint8_t* p, int tam, const std::string& s)
         pon16(p + i * 2, u[i]);
 }
 
-const char* const MESES[] = {"ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sept", "oct", "nov", "dic"};
+const char* const MESES_CORTOS[] = {"ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sept", "oct", "nov", "dic"};
 
 } // namespace
 
-Fecha hoy()
+FechaIsla hoyIsla()
 {
     const time_t t = time(nullptr);
     const tm* l = localtime(&t);
     return {l->tm_year + 1900, l->tm_mon + 1, l->tm_mday};
 }
 
-std::string textoFecha(const Fecha& f)
+std::string textoFechaIsla(const FechaIsla& f)
 {
     if (f.vacia())
         return "";
     if (f.mes < 1 || f.mes > 12)
         return std::to_string(f.dia) + "/" + std::to_string(f.mes) + "/" + std::to_string(f.anio);
-    return std::to_string(f.dia) + " " + MESES[f.mes - 1] + " " + std::to_string(f.anio);
+    return std::to_string(f.dia) + " " + MESES_CORTOS[f.mes - 1] + " " + std::to_string(f.anio);
 }
 
 // ---------------------------------------------------------------------------------------- hemisferio y aeródromo
@@ -124,7 +124,7 @@ namespace {
 int indiceFruta(uint16_t id)
 {
     for (int i = 0; i < 5; i++)
-        if (FRUTAS[i].id == id)
+        if (FRUTAS_ISLA[i].id == id)
             return i;
     return -1;
 }
@@ -133,7 +133,7 @@ int indiceFruta(uint16_t id)
 std::string nombreFruta(uint16_t id)
 {
     const int i = indiceFruta(id);
-    return i >= 0 ? FRUTAS[i].nombre : "Objeto " + std::to_string(id);
+    return i >= 0 ? FRUTAS_ISLA[i].nombre : "Objeto " + std::to_string(id);
 }
 
 FrutasFlores leerFrutasFlores(const std::vector<uint8_t>& m, const std::vector<uint8_t>& yo)
@@ -187,9 +187,9 @@ std::string campista(const std::vector<uint8_t>& m)
     return s;
 }
 
-Fecha fechaCamping(const std::vector<uint8_t>& m) { return leerFecha(m.data() + ISLA_CAMPING_FECHA); }
+FechaIsla fechaCamping(const std::vector<uint8_t>& m) { return leerFecha(m.data() + ISLA_CAMPING_FECHA); }
 
-bool guardarCamping(std::vector<uint8_t>& m, const std::string& interno, const Fecha& dia)
+bool guardarCamping(std::vector<uint8_t>& m, const std::string& interno, const FechaIsla& dia)
 {
     if (!hayCamping(m))
         return false;
@@ -302,7 +302,7 @@ std::vector<Donacion> donaciones(const std::vector<uint8_t>& m)
     return r;
 }
 
-bool donar(std::vector<uint8_t>& m, uint16_t id, int jugador, const Fecha& dia)
+bool donar(std::vector<uint8_t>& m, uint16_t id, int jugador, const FechaIsla& dia)
 {
     int libre = -1;
     for (int h = 0; h < HUECOS_MUSEO; h++)
@@ -381,7 +381,7 @@ std::vector<Nota> notas(const std::vector<uint8_t>& m)
         v.push_back({n, numero});
     }
     // De la más nueva a la más vieja; con la misma fecha, la de número mayor primero.
-    auto clave = [](const Fecha& f) { return f.vacia() ? -1 : f.anio * 10000 + f.mes * 100 + f.dia; };
+    auto clave = [](const FechaIsla& f) { return f.vacia() ? -1 : f.anio * 10000 + f.mes * 100 + f.dia; };
     std::stable_sort(v.begin(), v.end(), [&](const Con& a, const Con& b) {
         if (clave(a.n.fecha) != clave(b.n.fecha))
             return clave(a.n.fecha) > clave(b.n.fecha);

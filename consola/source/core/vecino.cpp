@@ -58,7 +58,7 @@ void reemplazar(std::vector<uint8_t>& d, const std::vector<uint8_t>& antes, cons
 uint8_t* datosVecino(std::vector<uint8_t>& main, int hueco) { return main.data() + POS_VECINOS + hueco * TAM_VECINO; }
 const uint8_t* datosVecino(const std::vector<uint8_t>& main, int hueco) { return main.data() + POS_VECINOS + hueco * TAM_VECINO; }
 
-std::string leerTexto(const uint8_t* p, int largo)
+std::string leerTextoVecino(const uint8_t* p, int largo)
 {
     std::string s;
     for (int i = 0; i < largo; i++)
@@ -84,7 +84,7 @@ std::string leerTexto(const uint8_t* p, int largo)
     return s;
 }
 
-void escribirTexto(uint8_t* p, const std::string& texto, int largo)
+void escribirTextoVecino(uint8_t* p, const std::string& texto, int largo)
 {
     // De UTF-8 a UTF-16; como NHSE, se corta a «largo» unidades y se rellena con ceros.
     std::vector<uint16_t> u;
@@ -123,8 +123,8 @@ const char* const PERSONALIDADES[8] = {"Perezoso", "Deportista", "Gruñón", "Pr
 
 int personalidad(const std::vector<uint8_t>& main, int hueco) { return datosVecino(main, hueco)[V_PERSONALIDAD]; }
 void ponerPersonalidad(std::vector<uint8_t>& main, int hueco, int p) { datosVecino(main, hueco)[V_PERSONALIDAD] = (uint8_t)p; }
-std::string frase(const std::vector<uint8_t>& main, int hueco) { return leerTexto(datosVecino(main, hueco) + V_FRASE, LARGO_FRASE); }
-void ponerFrase(std::vector<uint8_t>& main, int hueco, const std::string& texto) { escribirTexto(datosVecino(main, hueco) + V_FRASE, texto, LARGO_FRASE); }
+std::string frase(const std::vector<uint8_t>& main, int hueco) { return leerTextoVecino(datosVecino(main, hueco) + V_FRASE, LARGO_FRASE); }
+void ponerFrase(std::vector<uint8_t>& main, int hueco, const std::string& texto) { escribirTextoVecino(datosVecino(main, hueco) + V_FRASE, texto, LARGO_FRASE); }
 
 std::string fraseOriginal(const std::string& interno)
 {
@@ -157,9 +157,9 @@ Recuerdo recuerdo(const std::vector<uint8_t>& main, int hueco, int r)
 {
     const uint8_t* m = recuerdoPtr(main, hueco, r);
     Recuerdo x;
-    x.isla = leerTexto(m + 4, 10);
-    x.jugador = leerTexto(m + 0x20, 10);
-    x.apodo = leerTexto(m + 0x138, 10);
+    x.isla = leerTextoVecino(m + 4, 10);
+    x.jugador = leerTextoVecino(m + 0x20, 10);
+    x.apodo = leerTextoVecino(m + 0x138, 10);
     x.amistad = m[0x38 + 10];
     return x;
 }
@@ -180,7 +180,7 @@ bool recuerdoUsado(const std::vector<uint8_t>& main, int hueco, int r)
 }
 
 void ponerAmistad(std::vector<uint8_t>& main, int hueco, int r, uint8_t puntos) { recuerdoPtr(main, hueco, r)[0x38 + 10] = puntos; }
-void ponerApodo(std::vector<uint8_t>& main, int hueco, int r, const std::string& apodo) { escribirTexto(recuerdoPtr(main, hueco, r) + 0x138, apodo, 10); }
+void ponerApodo(std::vector<uint8_t>& main, int hueco, int r, const std::string& apodo) { escribirTextoVecino(recuerdoPtr(main, hueco, r) + 0x138, apodo, 10); }
 
 bool mismaIsla(const std::vector<uint8_t>& main, int hueco, int r, const std::vector<uint8_t>& personal)
 {
@@ -294,7 +294,7 @@ bool deOtraIsla(const std::vector<uint8_t>& v, const std::vector<uint8_t>& perso
         || memcmp(v.data() + V_RECUERDOS + ID_JUGADOR_EN, personal.data() + ID_JUGADOR + ID_JUGADOR_EN, TAM_IDENTIDAD) != 0;
 }
 
-std::string islaDe(const std::vector<uint8_t>& v) { return leerTexto(v.data() + V_RECUERDOS + 4, 10); }
+std::string islaDe(const std::vector<uint8_t>& v) { return leerTextoVecino(v.data() + V_RECUERDOS + 4, 10); }
 
 void hacerDeLaIsla(std::vector<uint8_t>& v, const std::vector<uint8_t>& personal)
 {

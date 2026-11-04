@@ -34,8 +34,8 @@ uint8_t* datosVecino(std::vector<uint8_t>& main, int hueco);
 const uint8_t* datosVecino(const std::vector<uint8_t>& main, int hueco);
 
 // Textos en UTF-16 de la partida (como StringUtil de NHSE: «largo» letras, rellenas con ceros).
-std::string leerTexto(const uint8_t* p, int largo);
-void escribirTexto(uint8_t* p, const std::string& texto, int largo);
+std::string leerTextoVecino(const uint8_t* p, int largo);
+void escribirTextoVecino(uint8_t* p, const std::string& texto, int largo);
 
 // ---------------------------------------------------------------------------------------------- personalidad y frase
 // 0 perezoso, 1 deportista, 2 gruñón, 3 presumido, 4 normal, 5 alegre, 6 esnob, 7 hermana mayor.
