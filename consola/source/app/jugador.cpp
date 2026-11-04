@@ -260,4 +260,21 @@ Registro rNombres({SeccionJugador, 15, [] { return std::string("Nombres"); },
     [] { return partida::jugador().nombre + " de " + partida::isla; },
     [] { abrir(nombres); }});
 
+// Los primeros objetos en las tarjetas, como la página del jugador del Mac.
+Miniaturas m1("Bolsillos", [] {
+    std::vector<SDL_Texture*> r;
+    for (int i = 0; i < NUM_BOLSILLOS && r.size() < 6; i++)
+        if (SDL_Texture* t = dibujos::de(leerBolsillo(partida::personal(), i)))
+            r.push_back(t);
+    return r;
+});
+Miniaturas m2("Almacén", [] {
+    std::vector<SDL_Texture*> r;
+    const auto h = almacen();
+    for (int i = 0; i < h.cuantos() && r.size() < 6; i++)
+        if (SDL_Texture* t = dibujos::de(h.leer(i)))
+            r.push_back(t);
+    return r;
+});
+
 } // namespace

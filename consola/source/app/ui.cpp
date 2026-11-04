@@ -348,9 +348,21 @@ static void dibujarBoton(const Boton& b, bool foco)
     }
     if (b.grande)
     {
-        // A card of the Mac: title in bold, and what there is now in grey.
+        // A card of the Mac: title in bold, and what there is now in grey (and its small pictures on the right).
         const int x = conDibujo ? x0 : b.r.x + 24;
-        const int ancho = b.r.x + b.r.w - x - 16;
+        int ancho = b.r.x + b.r.w - x - 16;
+        if (!b.tira.empty())
+        {
+            const int lado = std::min(34, b.r.h - 30), n = std::min<int>(b.tira.size(), 4);
+            int tx = b.r.x + b.r.w - 14 - n * (lado + 4);
+            ancho = std::min(ancho, tx - x - 8);
+            for (int i = 0; i < n; i++, tx += lado + 4)
+                if (b.tira[i])
+                {
+                    SDL_Rect d = {tx, b.r.y + (b.r.h - lado) / 2, lado, lado};
+                    SDL_RenderCopy(g_r, b.tira[i], nullptr, &d);
+                }
+        }
         const SDL_Color gris = !b.activo ? APAGADO : b.principal ? BLANCO : MARRON_SUAVE;
         if (b.detalle.empty())
             texto(encajar(b.texto, ancho, g_negrita), x, b.r.y + b.r.h / 2 - 17, letra, g_negrita);
@@ -572,6 +584,28 @@ void enfocar(int f)
     });
 }
 uint64_t fotograma() { return g_fotograma; }
+
+namespace {
+std::vector<std::function<void()>>& liberadores()
+{
+    static std::vector<std::function<void()>> v;
+    return v;
+}
+} // namespace
+
+void alFaltarMemoria(std::function<void()> f) { liberadores().push_back(std::move(f)); }
+
+int memoriaLibre()
+{
+#ifdef __SWITCH__
+    u64 usada = 0, total = 0;
+    svcGetInfo(&usada, InfoType_UsedMemorySize, CUR_PROCESS_HANDLE, 0);
+    svcGetInfo(&total, InfoType_TotalMemorySize, CUR_PROCESS_HANDLE, 0);
+    return (int)((total - usada) >> 20);
+#else
+    return 4096;
+#endif
+}
 int foco() { return g_pila.empty() ? 0 : g_pila.back().foco; }
 void terminar() { g_salir = true; }
 bool terminando() { return g_salir; }
@@ -1014,6 +1048,24 @@ Pantalla marcas(Marcas m)
 }
 
 // ----------------------------------------------------------------------------------------------------------- bucle
+namespace {
+std::vector<std::pair<std::string, std::function<std::vector<SDL_Texture*>()>>>& miniaturas()
+{
+    static std::vector<std::pair<std::string, std::function<std::vector<SDL_Texture*>()>>> m;
+    return m;
+}
+} // namespace
+
+Miniaturas::Miniaturas(const char* titulo, std::function<std::vector<SDL_Texture*>()> f) { miniaturas().push_back({titulo, std::move(f)}); }
+
+std::vector<SDL_Texture*> miniaturasDe(const std::string& titulo)
+{
+    for (const auto& m : miniaturas())
+        if (titulo.rfind(m.first, 0) == 0)
+            return m.second();
+    return {};
+}
+
 std::vector<Tarjeta>& tarjetas()
 {
     static std::vector<Tarjeta> t;
@@ -1049,6 +1101,17 @@ void bucle(Pantalla inicio)
         touchAntes = ts.count > 0;
         int tx = toque ? (int)ts.touches[0].x : -1, ty = toque ? (int)ts.touches[0].y : -1;
 
+        // Little memory left: throw away what can be made again (before drawing anything of this frame).
+        if (g_fotograma % 30 == 0 && memoriaLibre() < 64)
+        {
+            registro::apuntar("poca memoria (%d MB libres): se tiran los dibujos guardados", memoriaLibre());
+            for (auto& f : liberadores())
+                f();
+            for (auto& l : g_letras)
+                SDL_DestroyTexture(l.second.t);
+            g_letras.clear();
+            registro::apuntar("ahora %d MB libres", memoriaLibre());
+        }
         Vista v;
         Entrada actual = g_pila.back();
         const u32 antes = SDL_GetTicks();

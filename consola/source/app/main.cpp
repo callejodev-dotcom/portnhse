@@ -103,6 +103,7 @@ Pantalla seccion(Seccion s)
             b.detalle = t.detalle ? t.detalle() : "";
             b.grande = true;
             b.imagen = dibujos::menu(iconoDe(t, titulo));
+            b.tira = miniaturasDe(titulo);
             v.b.push_back(b);
         }
         if (paginas > 1)
@@ -193,6 +194,11 @@ int main(int, char**)
         registro::apuntar("no se abre la partida: %s", error.c_str());
     if (error.empty())
     {
+#ifdef __SWITCH__
+        // From the Album the app has much less memory: the map and the houses may not fit. Said at the start.
+        if (appletGetAppletType() != AppletType_Application)
+            avisar("Abierta desde el Álbum (poca memoria). Si el mapa o las casas fallan, ábrela manteniendo R al abrir un juego.");
+#endif
         ponerLateral(lateral);
         bucle(seccion(SeccionJugador));
     }

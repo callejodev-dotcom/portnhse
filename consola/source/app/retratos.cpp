@@ -82,7 +82,10 @@ Paquete& paquete()
     return p;
 }
 
+struct LiberarAlFaltar { LiberarAlFaltar(); };
 CacheTexturas<uint32_t> g_cache(120);
+LiberarAlFaltar::LiberarAlFaltar() { ui::alFaltarMemoria([] { g_cache.vaciar(); }); }
+LiberarAlFaltar g_liberar;
 } // namespace
 
 SDL_Texture* de(const std::string& interno)

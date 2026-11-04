@@ -63,6 +63,7 @@ struct Boton {
                                     // «detalle» (how many) at the bottom right
     bool vertical = false;          // a card with the picture big on top and the text below (villagers, as the Mac)
     bool pequena = false;           // small letters (all the buttons of a row the same)
+    std::vector<SDL_Texture*> tira; // with «grande»: small pictures on the right (the faces of the visitors...)
     std::string valor;              // with «grande»: a number card, as the money of the Mac («texto» small on top,
                                     // «valor» big, «detalle» below)
 };
@@ -169,6 +170,12 @@ struct Tarjeta {
     const char* icono = nullptr;  // a menu icon of NHSE («Bag», «Kabu»...), as the cards of the Mac
 };
 std::vector<Tarjeta>& tarjetas();
+// Dibujitos para la tarjeta de una sección (por cómo empieza su título), como el Mac: la fruta y la flor, las caras de
+// los visitantes, las miniaturas de los diseños...
+struct Miniaturas {
+    Miniaturas(const char* titulo, std::function<std::vector<SDL_Texture*>()> f);
+};
+std::vector<SDL_Texture*> miniaturasDe(const std::string& titulo);
 struct Registro {
     explicit Registro(Tarjeta t) { tarjetas().push_back(std::move(t)); }
 };
@@ -211,6 +218,12 @@ struct Buscador {
     std::function<void(const std::string&)> alSalir;
 };
 Pantalla buscador(Buscador b);
+
+// Con poca memoria (abierta desde el Álbum), lo que se puede volver a hacer (dibujos guardados...) se tira. Cada parte
+// que guarda cosas así pone aquí cómo tirarlas; se llama entre fotogramas.
+void alFaltarMemoria(std::function<void()> f);
+// La memoria libre, en MB (en el Mac, mucha).
+int memoriaLibre();
 
 // Cuántos fotogramas se han dibujado (para saber qué se ha usado en este).
 uint64_t fotograma();

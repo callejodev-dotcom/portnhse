@@ -103,7 +103,10 @@ Paquete& iconos()
     return p;
 }
 
+struct LiberarAlFaltar { LiberarAlFaltar(); };
 CacheTexturas<uint32_t> g_cache(400);
+LiberarAlFaltar::LiberarAlFaltar() { ui::alFaltarMemoria([] { g_cache.vaciar(); }); }
+LiberarAlFaltar g_liberar;
 } // namespace
 
 SDL_Texture* de(uint16_t id, uint16_t variante)

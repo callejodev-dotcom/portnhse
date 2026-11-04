@@ -31,6 +31,15 @@ public:
         return t;
     }
 
+    // Quita todas (con poca memoria; solo entre fotogramas, antes de dibujar).
+    void vaciar()
+    {
+        for (auto& e : m_)
+            if (e.second.t)
+                SDL_DestroyTexture(e.second.t);
+        m_.clear();
+    }
+
 private:
     struct Entrada {
         SDL_Texture* t;

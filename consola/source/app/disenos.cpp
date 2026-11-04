@@ -859,4 +859,19 @@ Registro r2({SeccionDisenos, 20, [] { return std::string(TITULOS[Pro]); }, [] { 
 Registro r3({SeccionDisenos, 30, [] { return std::string(TITULOS[Bandera]); }, [] { return resumen(Bandera); }, [] { abrirTipo(Bandera); }, nullptr, "Flowershower"});
 Registro r4({SeccionDisenos, 40, [] { return std::string(TITULOS[Sastreria]); }, [] { return resumen(Sastreria); }, [] { abrirTipo(Sastreria); }, nullptr, "TailorTicket"});
 
+// Las primeras miniaturas en las tarjetas de la sección, como el Mac.
+std::vector<SDL_Texture*> primeros(Tipo t)
+{
+    std::vector<SDL_Texture*> r;
+    const auto& hs = huecos(t);
+    for (int i = 0; i < (int)hs.size() && r.size() < 5; i++)
+        if (!hs[i].vacio)
+            r.push_back(textura(t, i));
+    return r;
+}
+Miniaturas m1(TITULOS[Normales], [] { return primeros(Normales); });
+Miniaturas m2(TITULOS[Pro], [] { return primeros(Pro); });
+Miniaturas m3(TITULOS[Bandera], [] { return primeros(Bandera); });
+Miniaturas m4(TITULOS[Sastreria], [] { return primeros(Sastreria); });
+
 } // namespace

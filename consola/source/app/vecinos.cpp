@@ -701,4 +701,12 @@ Registro r5({SeccionVecinos, 50, [] { return std::string("Guardar todos en la SD
         avisar(mal ? "No he podido guardar " + std::to_string(mal) + " vecinos en la tarjeta SD." : "Se han guardado " + std::to_string(n) + " vecinos en /switch/NHSE/vecinos.", mal > 0);
     }});
 
+Miniaturas m1("Tus vecinos", [] {
+    std::vector<SDL_Texture*> r;
+    for (int i = 0; i < NUM_VECINOS && r.size() < 5; i++)
+        if (SDL_Texture* c = retratos::deHueco(i))
+            r.push_back(c);
+    return r;
+});
+
 } // namespace

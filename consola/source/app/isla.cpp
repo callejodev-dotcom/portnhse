@@ -854,4 +854,30 @@ Registro r3({SeccionIsla, 60, [] { return std::string("Nabos"); },
 
 Registro r7({SeccionIsla, 70, [] { return std::string("Visitantes especiales"); }, resumenVisitantes, [] { abrir(visitantes); }});
 
+// Los dibujitos de las tarjetas de la sección, como la página de la isla del Mac.
+Miniaturas m1("Fruta y flores", [] {
+    const FrutasFlores f = leerFrutasFlores(partida::principal(), partida::personal());
+    std::vector<SDL_Texture*> r;
+    for (int i = 0; i < 5; i++)
+        if (FRUTAS_ISLA[i].id == f.fruta)
+            r.push_back(dibujos::menu(DIBUJO_FRUTA[i]));
+    if (f.flor < NUM_FLORES_ISLA)
+        r.push_back(dibujos::menu(DIBUJO_FLOR[f.flor]));
+    return r;
+});
+Miniaturas m2("Visitantes", [] {
+    std::vector<SDL_Texture*> r;
+    for (int dia = 0; dia < 7 && r.size() < 5; dia++)
+        if (SDL_Texture* c = isla::caraVisitante(visitante(partida::principal(), dia)))
+            if (std::find(r.begin(), r.end(), c) == r.end())
+                r.push_back(c);
+    return r;
+});
+Miniaturas m3("Zona de acampada", [] {
+    std::vector<SDL_Texture*> r;
+    if (SDL_Texture* c = retratos::de(campista(partida::principal())))
+        r.push_back(c);
+    return r;
+});
+
 } // namespace
