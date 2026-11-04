@@ -57,6 +57,25 @@ void ponerVisitante(std::vector<uint8_t>& main, int dia, int quien);
 bool concierto(const std::vector<uint8_t>& main, int dia, bool cumple);
 void ponerConcierto(std::vector<uint8_t>& main, int dia, bool cumple, bool si);
 
+// Opciones avanzadas: lo demás que guarda el juego de los visitantes, tal cual (lo que deja cambiar el Mac en «Opciones
+// avanzadas»). Quién viene un día sin tocar el plan de la semana, y el plan sin tocar quién viene.
+void ponerSoloVisitante(std::vector<uint8_t>& main, int dia, int quien);
+int planVisitante(const std::vector<uint8_t>& main, int dia);
+void ponerPlanVisitante(std::vector<uint8_t>& main, int dia, int quien);
+// Dos posiciones (0 = dónde aparecen, 1 = la otra, sin nombre en NHSE).
+struct PosicionIsla {
+    float x = 0, y = 0, z = 0;
+};
+PosicionIsla posicionVisitantes(const std::vector<uint8_t>& main, int cual);
+void ponerPosicionVisitantes(std::vector<uint8_t>& main, int cual, const PosicionIsla& p);
+// 14 marcas sin nombre.
+constexpr int NUM_MARCAS_VISITANTES = 14;
+bool marcaVisitantes(const std::vector<uint8_t>& main, int i);
+void ponerMarcaVisitantes(std::vector<uint8_t>& main, int i, bool si);
+// Dos números: 0 = el día de Buh, 1 = el de Estela.
+int32_t diaVisitante(const std::vector<uint8_t>& main, int cual);
+void ponerDiaVisitante(std::vector<uint8_t>& main, int cual, int32_t valor);
+
 // -------------------------------------------------------------------------------------------------------- nabos
 // Tendencia de la semana: 0 fluctuante, 1 pico grande, 2 decreciente, 3 pico pequeño. El pico empieza en un medio
 // día (2 = lunes por la mañana ... 13 = sábado por la tarde).
@@ -87,10 +106,29 @@ bool donar(std::vector<uint8_t>& main, uint16_t id, int jugador, const FechaIsla
 // La quita del museo: las donaciones que van detrás suben un hueco, como las guarda el juego.
 bool retirar(std::vector<uint8_t>& main, uint16_t id);
 
+// «Fechas y más…» (el editor clásico del museo del Mac): cada donación de la lista, en su orden.
+struct EntradaMuseo {
+    int hueco = 0;
+    uint16_t id = 0;
+    FechaIsla fecha;
+    int jugador = 255;
+};
+std::vector<EntradaMuseo> entradasMuseo(const std::vector<uint8_t>& main); // los huecos con algo
+// ¿Es un día que existe? (las fechas imposibles rompen NHSE para Mac).
+bool fechaIslaValida(const FechaIsla& f);
+void ponerFechaDonacion(std::vector<uint8_t>& main, int hueco, const FechaIsla& f); // vacía = sin fecha
+void ponerDonante(std::vector<uint8_t>& main, int hueco, int jugador);             // 0-255
+void ponerPiezaDonacion(std::vector<uint8_t>& main, int hueco, uint16_t id);        // solo el objeto
+// Ordena toda la lista por fecha, de la más vieja a la más nueva (sin fecha, al final), como «Sort By Date».
+void ordenarMuseoPorFecha(std::vector<uint8_t>& main);
+// El museo entero tal cual (ISLA_TAM_MUSEO bytes, el .nhm de NHSE) y al revés; false si no tiene ese tamaño.
+std::vector<uint8_t> exportarMuseo(const std::vector<uint8_t>& main);
+bool importarMuseo(std::vector<uint8_t>& main, const std::vector<uint8_t>& datos);
+
 // -------------------------------------------------------------------------------------------- tablón de anuncios
 constexpr int NUM_NOTAS = 30;
 constexpr int LARGO_NOTA = 239;  // letras del texto
-constexpr int LARGO_FIRMA = 47;
+constexpr int LARGO_FIRMA_NOTA = 47;
 struct Nota {
     int hueco = 0;
     FechaIsla fecha;

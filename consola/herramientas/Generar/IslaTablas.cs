@@ -62,6 +62,7 @@ public sealed class IslaTablas : ITabla
         Pos("ISLA_VISITANTES", o.Visitor, "GSaveVisitorNpc (0x78 bytes)");
         Pos("ISLA_TABLON", o.BulletinBoard, "GSaveBulletinBoard: 30 notas de 0x77D0 bytes desde +8");
         Pos("ISLA_NABOS", o.ShopKabu, "TurnipStonk: compra, 14 precios, tendencia y comienzo del pico");
+        Pos("ISLA_TAM_MUSEO", Museum.SIZE, "lo que ocupa el museo (y un museo exportado, .nhm)");
         sb.AppendLine("// En personal.dat (3.0.x), de PersonalOffsets30.");
         Pos("PERSONAL_FRUTA", p.ProfileFruit, "la fruta del pasaporte");
         sb.AppendLine();

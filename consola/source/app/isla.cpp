@@ -1,7 +1,9 @@
 // Sección «Isla»: hemisferio y aeródromo, fruta y flores de la isla, flores del suelo, malas hierbas, zona de
-// acampada, nabos (precios y tendencia) y visitantes. El museo y el tablón van en isla_museo.cpp e isla_tablon.cpp;
+// acampada, nabos (precios y tendencia) y visitantes (con sus opciones avanzadas). El museo y el tablón van en isla_museo.cpp e isla_tablon.cpp;
 // el mapa y las casas, en los suyos.
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 #include <ctime>
 #include <memory>
 #include "../core/isla.hpp"
@@ -356,29 +358,38 @@ void tendencia(Vista& v)
     v.b.push_back({{840, 545, 380, 60}, "Volver", [] { volver(); }});
 }
 
+constexpr uint32_t MAX_NABOS = 9999; // como NHSE para Mac
+
 void nabos(Vista& v)
 {
     v.titulo = "Nabos";
-    v.explicacion = "Precios de esta semana. Toca uno para cambiarlo.";
     const Nabos n = leerNabos(partida::principal());
+    v.explicacion = "Precios de esta semana. Toca uno para cambiarlo.";
+    // Cuándo venderlos, como el Mac: el precio más alto de la semana (el primero si hay varios).
+    int mejor = 2;
+    for (int i = 3; i < 14; i++)
+        if (n.venta[i] > n.venta[mejor])
+            mejor = i;
+    if (n.venta[mejor] != 0)
+        v.explicacion += " Lo mejor: venderlos el " + medioDia((uint32_t)mejor, false) + " (" + numero(n.venta[mejor]) + " bayas).";
     auto cambiar = [](int i) {
         Nabos m = leerNabos(partida::principal());
         uint32_t valor = i < 0 ? m.compra : m.venta[i];
         const std::string t = i < 0 ? std::string("Precio de compra (domingo)") : std::string(DIAS[i]) + (i % 2 ? " por la tarde" : " por la mañana");
-        if (!pedirNumero(t, valor, 999))
+        if (!pedirNumero(t, valor, std::max<uint32_t>(MAX_NABOS, valor)))
             return;
         (i < 0 ? m.compra : m.venta[i]) = valor;
         escribirNabos(partida::principal(), m);
         partida::cambiaPrincipal();
         cambiado();
     };
-    v.b.push_back({{60, 145, 1160, 50}, "Juliana los vende a " + std::to_string(n.compra) + " bayas", [cambiar] { cambiar(-1); }});
+    v.b.push_back({{60, 145, 1160, 50}, "Juliana los vende a " + numero(n.compra) + " bayas", [cambiar] { cambiar(-1); }});
     for (int i = 2; i < 14; i++)
         v.b.push_back({{60 + (i % 2) * 590, 208 + (i / 2 - 1) * 58, 570, 50},
-            std::string(DIAS[i]) + (i % 2 ? " tarde: " : " mañana: ") + std::to_string(n.venta[i]), [cambiar, i] { cambiar(i); }});
+            std::string(DIAS[i]) + (i % 2 ? " tarde: " : " mañana: ") + numero(n.venta[i]), [cambiar, i] { cambiar(i); }});
     v.b.push_back({{60, 570, 360, 56}, "Poner todos a…", [] {
         uint32_t valor = 600;
-        if (!pedirNumero("Precio de venta para toda la semana", valor, 999))
+        if (!pedirNumero("Precio de venta para toda la semana", valor, MAX_NABOS))
             return;
         Nabos m = leerNabos(partida::principal());
         for (int i = 2; i < 14; i++)
@@ -392,7 +403,10 @@ void nabos(Vista& v)
 }
 
 // ---------------------------------------------------------------------------------------------------- visitantes
-void elegirVisitante(int dia)
+std::string nombreVisitante(int v) { return v >= 0 && v < NUM_VISITANTES ? VISITANTES[v] : "Visitante " + std::to_string(v); }
+
+// Elegir un visitante especial (o nadie); «poner» lo guarda.
+void elegirQuien(const std::string& titulo, const std::string& explicacion, int actual, std::function<void(int)> poner)
 {
     // Nadie primero y luego por orden alfabético, como NHSE para Mac.
     std::vector<int> orden;
@@ -401,7 +415,6 @@ void elegirVisitante(int dia)
     std::sort(orden.begin(), orden.end(), [](int a, int b) { return normalizar(VISITANTES[a]) < normalizar(VISITANTES[b]); });
     orden.insert(orden.begin(), 0);
     std::vector<std::string> op;
-    const int actual = visitante(partida::principal(), dia);
     int marcada = -1;
     for (size_t k = 0; k < orden.size(); k++)
     {
@@ -409,14 +422,176 @@ void elegirVisitante(int dia)
         if (orden[k] == actual)
             marcada = (int)k;
     }
-    std::string nota = dia == 0 ? " Los domingos por la mañana viene Juliana." : dia == 6 ? " Los sábados por la noche toca Totakeke." : "";
-    elegir(std::string("¿Quién viene el ") + DIA_MIN[dia] + "?", "Quién visita tu isla ese día de esta semana." + nota, op, marcada, [dia, orden](int k) {
-        ponerVisitante(partida::principal(), dia, orden[k]);
-        cambiaMain(std::string(DIA[dia]) + ": " + VISITANTES[orden[k]]);
-    }, 3);
+    elegir(titulo, explicacion, op, marcada, [orden, poner](int k) { poner(orden[k]); }, 3);
 }
 
-std::string nombreVisitante(int v) { return v >= 0 && v < NUM_VISITANTES ? VISITANTES[v] : "Visitante " + std::to_string(v); }
+void elegirVisitante(int dia)
+{
+    std::string nota = dia == 0 ? " Los domingos por la mañana viene Juliana." : dia == 6 ? " Los sábados por la noche toca Totakeke." : "";
+    elegirQuien(std::string("¿Quién viene el ") + DIA_MIN[dia] + "?", "Quién visita tu isla ese día de esta semana." + nota,
+        visitante(partida::principal(), dia), [dia](int q) {
+            ponerVisitante(partida::principal(), dia, q);
+            cambiaMain(std::string(DIA[dia]) + ": " + VISITANTES[q]);
+        });
+}
+
+// ------------------------------------------------------------------------------ visitantes: opciones avanzadas
+// Lo demás que guarda el juego de los visitantes, tal cual (lo que el Mac enseña en «Opciones avanzadas»).
+
+// El número más corto que se vuelve a leer igual («12.5», no «12.50000000»).
+std::string textoDecimal(float f)
+{
+    char s[32] = "0";
+    for (int p = 1; p <= 9; p++)
+    {
+        snprintf(s, sizeof(s), "%.*g", p, (double)f);
+        if (strtof(s, nullptr) == f)
+            break;
+    }
+    return s;
+}
+
+std::string textoPosicion(const PosicionIsla& p)
+{
+    return "(" + textoDecimal(p.x) + "; " + textoDecimal(p.y) + "; " + textoDecimal(p.z) + ")";
+}
+
+void planSemana(Vista& v)
+{
+    v.titulo = "Quién viene y plan de la semana";
+    v.explicacion = "Viene: quién está ese día. Plan: lo que el juego decidió al empezar la semana.";
+    const auto& m = partida::principal();
+    std::vector<std::string> dias;
+    for (int k = 0; k < 7; k++)
+    {
+        const int dia = SEMANA[k];
+        const int y = 150 + k * 62;
+        dias.push_back(DIA[dia]);
+        v.b.push_back({{280, y, 460, 54}, "Viene: " + nombreVisitante(visitante(m, dia)), [dia] {
+            elegirQuien(std::string("¿Quién viene el ") + DIA_MIN[dia] + "?", "Solo quién viene; el plan de la semana no cambia.",
+                visitante(partida::principal(), dia), [dia](int q) {
+                    ponerSoloVisitante(partida::principal(), dia, q);
+                    cambiaMain(std::string(DIA[dia]) + ": viene " + VISITANTES[q]);
+                });
+        }});
+        v.b.push_back({{760, y, 460, 54}, "Plan: " + nombreVisitante(planVisitante(m, dia)), [dia] {
+            elegirQuien(std::string("Plan del ") + DIA_MIN[dia], "Solo el plan de la semana; quién viene no cambia.",
+                planVisitante(partida::principal(), dia), [dia](int q) {
+                    ponerPlanVisitante(partida::principal(), dia, q);
+                    cambiaMain(std::string(DIA[dia]) + ": en el plan, " + VISITANTES[q]);
+                });
+        }});
+    }
+    v.dibujo = [dias] {
+        for (int k = 0; k < 7; k++)
+            texto(dias[k], 60, 150 + k * 62 + 27, MARRON, nullptr, Izquierda);
+    };
+    v.b.push_back({{440, ABAJO - 70, 400, 60}, "Volver", [] { volver(); }});
+}
+
+void posicion(int cual, Vista& v)
+{
+    v.titulo = cual == 0 ? "Dónde aparecen" : "Otra posición";
+    v.explicacion = cual == 0 ? "El sitio de la isla donde aparecen los visitantes (x, y, z)."
+                              : "Otra posición que guarda el juego, sin nombre en NHSE (x, y, z).";
+    const PosicionIsla p = posicionVisitantes(partida::principal(), cual);
+    const float valores[3] = {p.x, p.y, p.z};
+    const char* const ejes[3] = {"X", "Y", "Z"};
+    for (int i = 0; i < 3; i++)
+    {
+        Boton b{{60 + i * 395, 180, 370, 110}, textoDecimal(valores[i]), [cual, i, ejes] {
+            PosicionIsla q = posicionVisitantes(partida::principal(), cual);
+            float* f = i == 0 ? &q.x : i == 1 ? &q.y : &q.z;
+            std::string t = textoDecimal(*f);
+            if (!pedirTexto(std::string("Posición ") + ejes[i], "Un número, como 12.5 o -3", t, 20))
+                return;
+            for (char& c : t)
+                if (c == ',')
+                    c = '.';
+            char* fin = nullptr;
+            const float n = strtof(t.c_str(), &fin);
+            if (t.empty() || fin == t.c_str() || *fin)
+            {
+                avisar("Eso no es un número", true);
+                return;
+            }
+            *f = n;
+            ponerPosicionVisitantes(partida::principal(), cual, q);
+            cambiaMain();
+        }};
+        b.detalle = ejes[i];
+        v.b.push_back(b);
+    }
+    v.b.push_back({{440, ABAJO - 76, 400, 64}, "Volver", [] { volver(); }});
+}
+
+void marcasVisitantes(Vista& v)
+{
+    v.titulo = "Marcas sin nombre";
+    v.explicacion = "Catorce marcas que guarda el juego de los visitantes; NHSE tampoco sabe qué son. Toca una para cambiarla.";
+    const auto& m = partida::principal();
+    for (int i = 0; i < NUM_MARCAS_VISITANTES; i++)
+    {
+        const bool si = marcaVisitantes(m, i);
+        v.b.push_back({{60 + (i / 7) * 590, 140 + (i % 7) * 64, 570, 56}, std::string(si ? "● " : "") + "Marca " + std::to_string(i + 1) + (si ? ": sí" : ": no"), [i] {
+            const bool ahora = !marcaVisitantes(partida::principal(), i);
+            ponerMarcaVisitantes(partida::principal(), i, ahora);
+            cambiaMain("Marca " + std::to_string(i + 1) + (ahora ? ": sí" : ": no"));
+        }, true, si});
+    }
+    v.b.push_back({{440, ABAJO - 70, 400, 60}, "Volver", [] { volver(); }});
+}
+
+void pedirDiaVisitante(int cual)
+{
+    const char* const quien[2] = {"Buh", "Estela"};
+    std::string t = std::to_string(diaVisitante(partida::principal(), cual));
+    if (!pedirTexto(std::string("Número de ") + quien[cual], "Un número entero", t, 11))
+        return;
+    char* fin = nullptr;
+    const long long n = strtoll(t.c_str(), &fin, 10);
+    if (t.empty() || *fin || n < INT32_MIN || n > INT32_MAX)
+    {
+        avisar("Eso no es un número que quepa", true);
+        return;
+    }
+    ponerDiaVisitante(partida::principal(), cual, (int32_t)n);
+    cambiaMain(std::string("Número de ") + quien[cual] + ": " + std::to_string(n));
+}
+
+void visitantesAvanzado(Vista& v)
+{
+    v.titulo = "Visitantes: opciones avanzadas";
+    v.explicacion = "Todo lo que guarda el juego de los visitantes de esta semana, tal cual. Mejor no tocarlo si no sabes qué es.";
+    const auto& m = partida::principal();
+    Boton plan{{60, 140, 1160, 88}, "Quién viene y plan de la semana…", [] { abrir(planSemana); }};
+    plan.detalle = "Quién viene cada día y el plan de la semana, cada uno por su lado.";
+    plan.grande = true;
+    v.b.push_back(plan);
+    const char* const quien[2] = {"Buh", "Estela"};
+    for (int c = 0; c < 2; c++)
+    {
+        Boton b{{60 + c * 590, 244, 570, 88}, std::string("Número de ") + quien[c] + ": " + std::to_string(diaVisitante(m, c)), [c] { pedirDiaVisitante(c); }};
+        b.detalle = std::string("Un número que guarda el juego sobre ") + quien[c] + ".";
+        v.b.push_back(b);
+    }
+    for (int c = 0; c < 2; c++)
+    {
+        Boton b{{60 + c * 590, 348, 570, 88}, std::string(c == 0 ? "Dónde aparecen" : "Otra posición") + "…", [c] {
+            abrir([c](Vista& w) { posicion(c, w); });
+        }};
+        b.detalle = textoPosicion(posicionVisitantes(m, c));
+        v.b.push_back(b);
+    }
+    int puestas = 0;
+    for (int i = 0; i < NUM_MARCAS_VISITANTES; i++)
+        puestas += marcaVisitantes(m, i);
+    Boton marcas{{60, 452, 1160, 88}, "Marcas sin nombre…", [] { abrir(marcasVisitantes); }};
+    marcas.detalle = std::to_string(puestas) + " de " + std::to_string(NUM_MARCAS_VISITANTES) + " puestas.";
+    marcas.grande = true;
+    v.b.push_back(marcas);
+    v.b.push_back({{440, ABAJO - 70, 400, 60}, "Volver", [] { volver(); }});
+}
 
 void visitantes(Vista& v)
 {
@@ -438,7 +613,8 @@ void visitantes(Vista& v)
             }, true, si});
         }
     }
-    v.b.push_back({{440, ABAJO - 70, 400, 60}, "Volver", [] { volver(); }});
+    v.b.push_back({{60, ABAJO - 70, 560, 60}, "Opciones avanzadas…", [] { abrir(visitantesAvanzado); }});
+    v.b.push_back({{660, ABAJO - 70, 560, 60}, "Volver", [] { volver(); }});
 }
 
 std::string resumenVisitantes()

@@ -87,6 +87,36 @@ OrdenPrueba conc("isla-concierto", [](Contexto& c) {
     return 0;
 });
 
+// isla-visitante-solo <día> <quién>: quién viene, sin tocar el plan de la semana.
+OrdenPrueba visitSolo("isla-visitante-solo", [](Contexto& c) {
+    ponerSoloVisitante(c.main.datos, num(c, 0), num(c, 1));
+    return 0;
+});
+
+// isla-plan <día> <quién>: el plan de la semana, sin tocar quién viene.
+OrdenPrueba plan("isla-plan", [](Contexto& c) {
+    ponerPlanVisitante(c.main.datos, num(c, 0), num(c, 1));
+    return 0;
+});
+
+// isla-posicion <0|1> <x> <y> <z>
+OrdenPrueba pos("isla-posicion", [](Contexto& c) {
+    ponerPosicionVisitantes(c.main.datos, num(c, 0), {strtof(c.arg(1).c_str(), nullptr), strtof(c.arg(2).c_str(), nullptr), strtof(c.arg(3).c_str(), nullptr)});
+    return 0;
+});
+
+// isla-marca-visitantes <0-13> <0|1>
+OrdenPrueba marcaVis("isla-marca-visitantes", [](Contexto& c) {
+    ponerMarcaVisitantes(c.main.datos, num(c, 0), num(c, 1) != 0);
+    return 0;
+});
+
+// isla-dia-visitante <0 Buh|1 Estela> <número>
+OrdenPrueba diaVis("isla-dia-visitante", [](Contexto& c) {
+    ponerDiaVisitante(c.main.datos, num(c, 0), (int32_t)strtol(c.arg(1).c_str(), nullptr, 0));
+    return 0;
+});
+
 // isla-tendencia <0-3> <medio día del pico>
 OrdenPrueba tend("isla-tendencia", [](Contexto& c) {
     ponerTendenciaNabos(c.main.datos, (uint32_t)num(c, 0));
@@ -123,6 +153,65 @@ OrdenPrueba donSala("isla-donar-sala", [](Contexto& c) {
     for (int i = todo ? 0 : INICIO_SALAS[sala]; i < (todo ? NUM_PIEZAS : INICIO_SALAS[sala + 1]); i++)
         n += donar(c.main.datos, PIEZAS_MUSEO[i].id, num(c, 1), f);
     printf("donadas %d\n", n);
+    return 0;
+});
+
+// isla-museo-entradas: las donaciones de la lista, en su orden.
+OrdenPrueba museoEnt("isla-museo-entradas", [](Contexto& c) {
+    for (auto& e : entradasMuseo(c.main.datos))
+        printf("entrada %d %d %04d-%02d-%02d %d\n", e.hueco, e.id, e.fecha.anio, e.fecha.mes, e.fecha.dia, e.jugador);
+    c.guardar = false;
+    return 0;
+});
+
+// isla-museo-fecha <hueco> <aaaa-mm-dd|nada>
+OrdenPrueba museoFecha("isla-museo-fecha", [](Contexto& c) {
+    const FechaIsla f = c.arg(1) == "nada" ? FechaIsla{} : fecha(c.arg(1));
+    if (!f.vacia() && !fechaIslaValida(f))
+    {
+        printf("fecha imposible\n");
+        return 1;
+    }
+    ponerFechaDonacion(c.main.datos, num(c, 0), f);
+    return 0;
+});
+
+// isla-museo-donante <hueco> <jugador 0-255>
+OrdenPrueba museoDonante("isla-museo-donante", [](Contexto& c) {
+    ponerDonante(c.main.datos, num(c, 0), num(c, 1));
+    return 0;
+});
+
+// isla-museo-pieza <hueco> <objeto>
+OrdenPrueba museoPieza("isla-museo-pieza", [](Contexto& c) {
+    ponerPiezaDonacion(c.main.datos, num(c, 0), (uint16_t)num(c, 1));
+    return 0;
+});
+
+OrdenPrueba museoOrdenar("isla-museo-ordenar", [](Contexto& c) {
+    ordenarMuseoPorFecha(c.main.datos);
+    return 0;
+});
+
+// isla-museo-exportar <archivo>
+OrdenPrueba museoExp("isla-museo-exportar", [](Contexto& c) {
+    const auto d = exportarMuseo(c.main.datos);
+    FILE* f = fopen(c.arg(0).c_str(), "wb");
+    if (!f)
+        return 1;
+    fwrite(d.data(), 1, d.size(), f);
+    fclose(f);
+    c.guardar = false;
+    return 0;
+});
+
+// isla-museo-importar <archivo>
+OrdenPrueba museoImp("isla-museo-importar", [](Contexto& c) {
+    if (!importarMuseo(c.main.datos, leerArchivo(c.arg(0))))
+    {
+        printf("no es un museo\n");
+        c.guardar = false;
+    }
     return 0;
 });
 

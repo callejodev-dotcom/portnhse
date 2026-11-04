@@ -18,6 +18,7 @@ constexpr uint32_t ISLA_MUSEO = 0x491220; // nivel, 1024 fechas, 1024 objetos y 
 constexpr uint32_t ISLA_VISITANTES = 0x494624; // GSaveVisitorNpc (0x78 bytes)
 constexpr uint32_t ISLA_TABLON = 0x4951B8; // GSaveBulletinBoard: 30 notas de 0x77D0 bytes desde +8
 constexpr uint32_t ISLA_NABOS = 0x490770; // TurnipStonk: compra, 14 precios, tendencia y comienzo del pico
+constexpr uint32_t ISLA_TAM_MUSEO = 0x3404; // lo que ocupa el museo (y un museo exportado, .nhm)
 // En personal.dat (3.0.x), de PersonalOffsets30.
 constexpr uint32_t PERSONAL_FRUTA = 0x3659C; // la fruta del pasaporte
 

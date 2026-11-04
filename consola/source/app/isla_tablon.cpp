@@ -111,7 +111,7 @@ Pantalla nota(int hueco)
         const bool hay = !e->n.aMano && !e->n.firma.empty();
         return Fila{hay ? "Firma: " + e->n.firma : std::string("Sin firma"), [e, hueco] {
             std::string t = e->n.firma;
-            if (!pedirTexto("Firma", "Quién firma la nota", t, LARGO_FIRMA) || t == e->n.firma)
+            if (!pedirTexto("Firma", "Quién firma la nota", t, LARGO_FIRMA_NOTA) || t == e->n.firma)
                 return;
             escribirFirma(partida::principal(), hueco, t);
             partida::cambiaPrincipal();

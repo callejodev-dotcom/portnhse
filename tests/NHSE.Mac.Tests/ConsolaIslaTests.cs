@@ -257,4 +257,197 @@ public partial class ConsolaTests
             sav.Main.Bulletin = board;
         }, "isla-firma", hueco.ToString(), "Carli");
     }
+
+    // ------------------------------------------------------------------------------------------- museo: fechas y más
+
+    /// <summary> Como Both, pero con varias órdenes de la Switch seguidas (cada una abre y guarda la partida). </summary>
+    private static (HorizonSave Nhse, HorizonSave Switch) BothVarias(Action<HorizonSave> nhse, params string[][] ordenes)
+    {
+        Skip();
+        var sav = TestSave.LoadCopy(out var folder);
+        foreach (var o in ordenes)
+            Run(folder, o);
+        var after = HorizonSave.FromFolder(folder);
+        Assert.Empty(after.GetInvalidHashes());
+        nhse(sav);
+        sav.Main.Hash();
+        sav.Players[0].Personal.Hash();
+        SameBytes(sav.Main.Data, after.Main.Data);
+        SameBytes(sav.Players[0].Personal.Data, after.Players[0].Personal.Data);
+        return (sav, after);
+    }
+
+    /// <summary>
+    /// El editor clásico del museo del Mac (MuseumWindow → «Editor clásico»): elige una donación, la cambia y pulsa un
+    /// botón (Save o una herramienta).
+    /// </summary>
+    private static void Clasico(HorizonSave sav, int entrada, Action<NHSE.Mac.MuseumEditor> cambiar, string boton = "B_Save")
+    {
+        var museum = sav.Main.Museum;
+        var w = new NHSE.Mac.MuseumEditor(museum);
+        w.Show();
+        Dispatcher.UIThread.RunJobs();
+        w.FindControl<ListBox>("LB_Donations")!.SelectedIndex = entrada;
+        Dispatcher.UIThread.RunJobs();
+        cambiar(w);
+        var b = w.FindControl<Control>(boton)!;
+        b.RaiseEvent(new RoutedEventArgs(b is MenuItem ? MenuItem.ClickEvent : Button.ClickEvent));
+        Dispatcher.UIThread.RunJobs();
+        sav.Main.Museum = museum;
+    }
+
+    private static void Fecha(NHSE.Mac.MuseumEditor w, DateTime? dia) => w.FindControl<CalendarDatePicker>("CAL_Date")!.SelectedDate = dia;
+
+    /// <summary> Una donación de la partida de prueba (la cuarta), para cambiarla. </summary>
+    private static int EntradaMuseo()
+    {
+        var sav = TestSave.LoadCopy(out _);
+        var items = sav.Main.Museum.GetItems();
+        Assert.SkipWhen(items.Count(z => !z.IsNone) < 5, "la partida de prueba casi no tiene museo");
+        return 3;
+    }
+
+    [AvaloniaFact]
+    public void IslaMuseoFechaComoNhse()
+    {
+        Skip();
+        var i = EntradaMuseo();
+        Both(sav => Clasico(sav, i, w => Fecha(w, new DateTime(2024, 2, 29))), "isla-museo-fecha", i.ToString(), "2024-02-29");
+    }
+
+    [AvaloniaFact]
+    public void IslaMuseoSinFechaComoNhse()
+    {
+        Skip();
+        var i = EntradaMuseo();
+        var (_, after) = Both(sav => Clasico(sav, i, w => Fecha(w, null)), "isla-museo-fecha", i.ToString(), "nada");
+        Assert.True(after.Main.Museum.GetDates()[i].IsEmpty);
+    }
+
+    [AvaloniaFact]
+    public void IslaMuseoDonanteComoNhse()
+    {
+        Skip();
+        var i = EntradaMuseo();
+        Both(sav => Clasico(sav, i, w => w.FindControl<NumericUpDown>("NUD_Player")!.Value = 7), "isla-museo-donante", i.ToString(), "7");
+    }
+
+    [Fact]
+    public void IslaMuseoPiezaComoNhse()
+    {
+        // Otra pieza en la misma donación: el editor de objetos del clásico solo cambia el número de objeto.
+        Skip();
+        var i = EntradaMuseo();
+        const ushort pieza = 2284; // celacanto
+        Both(sav =>
+        {
+            var museum = sav.Main.Museum;
+            var edit = new NHSE.Core.MuseumEditor(museum);
+            edit.Items[i].ItemId = pieza;
+            edit.Save();
+            sav.Main.Museum = museum;
+        }, "isla-museo-pieza", i.ToString(), pieza.ToString());
+    }
+
+    [AvaloniaFact]
+    public void IslaMuseoOrdenarComoNhse()
+    {
+        // Una donación muy nueva al principio de la lista; al ordenar por fecha pasa detrás de las demás.
+        Skip();
+        var (_, after) = BothVarias(sav =>
+        {
+            Clasico(sav, 0, w => Fecha(w, new DateTime(2099, 12, 31)));
+            Clasico(sav, 0, _ => { }, "B_SortDate");
+        }, ["isla-museo-fecha", "0", "2099-12-31"], ["isla-museo-ordenar"]);
+        var dates = after.Main.Museum.GetDates();
+        var items = after.Main.Museum.GetItems();
+        var ultima = Array.FindLastIndex(items, z => !z.IsNone);
+        Assert.Equal(2099, dates[ultima].Year);
+    }
+
+    [Fact]
+    public void IslaMuseoExportarComoNhse()
+    {
+        // El .nhm de «Dump» del Mac: el museo tal cual.
+        Skip();
+        var sav = TestSave.LoadCopy(out var folder);
+        var archivo = Path.Combine(Path.GetTempPath(), $"museo-{Guid.NewGuid():N}.nhm");
+        try
+        {
+            Run(folder, "isla-museo-exportar", archivo);
+            SameBytes(sav.Main.Museum.Data, File.ReadAllBytes(archivo));
+        }
+        finally
+        {
+            File.Delete(archivo);
+        }
+    }
+
+    [Fact]
+    public void IslaMuseoImportarComoNhse()
+    {
+        // Un museo de otra partida (aquí, el de la prueba con otros donantes y ordenado): «Load» del Mac lo copia tal cual.
+        Skip();
+        var otro = TestSave.LoadCopy(out _).Main.Museum;
+        var edit = new NHSE.Core.MuseumEditor(otro);
+        for (int i = 0; i < edit.Players.Length; i++)
+            edit.Players[i] = (byte)(i % 3);
+        edit.SortAll();
+        edit.Save();
+        var archivo = Path.Combine(Path.GetTempPath(), $"museo-{Guid.NewGuid():N}.nhm");
+        File.WriteAllBytes(archivo, otro.Data.ToArray());
+        try
+        {
+            Both(sav =>
+            {
+                var museum = sav.Main.Museum;
+                File.ReadAllBytes(archivo).CopyTo(museum.Data);
+                sav.Main.Museum = museum;
+            }, "isla-museo-importar", archivo);
+
+            // Un archivo que no es un museo no cambia nada.
+            File.WriteAllBytes(archivo, new byte[100]);
+            Both(_ => { }, "isla-museo-importar", archivo);
+        }
+        finally
+        {
+            File.Delete(archivo);
+        }
+    }
+
+    // ------------------------------------------------------------------------------- visitantes: opciones avanzadas
+
+    /// <summary> Lo que hace la tabla de «Opciones avanzadas» de VisitorsWindow (cambia el objeto) y pulsar «Hecho». </summary>
+    private static void Avanzado(HorizonSave sav, Action<GSaveVisitorNpc> cambiar)
+    {
+        var v = sav.Main.Visitor;
+        var w = new VisitorsWindow(v);
+        cambiar(v);
+        Hecho(w);
+        sav.Main.Visitor = v;
+    }
+
+    [AvaloniaFact]
+    public void IslaSoloVisitanteComoNhse() => Both(sav => Avanzado(sav, v => v.VisitorNPC[2] = VisitorNPC.Label), "isla-visitante-solo", "2", "2");
+
+    [AvaloniaFact]
+    public void IslaPlanVisitanteComoNhse() => Both(sav => Avanzado(sav, v => v.InitSchedule[4] = VisitorNPC.Redd), "isla-plan", "4", "10");
+
+    [AvaloniaFact]
+    public void IslaPosicionVisitantesComoNhse()
+    {
+        Both(sav => Avanzado(sav, v => v.CreatePos = new V3f { X = 1.5f, Y = -2.25f, Z = 100.1f }), "isla-posicion", "0", "1.5", "-2.25", "100.1");
+        Both(sav => Avanzado(sav, v => v._61e631dc = new V3f { X = 0.3f, Y = 7f, Z = -0.001f }), "isla-posicion", "1", "0.3", "7", "-0.001");
+    }
+
+    [AvaloniaFact]
+    public void IslaMarcaVisitantesComoNhse() => Both(sav => Avanzado(sav, v => v._437619d8[5] = !v._437619d8[5]), "isla-marca-visitantes", "5",
+        TestSave.Available ? (TestSave.LoadCopy(out _).Main.Visitor._437619d8[5] ? "0" : "1") : "1");
+
+    [AvaloniaFact]
+    public void IslaDiaVisitanteComoNhse()
+    {
+        Both(sav => Avanzado(sav, v => v.DayWisp = 12345), "isla-dia-visitante", "0", "12345");
+        Both(sav => Avanzado(sav, v => v.DayCeleste = -7), "isla-dia-visitante", "1", "-7");
+    }
 }

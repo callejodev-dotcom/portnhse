@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
+#include <cstring>
 #include <ctime>
 
 namespace acnh {
@@ -219,7 +220,8 @@ bool guardarCamping(std::vector<uint8_t>& m, const std::string& interno, const F
 // GSaveVisitorNpc: quién viene (7 × 4 bytes), dos posiciones, conciertos normales (7) y de cumpleaños (7), 2 bytes,
 // el plan de la semana (7 × 4), 14 marcas, 2 bytes y dos números.
 namespace {
-constexpr uint32_t VIS_QUIEN = 0x00, VIS_NORMAL = 0x34, VIS_CUMPLE = 0x3B, VIS_PLAN = 0x44, VIS_MARCAS = 0x60;
+constexpr uint32_t VIS_QUIEN = 0x00, VIS_POSICIONES = 0x1C, VIS_NORMAL = 0x34, VIS_CUMPLE = 0x3B, VIS_PLAN = 0x44,
+    VIS_MARCAS = 0x60, VIS_DIAS = 0x70;
 
 // NHSE lee y vuelve a escribir todo: las marcas (sí/no) quedan en 0 o 1.
 void normalizarVisitantes(std::vector<uint8_t>& m)
@@ -252,6 +254,60 @@ bool concierto(const std::vector<uint8_t>& m, int dia, bool cumple)
 void ponerConcierto(std::vector<uint8_t>& m, int dia, bool cumple, bool si)
 {
     m[ISLA_VISITANTES + (cumple ? VIS_CUMPLE : VIS_NORMAL) + dia] = si;
+    normalizarVisitantes(m);
+}
+
+void ponerSoloVisitante(std::vector<uint8_t>& m, int dia, int quien)
+{
+    pon32(m.data() + ISLA_VISITANTES + VIS_QUIEN + dia * 4, (uint32_t)quien);
+    normalizarVisitantes(m);
+}
+
+int planVisitante(const std::vector<uint8_t>& m, int dia) { return (int)le32(m.data() + ISLA_VISITANTES + VIS_PLAN + dia * 4); }
+
+void ponerPlanVisitante(std::vector<uint8_t>& m, int dia, int quien)
+{
+    pon32(m.data() + ISLA_VISITANTES + VIS_PLAN + dia * 4, (uint32_t)quien);
+    normalizarVisitantes(m);
+}
+
+PosicionIsla posicionVisitantes(const std::vector<uint8_t>& m, int cual)
+{
+    PosicionIsla p;
+    float* v[3] = {&p.x, &p.y, &p.z};
+    for (int i = 0; i < 3; i++)
+    {
+        const uint32_t b = le32(m.data() + ISLA_VISITANTES + VIS_POSICIONES + cual * 12 + i * 4);
+        memcpy(v[i], &b, 4);
+    }
+    return p;
+}
+
+void ponerPosicionVisitantes(std::vector<uint8_t>& m, int cual, const PosicionIsla& p)
+{
+    const float v[3] = {p.x, p.y, p.z};
+    for (int i = 0; i < 3; i++)
+    {
+        uint32_t b;
+        memcpy(&b, &v[i], 4);
+        pon32(m.data() + ISLA_VISITANTES + VIS_POSICIONES + cual * 12 + i * 4, b);
+    }
+    normalizarVisitantes(m);
+}
+
+bool marcaVisitantes(const std::vector<uint8_t>& m, int i) { return m[ISLA_VISITANTES + VIS_MARCAS + i] != 0; }
+
+void ponerMarcaVisitantes(std::vector<uint8_t>& m, int i, bool si)
+{
+    m[ISLA_VISITANTES + VIS_MARCAS + i] = si;
+    normalizarVisitantes(m);
+}
+
+int32_t diaVisitante(const std::vector<uint8_t>& m, int cual) { return (int32_t)le32(m.data() + ISLA_VISITANTES + VIS_DIAS + cual * 4); }
+
+void ponerDiaVisitante(std::vector<uint8_t>& m, int cual, int32_t valor)
+{
+    pon32(m.data() + ISLA_VISITANTES + VIS_DIAS + cual * 4, (uint32_t)valor);
     normalizarVisitantes(m);
 }
 
@@ -348,6 +404,78 @@ bool retirar(std::vector<uint8_t>& m, uint16_t id)
     return alguna;
 }
 
+std::vector<EntradaMuseo> entradasMuseo(const std::vector<uint8_t>& m)
+{
+    std::vector<EntradaMuseo> r;
+    for (int h = 0; h < HUECOS_MUSEO; h++)
+    {
+        const uint16_t o = objetoMuseo(m, h);
+        if (o == SIN_OBJETO)
+            continue;
+        EntradaMuseo e;
+        e.hueco = h;
+        e.id = o;
+        e.fecha = leerFecha(m.data() + ISLA_MUSEO + MUS_FECHAS + h * 4);
+        e.jugador = m[ISLA_MUSEO + MUS_JUGADORES + h];
+        r.push_back(e);
+    }
+    return r;
+}
+
+bool fechaIslaValida(const FechaIsla& f)
+{
+    if (f.anio < 1 || f.anio > 9999 || f.mes < 1 || f.mes > 12 || f.dia < 1)
+        return false;
+    static const int dias[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    const bool bisiesto = (f.anio % 4 == 0 && f.anio % 100 != 0) || f.anio % 400 == 0;
+    return f.dia <= dias[f.mes - 1] + (f.mes == 2 && bisiesto);
+}
+
+void ponerFechaDonacion(std::vector<uint8_t>& m, int hueco, const FechaIsla& f)
+{
+    ponerFecha(m.data() + ISLA_MUSEO + MUS_FECHAS + hueco * 4, f.vacia() ? FechaIsla{} : f);
+}
+
+void ponerDonante(std::vector<uint8_t>& m, int hueco, int jugador) { m[ISLA_MUSEO + MUS_JUGADORES + hueco] = (uint8_t)jugador; }
+
+void ponerPiezaDonacion(std::vector<uint8_t>& m, int hueco, uint16_t id) { pon16(m.data() + ISLA_MUSEO + MUS_OBJETOS + hueco * 8, id); }
+
+void ordenarMuseoPorFecha(std::vector<uint8_t>& m)
+{
+    // Como MuseumEditor.SortAll: primero las que tienen fecha, por fecha; luego las demás; sin cambiar el orden de las
+    // que empatan (también los huecos vacíos).
+    uint8_t* base = m.data() + ISLA_MUSEO;
+    std::vector<int> orden(HUECOS_MUSEO);
+    for (int i = 0; i < HUECOS_MUSEO; i++)
+        orden[i] = i;
+    auto clave = [&](int i) {
+        const FechaIsla f = leerFecha(base + MUS_FECHAS + i * 4);
+        return f.vacia() ? (int64_t)1 << 40 : (int64_t)f.anio * 10000 + f.mes * 100 + f.dia;
+    };
+    std::stable_sort(orden.begin(), orden.end(), [&](int a, int b) { return clave(a) < clave(b); });
+    const std::vector<uint8_t> antes(base, base + ISLA_TAM_MUSEO);
+    for (int k = 0; k < HUECOS_MUSEO; k++)
+    {
+        const int i = orden[k];
+        std::copy(&antes[MUS_FECHAS + i * 4], &antes[MUS_FECHAS + i * 4] + 4, base + MUS_FECHAS + k * 4);
+        std::copy(&antes[MUS_OBJETOS + i * 8], &antes[MUS_OBJETOS + i * 8] + 8, base + MUS_OBJETOS + k * 8);
+        base[MUS_JUGADORES + k] = antes[MUS_JUGADORES + i];
+    }
+}
+
+std::vector<uint8_t> exportarMuseo(const std::vector<uint8_t>& m)
+{
+    return std::vector<uint8_t>(m.begin() + ISLA_MUSEO, m.begin() + ISLA_MUSEO + ISLA_TAM_MUSEO);
+}
+
+bool importarMuseo(std::vector<uint8_t>& m, const std::vector<uint8_t>& datos)
+{
+    if (datos.size() != ISLA_TAM_MUSEO)
+        return false;
+    std::copy(datos.begin(), datos.end(), m.begin() + ISLA_MUSEO);
+    return true;
+}
+
 // -------------------------------------------------------------------------------------------- tablón de anuncios
 // GSaveBBS (0x77D0 bytes, desde +8 del tablón): fecha, texto (240 letras), firma (48), letra a mano (con el número de
 // trazos al final), jugador (su nombre en +0x1C+4), dibujo y número de nota.
@@ -400,7 +528,7 @@ void escribirNota(std::vector<uint8_t>& m, int hueco, const std::string& texto)
 
 void escribirFirma(std::vector<uint8_t>& m, int hueco, const std::string& firma)
 {
-    ponerUtf16(nota(m, hueco) + NOTA_FIRMA, LARGO_FIRMA + 1, firma);
+    ponerUtf16(nota(m, hueco) + NOTA_FIRMA, LARGO_FIRMA_NOTA + 1, firma);
 }
 
 int letras16(const std::string& texto) { return (int)aUtf16(texto).size(); }
