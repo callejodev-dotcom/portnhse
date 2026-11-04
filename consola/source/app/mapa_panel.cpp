@@ -70,10 +70,16 @@ Pantalla panelSitio(Sitio s)
         v.dibujo = [s, o, vacio] {
             redondo({60, 112, 1160, 140}, 16, BLANCO);
             const SDL_Color c = vacio ? CREMA_OSCURA : colorDe(o);
-            redondo({84, 136, 92, 92}, 14, c);
+            SDL_Texture* foto = vacio ? nullptr : dibujoDe(o);
+            redondo({84, 136, 92, 92}, 14, foto ? CREMA : c);
+            if (foto)
+            {
+                SDL_Rect d = {92, 144, 76, 76};
+                SDL_RenderCopy(g_r, foto, nullptr, &d);
+            }
             int w, h;
             tamano(o, w, h);
-            if (!vacio)
+            if (!vacio && !foto)
                 texto(std::to_string(w / 2) + (w % 2 ? ",5" : "") + "×" + std::to_string(h / 2) + (h % 2 ? ",5" : ""), 130, 182, BLANCO, g_pequena, Centro);
             texto(encajar(vacio ? "Sitio vacío" : nombre(o), 1000, g_grande), 200, 128, MARRON, g_grande);
             std::string donde = s.donde;
@@ -128,6 +134,14 @@ Pantalla panelSitio(Sitio s)
         }
         for (const auto& m : s.mas)
             bs.push_back({{}, m.first, m.second});
+        bs.push_back({{}, "Opciones avanzadas…", [s] {
+            abrir(editorBruto("Opciones avanzadas", s.objeto, s.poner, [s] {
+                std::string d = s.donde;
+                if (s.posicion)
+                    d += " · casilla " + std::to_string(s.posicion().first) + ", " + std::to_string(s.posicion().second);
+                return d;
+            }));
+        }});
         for (size_t i = 0; i < bs.size() && i < 8; i++)
         {
             bs[i].r = {60 + (int)(i % 2) * 590, 270 + (int)(i / 2) * 80, 570, 66};
@@ -165,7 +179,11 @@ void buscarObjeto(std::function<void(const Objeto&)> elegido, const std::string&
             volver();
             elegido(n);
         }};
-        f.color = colorDe([&] { Objeto n; n.id = OBJETOS[i].id; return n; }());
+        Objeto n = nada();
+        n.id = OBJETOS[i].id;
+        f.imagen = dibujoDe(n);
+        if (!f.imagen)
+            f.color = colorDe(n);
         return f;
     };
     l.abajo.push_back([elegido, para, cat] {
@@ -213,11 +231,14 @@ struct Plantas {
     }
 };
 
-SDL_Color colorPlanta(uint16_t id)
+// El dibujo de una planta en su fila, o su color si no hay.
+void ponerDibujo(Fila& f, uint16_t id)
 {
     Objeto o = nada();
     o.id = id;
-    return colorDe(o);
+    f.imagen = dibujoDe(o);
+    if (!f.imagen)
+        f.color = colorDe(o);
 }
 
 Lista listaPlantas(std::shared_ptr<Plantas> e, const std::string& titulo, const std::string& para)
@@ -258,7 +279,7 @@ void elegirPlanta(std::function<void(uint16_t)> elegida, const std::string& para
             volver();
             elegida(id);
         }};
-        f.color = colorPlanta(p.id);
+        ponerDibujo(f, p.id);
         return f;
     };
     abrir(lista(l));
@@ -279,7 +300,7 @@ void elegirPlantas(std::function<void(const std::vector<uint16_t>&, bool)> elegi
             else
                 e->elegidas.erase(it);
         }, true, marcada};
-        f.color = colorPlanta(p.id);
+        ponerDibujo(f, p.id);
         return f;
     };
     l.abajo.push_back([e] { return Fila{e->alAzar ? "Al azar" : "Alternando", [e] { e->alAzar = !e->alAzar; }}; });
@@ -295,6 +316,67 @@ void elegirPlantas(std::function<void(const std::vector<uint16_t>&, bool)> elegi
         v.teclas[0].second = "Marcar";
     };
     abrir(lista(l));
+}
+
+Pantalla editorBruto(const std::string& titulo, std::function<Objeto()> leer, std::function<bool(const Objeto&)> poner,
+    std::function<std::string()> donde)
+{
+    return [=](Vista& v) {
+        const Objeto o = leer();
+        v.titulo = titulo;
+        v.explicacion = "Cada valor del objeto por separado, como en el editor de objetos de NHSE. Para quien sabe lo que toca.";
+        v.dibujo = [o, donde] {
+            redondo({60, 140, 1160, 96}, 16, BLANCO);
+            SDL_Texture* foto = dibujoDe(o);
+            redondo({76, 150, 76, 76}, 12, foto ? CREMA : esNada(o) ? CREMA_OSCURA : colorDe(o));
+            if (foto)
+            {
+                SDL_Rect d = {82, 156, 64, 64};
+                SDL_RenderCopy(g_r, foto, nullptr, &d);
+            }
+            texto(encajar(esNada(o) ? std::string("Nada") : nombre(o), 1020), 172, 152, MARRON);
+            texto(encajar(donde ? donde() : "", 1020, g_pequena), 172, 194, MARRON_SUAVE, g_pequena);
+        };
+        auto cambiar = [leer, poner](std::function<void(Objeto&)> f, const std::string& que) {
+            Objeto n = leer();
+            f(n);
+            if (poner(n))
+                cambiado(que);
+        };
+        auto pedir = [cambiar](const std::string& t, uint32_t ahora, uint32_t maximo, std::function<void(Objeto&, uint32_t)> f) {
+            uint32_t n = ahora;
+            if (pedirNumero(t, n, maximo))
+                cambiar([f, n](Objeto& o) { f(o, n); }, "Cambiado");
+        };
+        std::vector<Boton> bs;
+        auto fila = [&](const std::string& t, const std::string& d, std::function<void()> f) {
+            Boton b{{}, t, std::move(f)};
+            b.detalle = d;
+            bs.push_back(b);
+        };
+        fila("Objeto", esNada(o) ? "Nada · buscar otro" : "nº " + std::to_string(o.id) + " · buscar otro", [cambiar] {
+            buscarObjeto([cambiar](const Objeto& n) { cambiar([n](Objeto& x) { x.id = n.id; }, "Puesto: " + nombre(n)); }, "este sitio");
+        });
+        fila("Número del objeto", std::to_string(o.id), [pedir, o] { pedir("Número del objeto (65534: nada)", o.id, 65535, [](Objeto& x, uint32_t n) { x.id = (uint16_t)n; }); });
+        fila("Cantidad", std::to_string(o.cuenta), [pedir, o] { pedir("Cantidad (como la guarda el juego)", o.cuenta, 65535, [](Objeto& x, uint32_t n) { x.cuenta = (uint16_t)n; }); });
+        fila("Usos", std::to_string(o.usos), [pedir, o] { pedir("Usos", o.usos, 65535, [](Objeto& x, uint32_t n) { x.usos = (uint16_t)n; }); });
+        const char* const GIROS[] = {"Mira hacia abajo", "Mira a la derecha", "Mira hacia arriba", "Mira a la izquierda"};
+        fila("Giro", GIROS[giro(o)], [cambiar] { cambiar([](Objeto& x) { x.sistema = (uint8_t)((x.sistema & ~3) | ((x.sistema + 1) & 3)); }, "Girado"); });
+        fila("Enterrado", enterrado(o) ? "Sí" : "No", [cambiar] { cambiar([](Objeto& x) { x.sistema ^= 0x04; }, "Cambiado"); });
+        fila("Tirado en el suelo", tirado(o) ? "Sí" : "No", [cambiar] { cambiar([](Objeto& x) { x.sistema ^= 0x20; }, "Cambiado"); });
+        fila("Bits del sistema", std::to_string(o.sistema), [pedir, o] { pedir("Bits del sistema (0 a 255)", o.sistema, 255, [](Objeto& x, uint32_t n) { x.sistema = (uint8_t)n; }); });
+        fila("Extra", std::to_string(o.extra), [pedir, o] { pedir("Extra: envoltorio y otros (0 a 255)", o.extra, 255, [](Objeto& x, uint32_t n) { x.extra = (uint8_t)n; }); });
+        fila("Dejarlo vacío", "Sin nada", [poner] {
+            if (poner(nada()))
+                cambiado("Vaciado");
+        });
+        for (size_t i = 0; i < bs.size(); i++)
+        {
+            bs[i].r = {60 + (int)(i % 3) * 393, 256 + (int)(i / 3) * 84, 373, 74};
+            v.b.push_back(bs[i]);
+        }
+        v.b.push_back({{440, ABAJO - 66, 400, 56}, "Volver", [] { volver(); }});
+    };
 }
 
 } // namespace mapa

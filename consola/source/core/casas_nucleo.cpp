@@ -170,4 +170,143 @@ Resultado ponerNuevo(Rejilla& r, const Zona& l, const Objeto& o, int x, int y, O
     return mapa::poner(r, o, x, y, estorbo, nullptr, nullptr, false);
 }
 
+// ------------------------------------------------------------------------------------------- opciones avanzadas
+int16_t suceso(const std::vector<uint8_t>& main, int c, int i) { return (int16_t)lee16(casa(main, c) + SUCESOS + 2 * i); }
+
+void ponerSuceso(std::vector<uint8_t>& main, int c, int i, int16_t v) { pon16(casa(main, c) + SUCESOS + 2 * i, (uint16_t)v); }
+
+std::vector<uint8_t> sucesos(const std::vector<uint8_t>& main, int c)
+{
+    const uint8_t* p = casa(main, c) + SUCESOS;
+    return std::vector<uint8_t>(p, p + 2 * NUM_SUCESOS);
+}
+
+bool ponerSucesos(std::vector<uint8_t>& main, int c, const std::vector<uint8_t>& datos)
+{
+    if (datos.size() != 2 * NUM_SUCESOS)
+        return false;
+    std::copy(datos.begin(), datos.end(), casa(main, c) + SUCESOS);
+    return true;
+}
+
+std::vector<uint8_t> exportar(const std::vector<uint8_t>& main, int c)
+{
+    const uint8_t* p = casa(main, c);
+    return std::vector<uint8_t>(p, p + TAM_CASA);
+}
+
+std::vector<uint8_t> exportarHabitacion(const std::vector<uint8_t>& main, int c, int h)
+{
+    const uint8_t* p = casa(main, c) + HABITACIONES + h * TAM_HABITACION;
+    return std::vector<uint8_t>(p, p + TAM_HABITACION);
+}
+
+namespace {
+// Una habitación de antes de la 2.0 a la de ahora (PlayerRoom1.Upgrade: lo nuevo, a cero).
+std::vector<uint8_t> habitacionNueva(const uint8_t* p)
+{
+    std::vector<uint8_t> r(TAM_HABITACION, 0);
+    std::copy(p, p + TAM_HABITACION1, r.begin());
+    return r;
+}
+} // namespace
+
+std::string importar(std::vector<uint8_t>& main, int c, const std::vector<uint8_t>& datos)
+{
+    std::vector<uint8_t> d;
+    if (datos.size() == TAM_CASA)
+        d = datos;
+    else if (datos.size() == TAM_CASA1)
+    {
+        // PlayerHouse1.Upgrade: la cabecera, cada habitación agrandada y lo de después de las habitaciones.
+        d.assign(TAM_CASA, 0);
+        std::copy(datos.begin(), datos.begin() + HABITACIONES, d.begin());
+        for (int h = 0; h < NUM_HABITACIONES; h++)
+        {
+            const auto r = habitacionNueva(datos.data() + HABITACIONES + h * TAM_HABITACION1);
+            std::copy(r.begin(), r.end(), d.begin() + HABITACIONES + h * TAM_HABITACION);
+        }
+        std::copy(datos.begin() + 0x263D0, datos.begin() + 0x263D0 + 0x30, d.begin() + 0x289F8);
+    }
+    else
+        return "No es una casa de jugador (mide " + std::to_string(datos.size()) + " bytes).";
+    // Como NHSE: «h.NPC1 = current.NPC1» a través de IPlayerHouse, que en las casas de ahora sigue siendo el NPC1 de
+    // PlayerHouse1 (el byte 0x263D0, dentro de la última habitación).
+    uint8_t* p = casa(main, c);
+    d[0x263D0] = p[0x263D0];
+    std::copy(d.begin(), d.end(), p);
+    return "";
+}
+
+std::string importarHabitacion(std::vector<uint8_t>& main, int c, int h, const std::vector<uint8_t>& datos)
+{
+    std::vector<uint8_t> d;
+    if (datos.size() == TAM_HABITACION)
+        d = datos;
+    else if (datos.size() == TAM_HABITACION1)
+        d = habitacionNueva(datos.data());
+    else
+        return "No es una habitación (mide " + std::to_string(datos.size()) + " bytes).";
+    std::copy(d.begin(), d.end(), habitacion(main, c, h));
+    return "";
+}
+
+namespace {
+constexpr uint32_t NPC1 = 0x289F8, NPC2 = 0x289F9, BANDERA = 0x28A04;
+const uint32_t OBJETOS_CASA[3] = {0x289FC, 0x28A08, 0x28A10}; // DoorDecoItemName, PostItemName, OrderPostItemName
+const uint32_t POS_VALOR[] = {0, 0x04, 0x06, 0x08, 0x0A, 0x0C, 0x0E, 0x10, 0x18, NPC1, NPC2, BANDERA};
+} // namespace
+
+int64_t valor(const std::vector<uint8_t>& main, int c, Valor v)
+{
+    const uint8_t* p = casa(main, c) + POS_VALOR[v];
+    switch (v)
+    {
+        case ValorNivel: return nivel(main, c);
+        case ValorPrestamo:
+        case ValorOtro: return acnh::leerNumero(p);
+        case ValorNpc1:
+        case ValorNpc2: return (int8_t)p[0];
+        case ValorBandera: return p[0] != 0;
+        default: return lee16(p);
+    }
+}
+
+void ponerValor(std::vector<uint8_t>& main, int c, Valor v, int64_t n)
+{
+    uint8_t* p = casa(main, c) + POS_VALOR[v];
+    switch (v)
+    {
+        case ValorNivel: ponerNivel(main, c, (uint32_t)n); break;
+        case ValorPrestamo:
+        case ValorOtro: acnh::escribirNumero(p, (uint32_t)n); break;
+        case ValorNpc1:
+        case ValorNpc2: p[0] = (uint8_t)(int8_t)n; break;
+        case ValorBandera: p[0] = n ? 1 : 0; break;
+        default: pon16(p, (uint16_t)n); break;
+    }
+}
+
+Objeto objetoCasa(const std::vector<uint8_t>& main, int c, int cual)
+{
+    const uint8_t* p = casa(main, c) + OBJETOS_CASA[cual];
+    Objeto o;
+    o.id = lee16(p);
+    o.sistema = p[2];
+    o.extra = p[3];
+    o.cuenta = lee16(p + 4);
+    o.usos = lee16(p + 6);
+    return o;
+}
+
+void ponerObjetoCasa(std::vector<uint8_t>& main, int c, int cual, const Objeto& o)
+{
+    uint8_t* p = casa(main, c) + OBJETOS_CASA[cual];
+    pon16(p, o.id);
+    p[2] = o.sistema;
+    p[3] = o.extra;
+    pon16(p + 4, o.cuenta);
+    pon16(p + 6, o.usos);
+}
+
 } // namespace casas
