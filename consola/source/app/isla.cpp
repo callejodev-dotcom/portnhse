@@ -1,6 +1,7 @@
 // Sección «Isla»: hemisferio y aeródromo, fruta y flores de la isla, flores del suelo, malas hierbas, zona de
-// acampada, nabos (precios y tendencia) y visitantes (con sus opciones avanzadas). El museo y el tablón van en isla_museo.cpp e isla_tablon.cpp;
-// el mapa y las casas, en los suyos.
+// acampada, nabos (precios y tendencia) y visitantes (con sus opciones avanzadas), cada una como su ventana de NHSE
+// para Mac. El museo y el tablón van en isla_museo.cpp e isla_tablon.cpp; lo que comparten, en isla_comun.cpp; el mapa
+// y las casas, en los suyos.
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -10,6 +11,8 @@
 #include "../core/tablas.hpp"
 #include "../core/vecinos.hpp"
 #include "partida.hpp"
+#include "dibujos.hpp"
+#include "isla_comun.hpp"
 #include "retratos.hpp"
 #include "ui.hpp"
 
@@ -44,25 +47,29 @@ void cambiaMain(const std::string& que = "Cambiado")
 void hemisferioYAeropuerto(Vista& v)
 {
     v.titulo = "Hemisferio y aeródromo";
-    v.explicacion = "El hemisferio cambia las estaciones, los peces y los bichos.";
+    v.explicacion = "Dónde está tu isla y de qué color es su aeródromo.";
     const auto& m = partida::principal();
     const int h = hemisferio(m), a = aeropuerto(m);
     v.dibujo = [] {
-        texto("Hemisferio", 60, 150, MARRON);
-        texto("Color del aeródromo", 60, 330, MARRON);
+        isla::recuadro({60, 136, 1160, 196}, "Hemisferio", dibujos::menu("PltPalm"), "Cambia las estaciones, los peces y los bichos.");
+        isla::recuadro({60, 348, 1160, 196}, "Color del aeródromo", dibujos::menu("PlaneTicket"), "El de los mostradores y las banderas del aeródromo.");
     };
     const char* hemis[2] = {"Norte", "Sur"};
     for (int i = 0; i < 2; i++)
-        v.b.push_back({{60 + i * 590, 195, 570, 90}, (h == i ? "● " : "") + std::string(hemis[i]), [i] {
+    {
+        Boton b{{148 + i * 316, 236, 300, 64}, hemis[i], [i] {
             if (hemisferio(partida::principal()) == i)
                 return;
             ponerHemisferio(partida::principal(), i);
             cambiaMain(std::string("Hemisferio ") + (i ? "sur" : "norte"));
-        }, true, h == i});
+        }, true, h == i};
+        b.imagen = isla::redondel(h == i);
+        v.b.push_back(b);
+    }
     const SDL_Color colores[NUM_AEROPUERTOS] = {{60, 120, 200, 255}, {235, 195, 40, 255}, {235, 130, 40, 255}, {150, 215, 70, 255}};
     for (int i = 0; i < NUM_AEROPUERTOS; i++)
     {
-        Boton b{{60 + i * 295, 375, 275, 90}, (a == i ? "● " : "") + std::string(AEROPUERTOS[i]), [i] {
+        Boton b{{148 + i * 260, 448, 244, 64}, AEROPUERTOS[i], [i] {
             if (aeropuerto(partida::principal()) == i)
                 return;
             ponerAeropuerto(partida::principal(), i);
@@ -71,7 +78,7 @@ void hemisferioYAeropuerto(Vista& v)
         b.color = colores[i];
         v.b.push_back(b);
     }
-    v.b.push_back({{440, ABAJO - 90, 400, 70}, "Volver", [] { volver(); }});
+    v.b.push_back({{W - 60 - 240, ABAJO - 66, 240, 56}, "Volver", [] { volver(); }});
 }
 
 // ------------------------------------------------------------------------------------------------- fruta y flores
@@ -95,63 +102,82 @@ void guardarFrutas(std::function<void(FrutasFlores&)> cambio, const std::string&
     cambiaMain(que);
 }
 
-void elegirFruta(bool hermana)
+// Otra fruta que no es de las cinco de siempre, por su número de objeto.
+void otraFruta()
 {
-    const FrutasFlores f = leerFrutasFlores(partida::principal(), partida::personal());
-    const uint16_t actual = hermana ? f.frutaHermana : f.fruta;
-    std::vector<std::string> op;
-    int marcada = 5;
-    for (int i = 0; i < 5; i++)
-    {
-        op.push_back(FRUTAS_ISLA[i].nombre);
-        if (FRUTAS_ISLA[i].id == actual)
-            marcada = i;
-    }
-    op.push_back(marcada == 5 ? "Otra: objeto " + std::to_string(actual) + "…" : std::string("Otra (por su número de objeto)…"));
-    elegir(hermana ? "Segunda fruta" : "Fruta de tu isla",
-        hermana ? "La de las islas misteriosas (billete Nook) y la que te manda tu madre."
-                : "La que tenían los árboles cuando llegaste. También sale en el pasaporte.",
-        op, marcada, [hermana, actual](int i) {
-            uint32_t id = i < 5 ? FRUTAS_ISLA[i].id : actual;
-            if (i == 5 && !pedirNumero("Número de objeto de la fruta", id, 65534))
+    elegir("Otra fruta", "¿Cuál cambias por un objeto que no es de las cinco frutas de siempre?", {"Fruta de tu isla", "Segunda fruta"}, -1,
+        [](int i) {
+            const bool hermana = i == 1;
+            const FrutasFlores f = leerFrutasFlores(partida::principal(), partida::personal());
+            uint32_t id = hermana ? f.frutaHermana : f.fruta;
+            if (!pedirNumero("Número de objeto de la fruta", id, 65534))
                 return;
             guardarFrutas([hermana, id](FrutasFlores& f) { (hermana ? f.frutaHermana : f.fruta) = (uint16_t)id; },
                 std::string(hermana ? "Segunda fruta: " : "Fruta de la isla: ") + nombreFruta((uint16_t)id));
-        }, 3);
-}
-
-void elegirFlor(bool hermana)
-{
-    const FrutasFlores f = leerFrutasFlores(partida::principal(), partida::personal());
-    elegir(hermana ? "Segunda flor" : "Flor de tu isla", hermana ? "La otra flor propia de tu isla." : "La que crece sola en tu isla.",
-        std::vector<std::string>(FLORES_ISLA, FLORES_ISLA + NUM_FLORES_ISLA), hermana ? f.florHermana : f.flor, [hermana](int i) {
-            guardarFrutas([hermana, i](FrutasFlores& f) { (hermana ? f.florHermana : f.flor) = (uint8_t)i; },
-                std::string(hermana ? "Segunda flor: " : "Flor de la isla: ") + FLORES_ISLA[i]);
         });
 }
 
 std::string nombreFlor(int i) { return i >= 0 && i < NUM_FLORES_ISLA ? FLORES_ISLA[i] : "Flor " + std::to_string(i); }
 
+// Los dibujos, como FruitsFlowersWindow (en el orden de FRUTAS_ISLA y FLORES_ISLA).
+const char* const DIBUJO_FRUTA[5] = {"Apple", "Orange", "Pear", "Peach", "Cherry"};
+const char* const DIBUJO_FLOR[NUM_FLORES_ISLA] = {"Anemone1", "Hyacinth5", "Turip0", "Rose0", "Cosmos2", "Yuri2", "Mum1", "Pansi1"};
+
+// Como FruitsFlowersWindow: la fruta y las flores con sus dibujos; la elegida, en verde.
 void frutasYFlores(Vista& v)
 {
     v.titulo = "Fruta y flores de tu isla";
-    v.explicacion = "La fruta y las flores que crecen solas en tu isla. Toca una para cambiarla.";
+    v.explicacion = "La fruta y las flores que crecen solas en tu isla. Toca una para elegirla.";
     const FrutasFlores f = leerFrutasFlores(partida::principal(), partida::personal());
-    struct Fila4 { std::string t, d; std::function<void()> a; };
-    const Fila4 filas[4] = {
-        {"Fruta de tu isla: " + nombreFruta(f.fruta), "La que tenían los árboles cuando llegaste. También sale en el pasaporte.", [] { elegirFruta(false); }},
-        {"Segunda fruta: " + nombreFruta(f.frutaHermana), "La de las islas misteriosas (billete Nook) y la que te manda tu madre.", [] { elegirFruta(true); }},
-        {"Flor de tu isla: " + nombreFlor(f.flor), "La que crece sola en tu isla.", [] { elegirFlor(false); }},
-        {"Segunda flor: " + nombreFlor(f.florHermana), "La otra flor propia de tu isla.", [] { elegirFlor(true); }},
+    constexpr int ARRIBA = 136, FILA[2] = {224, 384}, DER = 550;
+    constexpr int LADO_FRUTA = 78, LADO_FLOR = 70;
+    struct Grupo {
+        std::string titulo, explicacion;
     };
-    for (int i = 0; i < 4; i++)
+    const Grupo frutas[2] = {{"Fruta de tu isla: " + nombreFruta(f.fruta), "La de los árboles cuando llegaste."},
+        {"Segunda fruta: " + nombreFruta(f.frutaHermana), "La de las islas misteriosas."}};
+    const Grupo flores[2] = {{"Flor de tu isla: " + nombreFlor(f.flor), "La que crece sola en tu isla."},
+        {"Segunda flor: " + nombreFlor(f.florHermana), "La otra flor propia de tu isla."}};
+    v.dibujo = [frutas, flores] {
+        isla::recuadro({60, ARRIBA, DER - 20 - 60, 404}, "Fruta", dibujos::menu("Peach"));
+        isla::recuadro({DER, ARRIBA, 1220 - DER, 404}, "Flores", dibujos::menu("PltCosmos0"));
+        for (int k = 0; k < 2; k++)
+        {
+            texto(encajar(frutas[k].titulo, 422, g_negrita), 84, FILA[k], MARRON, g_negrita);
+            texto(frutas[k].explicacion, 84, FILA[k] + 32, MARRON_SUAVE, g_pequena);
+            texto(encajar(flores[k].titulo, 622, g_negrita), DER + 24, FILA[k], MARRON, g_negrita);
+            texto(flores[k].explicacion, DER + 24, FILA[k] + 32, MARRON_SUAVE, g_pequena);
+        }
+    };
+    for (int k = 0; k < 2; k++)
     {
-        Boton b{{60, 145 + i * 112, 1160, 96}, filas[i].t, filas[i].a};
-        b.detalle = filas[i].d;
-        b.grande = true;
-        v.b.push_back(b);
+        const bool hermana = k == 1;
+        const uint16_t actual = hermana ? f.frutaHermana : f.fruta;
+        for (int i = 0; i < 5; i++)
+        {
+            Boton b{{84 + i * (LADO_FRUTA + 8), FILA[k] + 66, LADO_FRUTA, LADO_FRUTA}, FRUTAS_ISLA[i].nombre, [hermana, i] {
+                const uint16_t id = FRUTAS_ISLA[i].id;
+                guardarFrutas([hermana, id](FrutasFlores& f) { (hermana ? f.frutaHermana : f.fruta) = id; },
+                    std::string(hermana ? "Segunda fruta: " : "Fruta de la isla: ") + FRUTAS_ISLA[i].nombre);
+            }, true, FRUTAS_ISLA[i].id == actual};
+            b.casilla = true;
+            b.imagen = dibujos::menu(DIBUJO_FRUTA[i]);
+            v.b.push_back(b);
+        }
+        const int flor = hermana ? f.florHermana : f.flor;
+        for (int i = 0; i < NUM_FLORES_ISLA; i++)
+        {
+            Boton b{{DER + 24 + i * (LADO_FLOR + 8), FILA[k] + 66, LADO_FLOR, LADO_FLOR}, FLORES_ISLA[i], [hermana, i] {
+                guardarFrutas([hermana, i](FrutasFlores& f) { (hermana ? f.florHermana : f.flor) = (uint8_t)i; },
+                    std::string(hermana ? "Segunda flor: " : "Flor de la isla: ") + FLORES_ISLA[i]);
+            }, true, i == flor};
+            b.casilla = true;
+            b.imagen = dibujos::menu(DIBUJO_FLOR[i]);
+            v.b.push_back(b);
+        }
     }
-    v.b.push_back({{440, ABAJO - 82, 400, 66}, "Volver", [] { volver(); }});
+    v.b.push_back({{60, ABAJO - 66, 400, 56}, "Otra fruta por su número…", otraFruta});
+    v.b.push_back({{W - 60 - 240, ABAJO - 66, 240, 56}, "Volver", [] { volver(); }});
 }
 
 // ------------------------------------------------------------------------------------------- flores del suelo
@@ -166,17 +192,24 @@ Pantalla flores()
     l.titulo = "Flores";
     l.explicacion = [] { return "Elige una o varias: todas las flores de la isla (" + std::to_string(contar(partida::principal()).flores) + ") se cambian por esas."; };
     l.cuantas = [] { return NUM_FLORES; };
+    l.columnas = 3;
     l.porColumna = 6;
     l.fila = [e](int i) {
         const auto& f = FLORES_ABIERTAS[i];
         const bool marcada = std::find(e->elegidas.begin(), e->elegidas.end(), f.id) != e->elegidas.end();
-        return Fila{std::string(marcada ? "● " : "") + f.nombre, [e, id = f.id] {
+        // Con su dibujo, como las listas del Mac; las elegidas, en verde.
+        std::string nombre = f.nombre;
+        if (!nombre.empty())
+            nombre[0] = (char)toupper((unsigned char)nombre[0]);
+        Fila x{nombre, [e, id = f.id] {
             auto it = std::find(e->elegidas.begin(), e->elegidas.end(), id);
             if (it == e->elegidas.end())
                 e->elegidas.push_back(id);
             else
                 e->elegidas.erase(it);
         }, true, marcada};
+        x.imagen = dibujos::de(f.id);
+        return x;
     };
     l.abajo.push_back([e] { return Fila{e->alAzar ? "Mezcla: al azar" : "Mezcla: alternando", [e] { e->alAzar = !e->alAzar; }}; });
     l.abajo.push_back([e] {
@@ -189,6 +222,27 @@ Pantalla flores()
     });
     l.extra = [](Vista& v) { v.teclas = {{"A", "Marcar"}, {"L R", "Página"}, {"B", "Volver"}}; };
     return lista(l);
+}
+
+// ------------------------------------------------------------------------------------------------ malas hierbas
+void malasHierbas(Vista& v)
+{
+    v.titulo = "Malas hierbas";
+    v.explicacion = "Quita de golpe todas las malas hierbas del suelo de la isla.";
+    const int n = contar(partida::principal()).malasHierbas;
+    v.dibujo = [n] {
+        isla::recuadro({60, 136, 1160, 210}, n ? (n == 1 ? std::string("Hay 1 mala hierba") : "Hay " + std::to_string(n) + " malas hierbas") : std::string("No hay malas hierbas"),
+            dibujos::menu("Weed"), "Las flores, los árboles y lo demás que hay en el suelo se quedan como están.");
+    };
+    Boton b{{148, 256, 460, 64}, n == 1 ? std::string("Quitar la mala hierba") : "Quitar las " + std::to_string(n) + " malas hierbas", [] {
+        const int q = quitarMalasHierbas(partida::principal());
+        partida::cambiaPrincipal();
+        volver();
+        cambiado("Quitadas " + std::to_string(q) + " malas hierbas");
+    }, n > 0};
+    b.principal = n > 0;
+    v.b.push_back(b);
+    v.b.push_back({{W - 60 - 240, ABAJO - 66, 240, 56}, "Volver", [] { volver(); }});
 }
 
 // ---------------------------------------------------------------------------------------------- zona de acampada
@@ -208,20 +262,41 @@ Pantalla elegirVecino(const std::string& titulo, const std::string& actual, std:
         std::vector<int> vistos;
     };
     auto e = std::make_shared<Estado>();
-    auto filtrar = [e] {
-        e->vistos.clear();
-        const std::string q = normalizar(e->busqueda);
+    auto filtrar = [](const std::string& texto, std::vector<int>& vistos) {
+        vistos.clear();
+        const std::string q = normalizar(texto);
         for (int i = 0; i < NUM_VECINOS_LISTA; i++)
             if (q.empty() || normalizar(LISTA_VECINOS[i].nombre).find(q) != std::string::npos)
-                e->vistos.push_back(i);
+                vistos.push_back(i);
+        return (int)vistos.size();
     };
-    filtrar();
-    auto buscar = [e, filtrar] {
-        std::string q = e->busqueda;
-        if (!pedirTexto("Buscar", "Escribe parte del nombre (vacío: todos)", q))
-            return;
-        e->busqueda = q;
-        filtrar();
+    filtrar("", e->vistos);
+    // Una fila con la cara: al tocarla se elige (y se cierra todo lo que se abrió para elegir).
+    auto fila = [actual, elegido](int i, int cerrar) {
+        const auto& x = LISTA_VECINOS[i];
+        const std::string interno = x.interno;
+        Fila f{x.nombre, [interno, elegido, cerrar] {
+            for (int k = 0; k < cerrar; k++)
+                volver();
+            elegido(interno);
+        }, true, interno == actual};
+        f.imagen = retratos::de(interno);
+        return f;
+    };
+    // Buscar mientras se escribe; al volver, la lista se queda con lo buscado.
+    auto buscar = [e, filtrar, fila] {
+        auto encontrados = std::make_shared<std::vector<int>>();
+        Buscador b;
+        b.titulo = "Buscar un vecino";
+        b.explicacion = "Escribe parte del nombre y toca el que quieras.";
+        b.texto = e->busqueda;
+        b.filtrar = [encontrados, filtrar](const std::string& t) { return filtrar(t, *encontrados); };
+        b.fila = [encontrados, fila](int k) { return fila((*encontrados)[k], 2); };
+        b.alSalir = [e, filtrar](const std::string& t) {
+            e->busqueda = t;
+            filtrar(t, e->vistos);
+        };
+        abrir(buscador(b));
     };
     Lista l;
     l.titulo = titulo;
@@ -229,16 +304,7 @@ Pantalla elegirVecino(const std::string& titulo, const std::string& actual, std:
         return (e->busqueda.empty() ? std::string() : "«" + e->busqueda + "»: ") + std::to_string(e->vistos.size()) + " vecinos. Toca uno para elegirlo.";
     };
     l.cuantas = [e] { return (int)e->vistos.size(); };
-    l.fila = [e, actual, elegido](int k) {
-        const auto& x = LISTA_VECINOS[e->vistos[k]];
-        const std::string interno = x.interno;
-        Fila f{x.nombre, [interno, elegido] {
-            volver();
-            elegido(interno);
-        }, true, interno == actual};
-        f.imagen = retratos::de(interno);
-        return f;
-    };
+    l.fila = [e, fila](int k) { return fila(e->vistos[k], 1); };
     l.columnas = 3;
     l.abajo.push_back([buscar] { return Fila{"Buscar…", buscar}; });
     l.extra = [buscar](Vista& v) {
@@ -248,17 +314,32 @@ Pantalla elegirVecino(const std::string& titulo, const std::string& actual, std:
     return lista(l);
 }
 
+void cambiarDiaCamping(const std::string& quien)
+{
+    FechaIsla n = fechaCamping(partida::principal());
+    if (n.vacia())
+        n = hoyIsla();
+    uint32_t d = n.dia, mes = n.mes, a = n.anio;
+    if (!pedirNumero("Día de la visita (1-31)", d, 31, 1) || !pedirNumero("Mes de la visita (1-12)", mes, 12, 1) ||
+        !pedirNumero("Año de la visita", a, 2099, 2000))
+        return;
+    guardarCamping(partida::principal(), quien, {(int)a, (int)mes, (int)d});
+    cambiaMain();
+}
+
+// Como CampsiteWindow: la cara del campista en grande con sus botones, y debajo el día de la visita.
 void camping(Vista& v)
 {
     v.titulo = "Zona de acampada";
     const auto& m = partida::principal();
     if (!hayCamping(m))
     {
-        v.explicacion = "Aún no tienes zona de acampada.";
+        v.explicacion = "Elige quién se queda en la zona de acampada.";
         v.dibujo = [] {
-            texto("Cuando Tom Nook te la dé y la coloques en la isla, aquí podrás elegir quién se queda en ella.", 60, 200, MARRON, nullptr, Izquierda, 1160);
+            isla::recuadro({60, 136, 1160, 150}, "Aún no tienes zona de acampada", dibujos::menu("Tent"),
+                "Cuando Tom Nook te la dé y la coloques en la isla, aquí podrás elegir quién se queda en ella.");
         };
-        v.b.push_back({{440, ABAJO - 90, 400, 70}, "Volver", [] { volver(); }});
+        v.b.push_back({{W - 60 - 240, ABAJO - 66, 240, 56}, "Volver", [] { volver(); }});
         return;
     }
     v.explicacion = "Elige quién se queda en la zona de acampada.";
@@ -267,54 +348,50 @@ void camping(Vista& v)
     for (int i = 0; i < NUM_VECINOS && !quien.empty(); i++)
         vive = vive || vecinoEn(m, i) == quien;
     const std::string nombre = quien.empty() ? std::string("Nadie") : nombreVecino(quien);
-    const FechaIsla f = fechaCamping(m);
-    SDL_Texture* cara = quien.empty() ? nullptr : retratos::de(quien);
+    SDL_Texture* cara = quien.empty() ? dibujos::menu("Tent") : retratos::de(quien);
+    constexpr int X = 300; // where the text starts, right of the face
     v.dibujo = [nombre, quien, vive, cara] {
-        const int x = cara ? 60 + 120 + 16 : 60;
+        isla::recuadro({60, 136, 1160, 236}, "", nullptr);
         if (cara)
         {
-            SDL_Rect d = {60, 140, 120, 120};
+            SDL_Rect d = {96, 156, 180, 180};
             SDL_RenderCopy(g_r, cara, nullptr, &d);
         }
-        texto(nombre, x, 150, MARRON, g_grande);
-        texto(quien.empty() ? "No hay nadie en la zona de acampada." : "Está en la zona de acampada.", x, 205, MARRON_SUAVE, g_pequena);
+        texto(nombre, X, 166, MARRON, g_titulo);
+        texto(quien.empty() ? "No hay nadie en la zona de acampada." : "Está en la zona de acampada.", X, 220, MARRON_SUAVE, g_pequena);
         if (vive)
-            texto(nombre + " ya vive en tu isla.", x, 235, ROJO, g_pequena);
+            texto(nombre + " ya vive en tu isla.", X, 248, ROJO, g_pequena);
+        if (!quien.empty())
+            isla::recuadro({60, 388, 1160, 196}, "Día de la visita", dibujos::menu("Timer"),
+                "Los campistas solo se quedan un día: pon la fecha de hoy para encontrarlo al abrir el juego.");
     };
-    v.b.push_back({{60, 280, 570, 80}, "Elegir campista…", [quien] {
+    Boton elegir{{X, 290, 320, 56}, "Elegir campista…", [quien] {
         abrir(elegirVecino("Elegir campista", quien, [](const std::string& interno) {
             // Como NHSE para Mac: al elegir a alguien, la visita es hoy.
             guardarCamping(partida::principal(), interno, hoyIsla());
             cambiaMain(nombreVecino(interno) + " está acampando");
         }));
-    }});
-    v.b.push_back({{650, 280, 570, 80}, "Dejarla vacía", [] {
+    }};
+    elegir.principal = true;
+    v.b.push_back(elegir);
+    v.b.push_back({{X + 336, 290, 280, 56}, "Dejarla vacía", [] {
         guardarCamping(partida::principal(), "", {});
         cambiaMain("No hay nadie acampando");
     }, !quien.empty()});
     if (!quien.empty())
     {
-        v.b.push_back({{60, 400, 570, 80}, "Día de la visita: " + (f.vacia() ? std::string("sin fecha") : textoFechaIsla(f)), [quien] {
-            FechaIsla n = fechaCamping(partida::principal());
-            if (n.vacia())
-                n = hoyIsla();
-            uint32_t d = n.dia, mes = n.mes, a = n.anio;
-            if (!pedirNumero("Día de la visita (1-31)", d, 31, 1) || !pedirNumero("Mes de la visita (1-12)", mes, 12, 1) ||
-                !pedirNumero("Año de la visita", a, 2099, 2000))
-                return;
-            guardarCamping(partida::principal(), quien, {(int)a, (int)mes, (int)d});
-            cambiaMain();
-        }});
-        v.b.push_back({{650, 400, 570, 80}, "Poner la visita hoy", [quien] {
+        const FechaIsla f = fechaCamping(m);
+        Boton dia{{148, 500, 420, 64}, f.vacia() ? std::string("Sin fecha") : textoFechaIsla(f), [quien] { cambiarDiaCamping(quien); }};
+        dia.detalle = "Toca para cambiarlo";
+        dia.imagen = dibujos::menu("Timer");
+        v.b.push_back(dia);
+        const bool esHoy = !f.vacia() && f.anio == hoyIsla().anio && f.mes == hoyIsla().mes && f.dia == hoyIsla().dia;
+        v.b.push_back({{584, 500, 320, 64}, esHoy ? std::string("Ya es hoy") : std::string("Poner la visita hoy"), [quien] {
             guardarCamping(partida::principal(), quien, hoyIsla());
             cambiaMain("La visita es hoy");
-        }});
-        v.dibujo = [d = v.dibujo] {
-            d();
-            texto("Los campistas solo se quedan un día: pon la fecha de hoy para encontrarlo al abrir el juego.", 60, 500, MARRON_SUAVE, g_pequena, Izquierda, 1160);
-        };
+        }, !esHoy});
     }
-    v.b.push_back({{440, ABAJO - 90, 400, 70}, "Volver", [] { volver(); }});
+    v.b.push_back({{W - 60 - 240, ABAJO - 66, 240, 56}, "Volver", [] { volver(); }});
 }
 
 std::string resumenCamping()
@@ -327,89 +404,135 @@ std::string resumenCamping()
 }
 
 // -------------------------------------------------------------------------------------------------------- nabos
-const char* const DIAS[] = {"Domingo", "Domingo", "Lunes", "Lunes", "Martes", "Martes", "Miércoles", "Miércoles",
-    "Jueves", "Jueves", "Viernes", "Viernes", "Sábado", "Sábado"};
-
+// Como TurnipsWindow: el precio de Juliana en su tarjeta, la semana en una tabla con barras debajo y la tendencia.
 std::string nombreTendencia(uint32_t t) { return t < NUM_TENDENCIAS ? TENDENCIAS[t] : "Tendencia " + std::to_string(t); }
-
-void tendencia(Vista& v)
-{
-    v.titulo = "Tendencia de esta semana";
-    v.explicacion = "La elige el juego el domingo. No cambia los precios: decide la de la semana que viene.";
-    const auto& m = partida::principal();
-    const uint32_t t = tendenciaNabos(m);
-    for (int i = 0; i < NUM_TENDENCIAS; i++)
-    {
-        Boton b{{60, 145 + i * 98, 1160, 86}, (t == (uint32_t)i ? "● " : "") + std::string(TENDENCIAS[i]), [i] {
-            if (tendenciaNabos(partida::principal()) == (uint32_t)i)
-                return;
-            ponerTendenciaNabos(partida::principal(), (uint32_t)i);
-            cambiaMain(std::string("Tendencia: ") + TENDENCIAS[i]);
-        }, true, t == (uint32_t)i};
-        b.detalle = TENDENCIAS_EXPLICACION[i];
-        b.grande = true;
-        v.b.push_back(b);
-    }
-    if (t == 1 || t == 3)
-        v.b.push_back({{60, 545, 760, 60}, "El pico empieza el " + medioDia(picoNabos(m), false), [] {
-            const uint32_t actual = picoNabos(partida::principal());
-            std::vector<std::string> op;
-            std::vector<uint32_t> valores;
-            for (uint32_t h = 2; h < 14; h++)
-                op.push_back(medioDia(h)), valores.push_back(h);
-            if (actual < 2 || actual >= 14)
-                op.push_back(medioDia(actual)), valores.push_back(actual);
-            const int marcada = (int)(std::find(valores.begin(), valores.end(), actual) - valores.begin());
-            elegir("El pico empieza el…", "El medio día en que empieza a subir.", op, marcada, [valores](int i) {
-                ponerPicoNabos(partida::principal(), valores[i]);
-                cambiaMain("El pico empieza el " + medioDia(valores[i], false));
-            });
-        }});
-    v.b.push_back({{840, 545, 380, 60}, "Volver", [] { volver(); }});
-}
 
 constexpr uint32_t MAX_NABOS = 9999; // como NHSE para Mac
 
+// Cambiar un precio: -1 el de Juliana, 2...13 los medios días de venta.
+void cambiarNabo(int i)
+{
+    Nabos m = leerNabos(partida::principal());
+    uint32_t valor = i < 0 ? m.compra : m.venta[i];
+    const std::string t = i < 0 ? std::string("Precio de Juliana (domingo)") : medioDia((uint32_t)i);
+    if (!pedirNumero(t, valor, std::max<uint32_t>(MAX_NABOS, valor)))
+        return;
+    (i < 0 ? m.compra : m.venta[i]) = valor;
+    escribirNabos(partida::principal(), m);
+    partida::cambiaPrincipal();
+    cambiado();
+}
+
+void elegirPico()
+{
+    const uint32_t actual = picoNabos(partida::principal());
+    std::vector<std::string> op;
+    std::vector<uint32_t> valores;
+    for (uint32_t h = 2; h < 14; h++)
+        op.push_back(medioDia(h)), valores.push_back(h);
+    if (actual < 2 || actual >= 14)
+        op.push_back(medioDia(actual)), valores.push_back(actual);
+    const int marcada = (int)(std::find(valores.begin(), valores.end(), actual) - valores.begin());
+    elegir("El pico empieza el…", "El medio día en que los precios empiezan a subir.", op, marcada, [valores](int i) {
+        ponerPicoNabos(partida::principal(), valores[i]);
+        cambiaMain("El pico empieza el " + medioDia(valores[i], false));
+    });
+}
+
 void nabos(Vista& v)
 {
-    v.titulo = "Nabos";
-    const Nabos n = leerNabos(partida::principal());
-    v.explicacion = "Precios de esta semana. Toca uno para cambiarlo.";
-    // Cuándo venderlos, como el Mac: el precio más alto de la semana (el primero si hay varios).
+    v.titulo = "Precio de los nabos";
+    v.explicacion = "Lo que cobra Juliana el domingo y lo que te pagan por ellos cada día de esta semana. Toca un precio para cambiarlo.";
+    const auto& m = partida::principal();
+    const Nabos n = leerNabos(m);
+    const uint32_t t = tendenciaNabos(m);
+    // El mejor precio de la semana (el primero si hay varios), como el Mac.
     int mejor = 2;
     for (int i = 3; i < 14; i++)
         if (n.venta[i] > n.venta[mejor])
             mejor = i;
-    if (n.venta[mejor] != 0)
-        v.explicacion += " Lo mejor: venderlos el " + medioDia((uint32_t)mejor, false) + " (" + numero(n.venta[mejor]) + " bayas).";
-    auto cambiar = [](int i) {
-        Nabos m = leerNabos(partida::principal());
-        uint32_t valor = i < 0 ? m.compra : m.venta[i];
-        const std::string t = i < 0 ? std::string("Precio de compra (domingo)") : std::string(DIAS[i]) + (i % 2 ? " por la tarde" : " por la mañana");
-        if (!pedirNumero(t, valor, std::max<uint32_t>(MAX_NABOS, valor)))
-            return;
-        (i < 0 ? m.compra : m.venta[i]) = valor;
-        escribirNabos(partida::principal(), m);
-        partida::cambiaPrincipal();
-        cambiado();
+    const std::string mejorTexto = n.venta[mejor] == 0 ? std::string()
+        : "Mejor precio: " + medioDia((uint32_t)mejor, false) + ", " + numero(n.venta[mejor]) + " bayas.";
+
+    // La tabla: los días en columnas, mañana y tarde en filas.
+    constexpr int TX = 396, TW = 1220 - TX;      // the card of the week
+    constexpr int CX = 512, CW = 107, CP = 115; // where the cells start, their width and step
+    constexpr int ARRIBA = 136, FILA1 = 246, FILA2 = 296, BASE = 400, ALTO_BARRAS = 52;
+    const std::string tendenciaTexto = t < NUM_TENDENCIAS ? std::string(TENDENCIAS_EXPLICACION[t]) : std::string();
+    v.dibujo = [n, mejorTexto, tendenciaTexto] {
+        // Juliana: lo que hay debajo de su tarjeta.
+        if (!mejorTexto.empty())
+            texto(mejorTexto, 64, 306, VERDE_OSCURO, g_pequena, Izquierda, 312);
+        // La semana.
+        isla::recuadro({TX, ARRIBA, TW, 304}, "Precios de venta de esta semana", dibujos::menu("Kabu"),
+            "Lo que pagan Tendo y Nendo por cada nabo. Los domingos no compran.");
+        for (int d = 0; d < 6; d++)
+            texto(DIA[d + 1], CX + d * CP + CW / 2, 230, MARRON, g_pequena, Centro);
+        texto("Mañana", TX + 22, FILA1 + 22 - TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena);
+        texto("Tarde", TX + 22, FILA2 + 22 - TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena);
+        // Las barras: verdes las que ganan (más de lo que se pagó a Juliana), grises las demás.
+        uint32_t tope = std::max<uint32_t>(n.compra, 1);
+        for (int i = 2; i < 14; i++)
+            tope = std::max(tope, n.venta[i]);
+        const SDL_Color gana[2] = {VERDE, {0x6C, 0xC0, 0x8A, 255}}, pierde[2] = {{0xC7, 0xC7, 0xCC, 255}, {0xDD, 0xDD, 0xE2, 255}};
+        for (int i = 2; i < 14; i++)
+        {
+            const int alto = (int)((uint64_t)n.venta[i] * ALTO_BARRAS / tope);
+            if (alto <= 0)
+                continue;
+            const int x = CX + (i / 2 - 1) * CP + (i % 2 ? CW / 2 + 3 : 6);
+            rect({x, BASE - alto, CW / 2 - 9, alto}, n.venta[i] > n.compra ? gana[i % 2] : pierde[i % 2]);
+        }
+        if (n.compra > 0)
+        {
+            const int y = BASE - (int)((uint64_t)n.compra * ALTO_BARRAS / tope);
+            rect({CX, y - 1, 5 * CP + CW, 2}, MARRON_SUAVE);
+            texto(numero(n.compra), CX - 10, y - TTF_FontHeight(g_pequena) / 2, MARRON_SUAVE, g_pequena, Derecha);
+        }
+        texto("Barras verdes: ganas más de lo que pagaste a Juliana.", CX, BASE + 6, MARRON_SUAVE, g_pequena);
+        // La tendencia.
+        isla::recuadro({60, 452, 1160, 144}, "Tendencia de esta semana", dibujos::menu("BadKabu"), tendenciaTexto);
     };
-    v.b.push_back({{60, 145, 1160, 50}, "Juliana los vende a " + numero(n.compra) + " bayas", [cambiar] { cambiar(-1); }});
-    for (int i = 2; i < 14; i++)
-        v.b.push_back({{60 + (i % 2) * 590, 208 + (i / 2 - 1) * 58, 570, 50},
-            std::string(DIAS[i]) + (i % 2 ? " tarde: " : " mañana: ") + numero(n.venta[i]), [cambiar, i] { cambiar(i); }});
-    v.b.push_back({{60, 570, 360, 56}, "Poner todos a…", [] {
-        uint32_t valor = 600;
+
+    Boton juliana{{60, ARRIBA, 320, 160}, "Precio de Juliana", [] { cambiarNabo(-1); }};
+    juliana.grande = true;
+    juliana.valor = numero(n.compra);
+    juliana.detalle = "Toca para cambiarlo";
+    juliana.imagen = retratos::de("boc");
+    v.b.push_back(juliana);
+    for (int d = 0; d < 6; d++)
+        for (int pm = 0; pm < 2; pm++)
+        {
+            const int i = (d + 1) * 2 + pm;
+            v.b.push_back({{CX + d * CP, pm ? FILA2 : FILA1, CW, 44}, numero(n.venta[i]), [i] { cambiarNabo(i); }});
+        }
+    v.b.push_back({{60, 384, 320, 56}, "Poner todos a…", [] {
+        uint32_t valor = 500;
         if (!pedirNumero("Precio de venta para toda la semana", valor, MAX_NABOS))
             return;
-        Nabos m = leerNabos(partida::principal());
+        Nabos x = leerNabos(partida::principal());
         for (int i = 2; i < 14; i++)
-            m.venta[i] = valor;
-        escribirNabos(partida::principal(), m);
+            x.venta[i] = valor;
+        escribirNabos(partida::principal(), x);
         partida::cambiaPrincipal();
-        cambiado("Toda la semana a " + std::to_string(valor));
+        cambiado("Toda la semana a " + numero(valor));
     }});
-    v.b.push_back({{440, 570, 480, 56}, "Tendencia: " + nombreTendencia(tendenciaNabos(partida::principal())), [] { abrir(tendencia); }});
-    v.b.push_back({{940, 570, 280, 56}, "Volver", [] { volver(); }});
+    for (int i = 0; i < NUM_TENDENCIAS; i++)
+    {
+        Boton b{{84 + i * 282, 538, 270, 46}, TENDENCIAS[i], [i] {
+            if (tendenciaNabos(partida::principal()) == (uint32_t)i)
+                return;
+            ponerTendenciaNabos(partida::principal(), (uint32_t)i);
+            cambiaMain(std::string("Tendencia: ") + TENDENCIAS[i] + " (los precios de arriba no cambian)");
+        }, true, t == (uint32_t)i};
+        b.imagen = isla::tendencia(i);
+        v.b.push_back(b);
+    }
+    // El día del pico, solo en las tendencias con pico (como el Mac).
+    const bool conPico = t == 1 || t == 3;
+    v.b.push_back({{60, ABAJO - 66, 640, 56}, conPico ? "El pico empieza el " + medioDia(picoNabos(m), false) + "…" : std::string("Sin pico esta semana"),
+        elegirPico, conPico});
+    v.b.push_back({{W - 60 - 240, ABAJO - 66, 240, 56}, "Volver", [] { volver(); }});
 }
 
 // ---------------------------------------------------------------------------------------------------- visitantes
@@ -424,15 +547,29 @@ void elegirQuien(const std::string& titulo, const std::string& explicacion, int 
         orden.push_back(i);
     std::sort(orden.begin(), orden.end(), [](int a, int b) { return normalizar(VISITANTES[a]) < normalizar(VISITANTES[b]); });
     orden.insert(orden.begin(), 0);
-    std::vector<std::string> op;
-    int marcada = -1;
+    int marcada = 0;
     for (size_t k = 0; k < orden.size(); k++)
-    {
-        op.push_back(VISITANTES[orden[k]]);
         if (orden[k] == actual)
             marcada = (int)k;
-    }
-    elegir(titulo, explicacion, op, marcada, [orden, poner](int k) { poner(orden[k]); }, 3);
+    // Con la cara de cada uno, como las listas del Mac.
+    Lista l;
+    l.titulo = titulo;
+    l.explicacion = [explicacion] { return explicacion; };
+    l.cuantas = [orden] { return (int)orden.size(); };
+    l.fila = [orden, actual, poner](int k) {
+        const int q = orden[k];
+        Fila f{VISITANTES[q], [poner, q] {
+            volver();
+            poner(q);
+        }, true, q == actual};
+        f.imagen = q ? isla::caraVisitante(q) : nullptr;
+        if (!f.imagen)
+            f.imagen = isla::vacio();
+        return f;
+    };
+    l.columnas = 3;
+    l.porColumna = 4;
+    abrir(lista(l), marcada);
 }
 
 void elegirVisitante(int dia)
@@ -471,6 +608,10 @@ void planSemana(Vista& v)
     v.titulo = "Quién viene y plan de la semana";
     v.explicacion = "Viene: quién está ese día. Plan: lo que el juego decidió al empezar la semana.";
     const auto& m = partida::principal();
+    auto cara = [](int q) {
+        SDL_Texture* t = isla::caraVisitante(q);
+        return t ? t : isla::vacio();
+    };
     std::vector<std::string> dias;
     for (int k = 0; k < 7; k++)
     {
@@ -484,6 +625,7 @@ void planSemana(Vista& v)
                     cambiaMain(std::string(DIA[dia]) + ": viene " + VISITANTES[q]);
                 });
         }});
+        v.b.back().imagen = cara(visitante(m, dia));
         v.b.push_back({{760, y, 460, 54}, "Plan: " + nombreVisitante(planVisitante(m, dia)), [dia] {
             elegirQuien(std::string("Plan del ") + DIA_MIN[dia], "Solo el plan de la semana; quién viene no cambia.",
                 planVisitante(partida::principal(), dia), [dia](int q) {
@@ -491,12 +633,13 @@ void planSemana(Vista& v)
                     cambiaMain(std::string(DIA[dia]) + ": en el plan, " + VISITANTES[q]);
                 });
         }});
+        v.b.back().imagen = cara(planVisitante(m, dia));
     }
     v.dibujo = [dias] {
         for (int k = 0; k < 7; k++)
-            texto(dias[k], 60, 150 + k * 62 + 27 - TTF_FontHeight(g_fuente) / 2, MARRON, nullptr, Izquierda);
+            texto(dias[k], 60, 150 + k * 62 + 27 - TTF_FontHeight(g_negrita) / 2, MARRON, g_negrita, Izquierda);
     };
-    v.b.push_back({{440, ABAJO - 70, 400, 60}, "Volver", [] { volver(); }});
+    v.b.push_back({{W - 60 - 240, ABAJO - 66, 240, 56}, "Volver", [] { volver(); }});
 }
 
 void posicion(int cual, Vista& v)
@@ -509,7 +652,7 @@ void posicion(int cual, Vista& v)
     const char* const ejes[3] = {"X", "Y", "Z"};
     for (int i = 0; i < 3; i++)
     {
-        Boton b{{60 + i * 395, 180, 370, 110}, textoDecimal(valores[i]), [cual, i, ejes] {
+        Boton b{{60 + i * 395, 150, 370, 120}, ejes[i], [cual, i, ejes] {
             PosicionIsla q = posicionVisitantes(partida::principal(), cual);
             float* f = i == 0 ? &q.x : i == 1 ? &q.y : &q.z;
             std::string t = textoDecimal(*f);
@@ -529,10 +672,12 @@ void posicion(int cual, Vista& v)
             ponerPosicionVisitantes(partida::principal(), cual, q);
             cambiaMain();
         }};
-        b.detalle = ejes[i];
+        b.grande = true;
+        b.valor = textoDecimal(valores[i]);
+        b.detalle = "Toca para cambiarlo";
         v.b.push_back(b);
     }
-    v.b.push_back({{440, ABAJO - 76, 400, 64}, "Volver", [] { volver(); }});
+    v.b.push_back({{W - 60 - 240, ABAJO - 66, 240, 56}, "Volver", [] { volver(); }});
 }
 
 void marcasVisitantes(Vista& v)
@@ -543,13 +688,15 @@ void marcasVisitantes(Vista& v)
     for (int i = 0; i < NUM_MARCAS_VISITANTES; i++)
     {
         const bool si = marcaVisitantes(m, i);
-        v.b.push_back({{60 + (i / 7) * 590, 140 + (i % 7) * 64, 570, 56}, std::string(si ? "● " : "") + "Marca " + std::to_string(i + 1) + (si ? ": sí" : ": no"), [i] {
+        Boton b{{60 + (i / 7) * 590, 136 + (i % 7) * 64, 570, 56}, "Marca " + std::to_string(i + 1), [i] {
             const bool ahora = !marcaVisitantes(partida::principal(), i);
             ponerMarcaVisitantes(partida::principal(), i, ahora);
             cambiaMain("Marca " + std::to_string(i + 1) + (ahora ? ": sí" : ": no"));
-        }, true, si});
+        }};
+        b.imagen = isla::interruptor(si);
+        v.b.push_back(b);
     }
-    v.b.push_back({{440, ABAJO - 70, 400, 60}, "Volver", [] { volver(); }});
+    v.b.push_back({{W - 60 - 240, ABAJO - 66, 240, 56}, "Volver", [] { volver(); }});
 }
 
 void pedirDiaVisitante(int cual)
@@ -577,12 +724,15 @@ void visitantesAvanzado(Vista& v)
     Boton plan{{60, 140, 1160, 88}, "Quién viene y plan de la semana…", [] { abrir(planSemana); }};
     plan.detalle = "Quién viene cada día y el plan de la semana, cada uno por su lado.";
     plan.grande = true;
+    plan.imagen = dibujos::menu("Balloon");
     v.b.push_back(plan);
     const char* const quien[2] = {"Buh", "Estela"};
     for (int c = 0; c < 2; c++)
     {
-        Boton b{{60 + c * 590, 244, 570, 88}, std::string("Número de ") + quien[c] + ": " + std::to_string(diaVisitante(m, c)), [c] { pedirDiaVisitante(c); }};
-        b.detalle = std::string("Un número que guarda el juego sobre ") + quien[c] + ".";
+        Boton b{{60 + c * 590, 244, 570, 88}, std::string("Número de ") + quien[c], [c] { pedirDiaVisitante(c); }};
+        b.grande = true;
+        b.valor = std::to_string(diaVisitante(m, c));
+        b.imagen = c == 0 ? isla::caraVisitante(4) : dibujos::menu("StarPiece");
         v.b.push_back(b);
     }
     for (int c = 0; c < 2; c++)
@@ -591,6 +741,8 @@ void visitantesAvanzado(Vista& v)
             abrir([c](Vista& w) { posicion(c, w); });
         }};
         b.detalle = textoPosicion(posicionVisitantes(m, c));
+        b.grande = true;
+        b.imagen = dibujos::menu("Fence");
         v.b.push_back(b);
     }
     int puestas = 0;
@@ -600,31 +752,53 @@ void visitantesAvanzado(Vista& v)
     marcas.detalle = std::to_string(puestas) + " de " + std::to_string(NUM_MARCAS_VISITANTES) + " puestas.";
     marcas.grande = true;
     v.b.push_back(marcas);
-    v.b.push_back({{440, ABAJO - 70, 400, 60}, "Volver", [] { volver(); }});
+    v.b.push_back({{W - 60 - 240, ABAJO - 66, 240, 56}, "Volver", [] { volver(); }});
 }
 
 void visitantes(Vista& v)
 {
     v.titulo = "Visitantes especiales";
     v.explicacion = "Quién viene a tu isla cada día de esta semana, y los conciertos de Totakeke en la plaza.";
+    // Como VisitorsWindow: a la izquierda la semana, con la cara de cada visitante; a la derecha los conciertos de
+    // Totakeke, en la misma fila que su día.
     const auto& m = partida::principal();
+    constexpr int ARRIBA = 136, FILA0 = 214, PASO = 54, ALTO = 48, DERECHA = 640;
+    v.dibujo = [] {
+        isla::recuadro({60, ARRIBA, DERECHA - 16 - 60, 464}, "Esta semana", dibujos::menu("Balloon"), "Toca un día para cambiar quién viene.");
+        isla::recuadro({DERECHA, ARRIBA, 1220 - DERECHA, 464}, "Conciertos de Totakeke", retratos::de("tkkA"), "En la plaza: normal o de cumpleaños.");
+        static const char* const CORTO[7] = {"Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"};
+        for (int k = 0; k < 7; k++)
+        {
+            const int y = FILA0 + k * PASO + ALTO / 2 - TTF_FontHeight(g_negrita) / 2;
+            texto(DIA[SEMANA[k]], 84, y, MARRON, g_negrita);
+            texto(CORTO[SEMANA[k]], DERECHA + 24, y, MARRON, g_negrita);
+        }
+    };
     for (int k = 0; k < 7; k++)
     {
         const int dia = SEMANA[k];
-        const int y = 140 + k * 64;
-        v.b.push_back({{60, y, 620, 56}, std::string(DIA[dia]) + ": " + nombreVisitante(visitante(m, dia)), [dia] { elegirVisitante(dia); }});
+        const int y = FILA0 + k * PASO;
+        const int q = visitante(m, dia);
+        Boton b{{240, y, DERECHA - 16 - 24 - 240, ALTO}, nombreVisitante(q), [dia] { elegirVisitante(dia); }};
+        b.imagen = q ? isla::caraVisitante(q) : nullptr;
+        if (!b.imagen)
+            b.imagen = isla::vacio();
+        v.b.push_back(b);
         for (int c = 0; c < 2; c++)
         {
             const bool cumple = c == 1, si = concierto(m, dia, cumple);
-            v.b.push_back({{700 + c * 265, y, 255, 56}, std::string(si ? "● " : "") + (cumple ? "Cumpleaños" : "Concierto"), [dia, cumple] {
+            Boton t{{DERECHA + 84 + c * 243, y, 233, ALTO}, cumple ? "Cumpleaños" : "Concierto", [dia, cumple] {
                 const bool ahora = !concierto(partida::principal(), dia, cumple);
                 ponerConcierto(partida::principal(), dia, cumple, ahora);
                 cambiaMain(std::string(ahora ? "Con " : "Sin ") + (cumple ? "concierto de cumpleaños" : "concierto") + " el " + DIA_MIN[dia]);
-            }, true, si});
+            }};
+            t.imagen = isla::interruptor(si);
+            t.pequena = true;
+            v.b.push_back(t);
         }
     }
-    v.b.push_back({{60, ABAJO - 70, 560, 60}, "Opciones avanzadas…", [] { abrir(visitantesAvanzado); }});
-    v.b.push_back({{660, ABAJO - 70, 560, 60}, "Volver", [] { volver(); }});
+    v.b.push_back({{60, ABAJO - 66, 400, 56}, "Opciones avanzadas…", [] { abrir(visitantesAvanzado); }});
+    v.b.push_back({{W - 60 - 240, ABAJO - 66, 240, 56}, "Volver", [] { volver(); }});
 }
 
 std::string resumenVisitantes()
@@ -649,11 +823,7 @@ Registro r2({SeccionIsla, 30, [] { return std::string("Quitar malas hierbas"); }
         const int n = contar(partida::principal()).malasHierbas;
         return n ? std::to_string(n) + " en la isla" : std::string("No hay ninguna");
     },
-    [] {
-        const int n = quitarMalasHierbas(partida::principal());
-        partida::cambiaPrincipal();
-        cambiado("Quitadas " + std::to_string(n) + " malas hierbas");
-    },
+    [] { abrir(malasHierbas); },
     [] { return contar(partida::principal()).malasHierbas > 0; }});
 
 Registro r4({SeccionIsla, 40, [] { return std::string("Hemisferio y aeródromo"); },
