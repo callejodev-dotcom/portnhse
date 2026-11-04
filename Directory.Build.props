@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <Product>NHSE para Mac</Product>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>Adrián Callejo; NHSE por Kaphotics e colaboradores</Authors>
     <NHSEDir>$(MSBuildThisFileDirectory)NHSE/</NHSEDir>
   </PropertyGroup>
