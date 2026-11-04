@@ -1,8 +1,11 @@
 // Piezas de la sección «Vecinos» repartidas en varios archivos: la ficha (vecinos.cpp), la amistad
-// (vecinos_amistad.cpp) y la casa, las paredes y el suelo (vecinos_casa.cpp).
+// (vecinos_amistad.cpp), la casa, las paredes y el suelo (vecinos_casa.cpp), los recuerdos (vecinos_recuerdos.cpp), las
+// marcas (vecinos_marcas.cpp), su diseño (vecinos_diseno.cpp) y los valores en bruto (vecinos_bruto.cpp). Las caras, en
+// retratos.hpp.
 #pragma once
 #include <functional>
 #include <string>
+#include <utility>
 #include <vector>
 #include "ui.hpp"
 
@@ -29,6 +32,34 @@ void cuarto(int hueco);
 void casa(int hueco);
 std::string resumenCuarto(int hueco);
 std::string resumenCasa(int hueco);
+
+// Lo que recuerda de cada jugador (saludos, apodo, fecha, marcas...), como VillagerMemoryEditor (vecinos_recuerdos.cpp).
+void recuerdos(int hueco);
+std::string resumenRecuerdos(int hueco);
+// Sus marcas sueltas, como VillagerFlagEditor (vecinos_marcas.cpp).
+void marcas(int hueco);
+std::string resumenMarcas(int hueco);
+// El diseño que lleva, como PatternEditorPRO (vecinos_diseno.cpp).
+void diseno(int hueco);
+std::string resumenDiseno(int hueco);
+// Los valores en bruto de su habitación y de su casa (vecinos_bruto.cpp).
+void brutoCuarto(int hueco);
+void brutoCasa(int hueco);
+
+// Una lista de marcas con nombre y valor (las del vecino y las de cada recuerdo), en páginas, con buscar (X) y ver (Y).
+struct ListaMarcas {
+    std::string titulo;
+    std::string explicacion;
+    std::vector<int> indices;                         // the flag number of each named one
+    std::vector<std::string> textos, internos;
+    std::vector<int> maximos;                         // usual maximum of each named one (1 = yes or no)
+    int total = 0;                                    // all the flags (also those without a name)
+    uint32_t tope = 0;                                // the most it can hold (255 or 65535)
+    std::function<int(int)> leer;                     // value of flag number i
+    std::function<void(int, int)> poner;              // and says it changed
+    std::vector<std::pair<std::string, std::function<void()>>> mas; // «Más…» options
+};
+void listaMarcas(ListaMarcas l);
 
 // Elegir uno de una lista larga, en páginas, con buscar (X) si hay claves; se abre en la página del actual.
 struct Opcion {

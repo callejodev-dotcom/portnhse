@@ -5,6 +5,7 @@
 #include <map>
 #include "../core/vecino.hpp"
 #include "partida.hpp"
+#include "retratos.hpp"
 #include "vecinos_ui.hpp"
 
 using namespace acnh;
@@ -199,6 +200,7 @@ void amistadDeJugador(int jugador)
             {
                 const uint8_t p = r >= 0 ? recuerdo(partida::principal(), i, r).amistad : 0;
                 b.detalle = r >= 0 ? std::string(NIVELES[nivelAmistad(p)]) + " · " + std::to_string(p) + " de 255" : "Todavía no conoce a " + quien;
+                b.imagen = retratos::deHueco(i);
             }
             v.b.push_back(b);
         }
