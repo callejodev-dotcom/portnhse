@@ -1,8 +1,10 @@
 // Sección «Isla»: el mapa de la isla, como el de NHSE para Mac (IslandMapWindow): la isla dibujada con sus edificios y
-// todo lo que hay en el suelo; un cursor que se mueve por cuadros (cruceta o palanca) o tocando, con acercar y alejar;
-// ver qué hay en un sitio, quitarlo, girarlo, moverlo o cambiarlo por otra cosa; las dos capas (en el suelo y encima de
-// otras cosas); marcar una zona; la goma; y ordenar la isla (quitar o cambiar todas las cosas de un tipo o de un nombre,
-// regar). Cada cambio se puede deshacer.
+// todo lo que hay en el suelo, en un recuadro con sus controles flotando encima (la capa, acercar y alejar, la
+// cuadrícula, y las herramientas: elegir, marcar zona y goma); a la derecha, un panel con lo que hay en el sitio
+// elegido (su dibujo grande y qué se puede hacer con ello) u «Ordenar la isla» (cuántas hay de cada cosa y quitarlas).
+// Un cursor que se mueve por cuadros (cruceta) o tocando, con acercar y alejar; ver qué hay en un sitio, quitarlo,
+// girarlo, moverlo o cambiarlo por otra cosa; las dos capas; marcar una zona; la goma; y ordenar la isla (quitar o
+// cambiar todas las cosas de un tipo o de un nombre, regar). Cada cambio se puede deshacer.
 #include <algorithm>
 #include <cmath>
 #include <ctime>
@@ -11,6 +13,7 @@
 #include "dibujos.hpp"
 #include "mapa_panel.hpp"
 #include "mapa_pintor.hpp"
+#include "mapa_vista.hpp"
 #include "partida.hpp"
 #include "ui.hpp"
 
@@ -19,10 +22,14 @@ using namespace mapa;
 
 namespace {
 
-const SDL_Rect AREA = {0, 96, 880, ABAJO - 96};     // donde se ve el mapa
-constexpr int PANEL_X = 880;                         // el panel de la derecha
+const SDL_Rect AREA = {60, 112, 760, 548};   // donde se ve el mapa
+const SDL_Rect PANEL = {836, 112, 384, 548}; // el panel de la derecha
 constexpr double ZOOM_MAX = 32;
+// Las pantallas se dibujan un poco más pequeñas que la de la consola (a la derecha de la barra lateral): lo que se
+// arrastra el dedo, en puntos de la pantalla de la app.
+constexpr double ESCALA = (double)(W - 132) / W;
 const char* const CAPAS[2] = {"En el suelo", "Encima de otras cosas"};
+const char* const CAPAS_CORTO[2] = {"En el suelo", "Encima de otros"};
 const char* const CAPAS_MIN[2] = {"en el suelo", "encima de otras cosas"};
 
 // Lo que se puede quitar de golpe (como «Ordenar la isla» del Mac), con su nombre.
@@ -30,12 +37,13 @@ struct TipoConNombre {
     Tipo tipo;
     const char* nombre;
     const char* minusculas;
-    uint16_t icono; // el objeto de su dibujo (los del Mac: Weed, Turip0, Branch...)
+    uint16_t icono;
+    const char* corto; // en los botones pequeños // el objeto de su dibujo (los del Mac: Weed, Turip0, Branch...)
 };
-const TipoConNombre TIPOS[] = {{Hierbas, "Malas hierbas", "malas hierbas", 758}, {Flores, "Flores", "flores", 2883}, {Ramas, "Ramas", "ramas", 14644},
-    {Conchas, "Conchas", "conchas", 1376}, {Hoyos, "Agujeros", "agujeros", 773}, {Vallas, "Vallas", "vallas", 3080},
-    {Arbustos, "Arbustos", "arbustos", 2820}, {Arboles, "Árboles", "árboles", 2796}, {Cosas, "Muebles y objetos", "muebles y objetos", 14414},
-    {Todo, "Todo", "cosas", 4645}};
+const TipoConNombre TIPOS[] = {{Hierbas, "Malas hierbas", "malas hierbas", 758, "Hierbas"}, {Flores, "Flores", "flores", 2883, "Flores"},
+    {Ramas, "Ramas", "ramas", 14644, "Ramas"}, {Conchas, "Conchas", "conchas", 1376, "Conchas"}, {Hoyos, "Agujeros", "agujeros", 773, "Agujeros"},
+    {Vallas, "Vallas", "vallas", 3080, "Vallas"}, {Arbustos, "Arbustos", "arbustos", 2820, "Arbustos"}, {Arboles, "Árboles", "árboles", 2796, "Árboles"},
+    {Cosas, "Muebles y objetos", "muebles y objetos", 14414, "Muebles"}, {Todo, "Todo", "cosas", 4645, "Todo"}};
 
 uint16_t iconoTipo(Tipo t)
 {
@@ -46,6 +54,15 @@ uint16_t iconoTipo(Tipo t)
 }
 
 enum Modo { Mirar, Llevar, Marcar, Goma };
+
+// Lo que se cuenta para «Ordenar la isla» (en toda la capa o en la zona), una vez por cambio.
+struct Cuenta {
+    int version = -1, capa = -1;
+    bool enZona = false;
+    Zona zona;
+    std::vector<std::pair<Tipo, int>> filas;
+    int clases = 0;
+};
 
 struct Estado {
     int capa = 0;
@@ -70,11 +87,17 @@ struct Estado {
     bool borrando = false;
     int borradas = 0;
     bool cuadricula = false;
-    // Tocar y arrastrar.
+    // Tocar y arrastrar: dónde empezó (en puntos de la app y de la consola) y la vista entonces.
     bool tocando = false, arrastrado = false;
-    int t0x = 0, t0y = 0;
+    int t0x = 0, t0y = 0, r0x = 0, r0y = 0;
     double v0x = 0, v0y = 0;
     std::string aviso;
+    // Los botones del panel y de encima del mapa (se ponen al dibujar).
+    Chips chips;
+    std::vector<SDL_Rect> flotantes; // los recuadros encima del mapa (los nombres de los edificios no van debajo)
+    Cuenta cuenta;
+    // Cuántas iguales a la del cursor hay (se mira al mover el cursor).
+    int igualesVersion = -1, igualesX = -1, igualesY = -1, igualesCapa = -1, iguales = 0;
 };
 
 std::shared_ptr<Estado> g_estado;
@@ -126,6 +149,8 @@ void deshacer()
     partida::cambiaPrincipal();
     cambiado("Deshecho");
 }
+
+std::string textoDeshacer() { return "Deshacer" + (g_deshacer.empty() ? std::string() : " (" + std::to_string(g_deshacer.size()) + ")"); }
 
 void hecho(const std::string& que)
 {
@@ -216,6 +241,8 @@ const Edificio* edificioEn(double x, double y)
     return nullptr;
 }
 
+std::string nombreEdificio(const Edificio& b) { return b.casa() && b.nombre != "Parcela libre" ? "Casa de " + b.nombre : b.nombre; }
+
 // La cosa del cursor en la capa que se edita: su raíz (casilla de la capa), o false.
 bool cosaEn(Estado& e, int mx, int my, Objeto& o, int& rx, int& ry)
 {
@@ -228,6 +255,14 @@ bool cosaEn(Estado& e, int mx, int my, Objeto& o, int& rx, int& ry)
         if (raiz(r, x + (k & 1), y + (k >> 1), o, rx, ry))
             return true;
     return false;
+}
+
+std::string corto(Tipo t)
+{
+    for (const auto& k : TIPOS)
+        if (k.tipo == t)
+            return k.corto;
+    return "";
 }
 
 std::string tipoNombre(Tipo t, bool minusculas = false)
@@ -245,6 +280,85 @@ void alMapa(int nivel)
         volver();
 }
 
+// Cuántas hay de cada cosa en la capa (o en la zona marcada), contado una vez por cambio.
+const Cuenta& contarTodo(Estado& e, bool enZona)
+{
+    Cuenta& c = e.cuenta;
+    const Zona z = enZona ? e.zona : Zona{};
+    if (c.version != g_version || c.capa != e.capa || c.enZona != enZona || c.zona.x != z.x || c.zona.y != z.y || c.zona.w != z.w || c.zona.h != z.h)
+    {
+        Rejilla r = capaActiva(e);
+        c.filas.clear();
+        for (const auto& k : TIPOS)
+        {
+            if (k.tipo == Todo && !enZona)
+                continue;
+            const int n = contar(r, k.tipo, z);
+            if (n == 0 && k.tipo != Hierbas && k.tipo != Flores)
+                continue;
+            c.filas.push_back({k.tipo, n});
+        }
+        c.clases = (int)clases(r, z).size();
+        c.version = g_version, c.capa = e.capa, c.enZona = enZona, c.zona = z;
+    }
+    return c;
+}
+
+// ----------------------------------------------------------------------------------------------- acciones
+void quitarTipo(std::shared_ptr<Estado> e, Tipo t, int n, bool enZona)
+{
+    const Zona z = enZona ? e->zona : Zona{};
+    const std::string donde = enZona ? "la zona marcada" : "toda la isla";
+    confirmar("Quitar", "¿Quitar " + numero(n) + " " + tipoNombre(t, true) + " de " + donde + "? Se puede deshacer.", "Sí, quitar", [e, z, t] {
+        recordar();
+        Rejilla r = capaActiva(*e);
+        const int q = quitarTodos(r, t, z);
+        hecho("Quitadas " + numero(q));
+    });
+}
+
+void regarZona(std::shared_ptr<Estado> e, bool enZona)
+{
+    recordar();
+    Rejilla r = capaActiva(*e);
+    const int q = regar(r, enZona ? e->zona : Zona{});
+    if (!q)
+        olvidarUltimo();
+    hecho("Regadas " + numero(q) + " flores");
+}
+
+void cambiarFlores(std::shared_ptr<Estado> e, int n, bool enZona)
+{
+    const Zona z = enZona ? e->zona : Zona{};
+    const std::string donde = enZona ? "la zona marcada" : "toda la isla";
+    elegirPlantas([e, z, donde, n](const std::vector<uint16_t>& ids, bool azar) {
+        std::string nombres;
+        for (auto id : ids)
+        {
+            Objeto o = nada();
+            o.id = id;
+            nombres += (nombres.empty() ? "" : ", ") + nombre(o);
+        }
+        confirmar("Cambiar flores", "¿Cambiar las flores de " + donde + " (" + numero(n) + ") por " + nombres + "? Se puede deshacer.", "Sí, cambiar", [e, z, ids, azar] {
+            recordar();
+            Rejilla r = capaActiva(*e);
+            const int q = cambiarTodos(r, Flores, ids, azar, z, (uint32_t)time(nullptr));
+            if (!q)
+                olvidarUltimo();
+            hecho("Cambiadas " + numero(q));
+        });
+    }, "cambiar las flores");
+}
+
+void usarGoma(Estado& e, Tipo t, uint64_t clave = 0, const std::string& n = "")
+{
+    e.gomaTipo = t;
+    e.gomaClave = clave;
+    e.gomaNombre = n;
+    e.modo = Goma;
+    e.hayZona = false;
+}
+
 // ----------------------------------------------------------------------------------------------- pantallas
 void abrirOrdenar(std::shared_ptr<Estado> e, bool enZona, int nivel);
 void abrirClases(std::shared_ptr<Estado> e, bool enZona, int nivel);
@@ -260,8 +374,17 @@ void abrirClase(std::shared_ptr<Estado> e, Clase k, bool enZona, int nivel)
             *cuenta = {g_version, (int)buscarNombre(capaActiva(*e), z, k.clave).size()};
         const int cuantas = cuenta->second;
         v.titulo = n;
-        v.explicacion = "Hay " + numero(cuantas) + (enZona ? " en la zona marcada." : " en la isla (" + std::string(CAPAS_MIN[e->capa]) + ").");
-        v.b.push_back({{140, 200, 1000, 90}, "Quitar todas (" + numero(cuantas) + ")", [e, k, n, z, cuantas] {
+        v.explicacion = enZona ? "En la zona marcada." : std::string("En toda la isla, ") + CAPAS_MIN[e->capa] + ".";
+        const Objeto ej = k.ejemplo;
+        const int capa = e->capa;
+        v.dibujo = [ej, n, cuantas, enZona, capa] {
+            tarjeta({60, 112, 1160, 200});
+            foto({84, 136, 152, 152}, dibujoDe(ej), colorDe(ej));
+            texto(encajar(n, 940, g_titulo), 264, 140, MARRON, g_titulo);
+            texto(numero(cuantas), 264, 196, AZUL, g_titulo);
+            texto(enZona ? "en la zona marcada" : std::string("en la isla, ") + CAPAS_MIN[capa], 270 + anchoTexto(numero(cuantas), g_titulo), 210, MARRON_SUAVE);
+        };
+        Boton quitar{{60, 336, 570, 96}, "Quitar todas", [e, k, n, z, cuantas] {
             confirmar("Quitar", "¿Quitar «" + n + "» (" + numero(cuantas) + ")" + (z.w ? " de la zona marcada" : " de toda la isla") + "? Se puede deshacer.", "Sí, quitar", [e, k, z] {
                 recordar();
                 Rejilla r = capaActiva(*e);
@@ -269,15 +392,20 @@ void abrirClase(std::shared_ptr<Estado> e, Clase k, bool enZona, int nivel)
                 volver();
                 hecho("Quitadas " + numero(q));
             });
-        }, cuantas > 0});
-        v.b.push_back({{140, 310, 1000, 90}, "Goma solo para estas", [e, k, n, nivel] {
-            e->gomaTipo = Todo;
-            e->gomaClave = k.clave;
-            e->gomaNombre = n;
-            e->modo = Goma;
+        }, cuantas > 0};
+        quitar.grande = true;
+        quitar.detalle = "Las " + numero(cuantas) + (enZona ? ", solo de la zona" : ", de toda la isla");
+        quitar.imagen = dibujos::menu("Can");
+        v.b.push_back(quitar);
+        Boton goma{{650, 336, 570, 96}, "Goma solo para estas", [e, k, n, nivel] {
+            usarGoma(*e, Todo, k.clave, n);
             alMapa(nivel);
-        }});
-        v.b.push_back({{440, ABAJO - 70, 400, 56}, "Volver", [] { volver(); }});
+        }};
+        goma.grande = true;
+        goma.detalle = "Pasa por encima y quita solo estas";
+        goma.imagen = dibujos::menu("Duster");
+        v.b.push_back(goma);
+        v.b.push_back({{W - 60 - 300, ABAJO - 66, 300, 56}, "Volver", [] { volver(); }});
     });
 }
 
@@ -310,26 +438,42 @@ void abrirClases(std::shared_ptr<Estado> e, bool enZona, int nivel)
         avisar(enZona ? "No hay nada en la zona marcada." : "No hay nada en esta capa.");
         return;
     }
-    Lista l;
-    l.titulo = enZona ? "Lo que hay en la zona" : "Lo que hay en la isla";
-    l.explicacion = [lista_, busca] {
-        return (busca->empty() ? "Cada cosa por su nombre (" : "Las que se llaman «" + *busca + "» (") + numero((uint32_t)lista_().size()) +
-               "). Elige una para quitarlas todas o borrarlas con la goma. X para buscar.";
-    };
-    l.cuantas = [lista_] { return (int)lista_().size(); };
-    l.porColumna = 7;
-    l.fila = [e, lista_, enZona, nivel](int i) {
-        const Clase k = lista_()[i];
-        Fila f{nombre(k.ejemplo) + " ×" + numero(k.cuantas), [e, k, enZona, nivel] { abrirClase(e, k, enZona, nivel + 1); }};
+    auto fila = [e, enZona](const Clase& k, int nivel) {
+        Fila f{nombre(k.ejemplo), [e, k, enZona, nivel] { abrirClase(e, k, enZona, nivel); }};
+        f.detalle = numero(k.cuantas) + (k.cuantas == 1 ? " en " : " en ") + (enZona ? "la zona" : "la isla");
         f.imagen = dibujoDe(k.ejemplo);
         if (!f.imagen)
             f.color = colorDe(k.ejemplo);
         return f;
     };
-    auto buscar = [busca] {
-        std::string q = *busca;
-        if (pedirTexto("Buscar", "Escribe parte del nombre (vacío: todas)", q))
-            *busca = q;
+    Lista l;
+    l.titulo = enZona ? "Lo que hay en la zona" : "Lo que hay en la isla";
+    l.explicacion = [lista_, busca] {
+        return (busca->empty() ? "Cada cosa por su nombre (" : "Las que se llaman «" + *busca + "» (") + numero((uint32_t)lista_().size()) +
+               "). Elige una para quitarlas todas o borrarlas con la goma.";
+    };
+    l.cuantas = [lista_] { return (int)lista_().size(); };
+    l.porColumna = 6;
+    l.alto = 66;
+    l.fila = [lista_, fila, nivel](int i) { return fila(lista_()[i], nivel + 1); };
+    auto buscar = [e, enZona, busca, nivel, fila] {
+        // En tiempo real, con su teclado.
+        auto hallados = std::make_shared<std::vector<Clase>>();
+        Buscador b;
+        b.titulo = "Buscar en lo que hay";
+        b.explicacion = "Escribe parte del nombre.";
+        b.texto = *busca;
+        b.filtrar = [e, enZona, hallados](const std::string& t) {
+            hallados->clear();
+            const std::string q = acnh::normalizar(t);
+            for (const auto& k : clases(capaActiva(*e), enZona ? e->zona : Zona{}))
+                if (q.empty() || acnh::normalizar(nombre(k.ejemplo)).find(q) != std::string::npos)
+                    hallados->push_back(k);
+            return (int)hallados->size();
+        };
+        b.fila = [hallados, fila, nivel](int i) { return fila((*hallados)[i], nivel + 2); };
+        b.alSalir = [busca](const std::string& t) { *busca = t; };
+        abrir(buscador(b));
     };
     l.abajo.push_back([buscar] { return Fila{"Buscar…", buscar}; });
     l.extra = [buscar](Vista& v) {
@@ -339,129 +483,81 @@ void abrirClases(std::shared_ptr<Estado> e, bool enZona, int nivel)
     abrir(lista(l));
 }
 
-// Ordenar: cada tipo con cuántas hay y botones para quitarlas (o regar, cambiar por otras, tapar).
+// Ordenar: cada tipo con cuántas hay y botones para quitarlas (o regar, cambiar por otras, tapar), como «Ordenar la
+// isla» del Mac.
 void abrirOrdenar(std::shared_ptr<Estado> e, bool enZona, int nivel)
 {
-    struct Cache {
-        int version = -1, capa = -1;
-        std::vector<std::pair<Tipo, int>> filas;
-    };
-    auto c = std::make_shared<Cache>();
-    abrir([e, enZona, nivel, c](Vista& v) {
+    abrir([e, enZona, nivel](Vista& v) {
         const Zona z = enZona ? e->zona : Zona{};
-        const std::string donde = enZona ? "la zona marcada" : "toda la isla";
         v.titulo = enZona ? "Zona de " + std::to_string(z.w / 2) + " × " + std::to_string(z.h / 2) + " cuadros" : "Ordenar la isla";
         v.explicacion = std::string(enZona ? "Lo que hay en la zona marcada" : "Todo de golpe, en toda la isla") + " (" + CAPAS_MIN[e->capa] + "). Se puede deshacer.";
-        if (c->version != g_version || c->capa != e->capa)
-        {
-            Rejilla r = capaActiva(*e);
-            c->filas.clear();
-            for (const auto& k : TIPOS)
-            {
-                if (k.tipo == Todo && !enZona)
-                    continue;
-                const int n = contar(r, k.tipo, z);
-                if (n == 0 && k.tipo != Hierbas && k.tipo != Flores)
-                    continue;
-                c->filas.push_back({k.tipo, n});
-            }
-            c->version = g_version, c->capa = e->capa;
-        }
-        const auto& filas = c->filas;
-        auto quitarTipo = [e, z, donde](Tipo t, int n) {
-            confirmar("Quitar", "¿Quitar " + numero(n) + " " + tipoNombre(t, true) + " de " + donde + "? Se puede deshacer.", "Sí, quitar", [e, z, t] {
-                recordar();
-                Rejilla r = capaActiva(*e);
-                const int q = quitarTodos(r, t, z);
-                hecho("Quitadas " + numero(q));
-            });
-        };
-        // Las flores en una fila entera (tienen más botones); lo demás de dos en dos.
+        const Cuenta& c = contarTodo(*e, enZona);
+        // Cada tipo en una tarjeta con su dibujo, cuántas hay y sus botones; de dos en dos.
         struct Etiqueta {
             SDL_Rect r;
             std::string nombre, cuantas;
             uint16_t icono;
+            int libre; // ancho para el nombre
         };
         auto etiquetas = std::make_shared<std::vector<Etiqueta>>();
-        int k = 0;
-        for (const auto& f : filas)
+        const int n = (int)c.filas.size();
+        const int filas = (n + 1) / 2;
+        const int alto = std::min(84, (ABAJO - 80 - 112) / std::max(1, filas) - 12);
+        for (int k = 0; k < n; k++)
         {
-            const Tipo t = f.first;
-            const int n = f.second;
-            const bool flores = t == Flores;
-            const int col = flores ? 0 : k % 2, fila = flores ? 0 : 1 + k / 2;
-            if (!flores)
-                k++;
-            const int x = 60 + col * 590, y = 140 + fila * 72;
-            etiquetas->push_back({{x, y, 270, 60}, tipoNombre(t), numero(n), iconoTipo(t)});
-            const std::string accion = t == Hoyos ? "Tapar" : "Quitar";
-            if (flores)
+            const Tipo t = c.filas[k].first;
+            const int cuantas = c.filas[k].second;
+            const SDL_Rect r = {60 + (k % 2) * 590, 112 + (k / 2) * (alto + 12), 570, alto};
+            const int by = r.y + (alto - 48) / 2;
+            int bx = r.x + r.w - 14;
+            auto boton = [&](int ancho, const std::string& texto, std::function<void()> f) {
+                bx -= ancho;
+                v.b.push_back({{bx, by, ancho, 48}, texto, std::move(f), cuantas > 0});
+                v.b.back().pequena = true;
+                bx -= 8;
+            };
+            boton(96, t == Hoyos ? "Tapar" : "Quitar", [e, t, cuantas, enZona] { quitarTipo(e, t, cuantas, enZona); });
+            if (t == Flores)
             {
-                v.b.push_back({{340, y, 280, 60}, "Regar", [e, z] {
-                    recordar();
-                    Rejilla r = capaActiva(*e);
-                    const int q = regar(r, z);
-                    if (!q)
-                        olvidarUltimo();
-                    hecho("Regadas " + numero(q) + " flores");
-                }, n > 0});
-                v.b.push_back({{630, y, 300, 60}, "Cambiar por…", [e, z, donde, n] {
-                    elegirPlantas([e, z, donde, n](const std::vector<uint16_t>& ids, bool azar) {
-                        std::string nombres;
-                        for (auto id : ids)
-                        {
-                            Objeto o = nada();
-                            o.id = id;
-                            nombres += (nombres.empty() ? "" : ", ") + nombre(o);
-                        }
-                        confirmar("Cambiar flores", "¿Cambiar las flores de " + donde + " (" + numero(n) + ") por " + nombres + "? Se puede deshacer.", "Sí, cambiar", [e, z, ids, azar] {
-                            recordar();
-                            Rejilla r = capaActiva(*e);
-                            const int q = cambiarTodos(r, Flores, ids, azar, z, (uint32_t)time(nullptr));
-                            if (!q)
-                                olvidarUltimo();
-                            hecho("Cambiadas " + numero(q));
-                        });
-                    }, "cambiar las flores");
-                }, n > 0});
-                v.b.push_back({{940, y, 280, 60}, accion, [quitarTipo, t, n] { quitarTipo(t, n); }, n > 0});
+                boton(172, "Cambiar por…", [e, cuantas, enZona] { cambiarFlores(e, cuantas, enZona); });
+                boton(84, "Regar", [e, enZona] { regarZona(e, enZona); });
             }
-            else
-                v.b.push_back({{x + 280, y, 290, 60}, accion, [quitarTipo, t, n] { quitarTipo(t, n); }, n > 0});
+            const int lado = std::min(52, alto - 16);
+            etiquetas->push_back({r, tipoNombre(t), numero(cuantas), iconoTipo(t), bx - (r.x + 24 + lado) - 4});
         }
         v.dibujo = [etiquetas] {
             for (const auto& t : *etiquetas)
             {
-                redondo(t.r, 12, BLANCO);
-                int x = t.r.x + 18;
-                if (SDL_Texture* d = dibujos::de(t.icono))
-                {
-                    SDL_Rect r = {t.r.x + 10, t.r.y + 12, 36, 36};
-                    SDL_RenderCopy(g_r, d, nullptr, &r);
-                    x = t.r.x + 54;
-                }
-                const int libre = t.r.x + t.r.w - 24 - anchoTexto(t.cuantas) - x;
-                texto(encajar(t.nombre, libre, g_pequena), x, t.r.y + 17, MARRON, g_pequena);
-                texto(t.cuantas, t.r.x + t.r.w - 16, t.r.y + 12, VERDE_OSCURO, nullptr, Derecha);
+                tarjeta(t.r, 12);
+                const int lado = std::min(52, t.r.h - 16);
+                foto({t.r.x + 12, t.r.y + (t.r.h - lado) / 2, lado, lado}, dibujos::de(t.icono));
+                const int x = t.r.x + 24 + lado;
+                const int alto = TTF_FontHeight(g_negrita) + TTF_FontHeight(g_pequena) - 8;
+                const int y = t.r.y + (t.r.h - alto) / 2;
+                texto(encajar(t.nombre, t.libre, g_negrita), x, y, MARRON, g_negrita);
+                texto(t.cuantas, x, y + TTF_FontHeight(g_negrita) - 8, MARRON_SUAVE, g_pequena);
             }
         };
         // Abajo: cada cosa por separado, deshacer, olvidar la zona y volver.
         std::vector<Boton> abajo;
-        abajo.push_back({{}, "Por nombres…", [e, enZona, nivel] { abrirClases(e, enZona, nivel + 1); }});
-        abajo.push_back({{}, "Deshacer" + (g_deshacer.empty() ? std::string() : " (" + std::to_string(g_deshacer.size()) + ")"),
-            [] { deshacer(); }, !g_deshacer.empty()});
+        abajo.push_back({{}, "Cada cosa por separado (" + numero(c.clases) + ")", [e, enZona, nivel] { abrirClases(e, enZona, nivel + 1); }, c.clases > 0});
+        abajo.push_back({{}, textoDeshacer(), [] { deshacer(); }, !g_deshacer.empty()});
         if (enZona)
             abajo.push_back({{}, "Olvidar la zona", [e] {
                 e->hayZona = false;
                 volver();
             }});
         abajo.push_back({{}, "Volver", [] { volver(); }});
-        const int ancho = (1160 - 16 * ((int)abajo.size() - 1)) / (int)abajo.size();
+        // Cada uno tan ancho como su texto; «Volver» a la derecha.
+        int x = 60;
         for (size_t i = 0; i < abajo.size(); i++)
         {
-            abajo[i].r = {60 + (int)i * (ancho + 16), ABAJO - 70, ancho, 56};
+            const int w = std::max(160, anchoTexto(abajo[i].texto) + 48);
+            abajo[i].r = {i + 1 == abajo.size() ? W - 60 - w : x, ABAJO - 66, w, 56};
+            x += w + 14;
             v.b.push_back(abajo[i]);
         }
+        v.menos = [] { deshacer(); };
     });
 }
 
@@ -470,39 +566,55 @@ void abrirGoma(std::shared_ptr<Estado> e, int nivel)
 {
     abrir([e, nivel](Vista& v) {
         v.titulo = "Goma";
-        v.explicacion = "Mantén A y mueve el cursor por encima de lo que quieras quitar. Las cosas grandes se quitan enteras. Cada pasada se puede deshacer.";
+        v.explicacion = "Mantén A (o el dedo) y pasa por encima de lo que quieras quitar. Cada pasada se puede deshacer.";
+        const int filas = ((int)(sizeof(TIPOS) / sizeof(TIPOS[0])) + (e->gomaClave ? 1 : 0) + 3) / 4;
+        v.dibujo = [filas] {
+            tarjeta({60, 112, 1160, 132});
+            texto("Tamaño", 84, 128, MARRON, g_negrita);
+            texto("En cuadros de la isla.", 84, 166, MARRON_SUAVE, g_pequena);
+            tarjeta({60, 256, 1160, 72 + filas * 66});
+            texto("Qué borra", 84, 270, MARRON, g_negrita);
+        };
         for (int i = 0; i < 3; i++)
         {
             const int n = i * 2 + 1;
-            Boton b{{60 + i * 200, 190, 180, 70}, std::to_string(n) + "×" + std::to_string(n), [e, n] { e->goma = n; }};
+            Boton b{{400 + i * 270, 128, 250, 100}, std::to_string(n) + " × " + std::to_string(n), [e, n] { e->goma = n; }};
             b.marcado = e->goma == n;
+            b.detalle = n == 1 ? "Un cuadro" : std::to_string(n * n) + " cuadros";
             v.b.push_back(b);
         }
-        v.dibujo = [] { texto("Tamaño en cuadros", 680, 210, MARRON); };
-        const int nt = sizeof(TIPOS) / sizeof(TIPOS[0]);
-        int k = 0;
+        std::vector<Boton> bs;
         if (e->gomaClave)
         {
-            Boton b{{60, 290, 370, 60}, "Solo: " + e->gomaNombre, [] {}};
+            Boton b{{}, "Solo: " + e->gomaNombre, [] {}};
             b.marcado = true;
-            v.b.push_back(b);
-            k++;
+            bs.push_back(b);
         }
-        for (int i = 0; i < nt; i++, k++)
+        for (const auto& t : TIPOS)
         {
-            const Tipo t = TIPOS[i].tipo;
-            Boton b{{60 + (k % 3) * 390, 290 + (k / 3) * 70, 370, 60}, TIPOS[i].nombre, [e, t] {
-                e->gomaTipo = t;
+            const Tipo tipo = t.tipo;
+            Boton b{{}, t.nombre, [e, tipo] {
+                e->gomaTipo = tipo;
                 e->gomaClave = 0;
             }};
-            b.marcado = !e->gomaClave && e->gomaTipo == t;
-            v.b.push_back(b);
+            b.marcado = !e->gomaClave && e->gomaTipo == tipo;
+            b.imagen = dibujos::de(t.icono);
+            bs.push_back(b);
         }
-        v.b.push_back({{60, ABAJO - 70, 560, 56}, "Usar la goma", [e, nivel] {
+        for (size_t i = 0; i < bs.size(); i++)
+        {
+            bs[i].r = {84 + (int)(i % 4) * 280, 316 + (int)(i / 4) * 66, 268, 56};
+            bs[i].pequena = true;
+            v.b.push_back(bs[i]);
+        }
+        Boton usar{{60, ABAJO - 66, 400, 56}, "Usar la goma", [e, nivel] {
             e->modo = Goma;
+            e->hayZona = false;
             alMapa(nivel);
-        }});
-        v.b.push_back({{660, ABAJO - 70, 560, 56}, "Volver", [] { volver(); }});
+        }};
+        usar.principal = true;
+        v.b.push_back(usar);
+        v.b.push_back({{W - 60 - 300, ABAJO - 66, 300, 56}, "Volver", [] { volver(); }});
     });
 }
 
@@ -511,28 +623,36 @@ void abrirHerramientas(std::shared_ptr<Estado> e)
 {
     abrir([e](Vista& v) {
         v.titulo = "Herramientas del mapa";
-        v.explicacion = std::string("Trabajando en: ") + CAPAS[e->capa] + ".";
+        v.explicacion = std::string("Trabajando en: ") + CAPAS_MIN[e->capa] + ".";
         std::vector<Boton> bs;
-        if (e->hayZona)
-            bs.push_back({{}, "Lo que hay en la zona marcada…", [e] { abrirOrdenar(e, true, 2); }});
-        bs.push_back({{}, "Marcar una zona", [e] {
+        auto tarjeta_ = [&](const std::string& t, const std::string& d, SDL_Texture* icono, std::function<void()> f, bool activo = true) {
+            Boton b{{}, t, std::move(f), activo};
+            b.detalle = d;
+            b.grande = true;
+            b.imagen = icono;
+            bs.push_back(b);
+        };
+        tarjeta_("Ordenar la isla", "Quitar o cambiar todo lo de un tipo", dibujos::de(758), [e] { abrirOrdenar(e, false, 2); });
+        tarjeta_("Cada cosa por separado", "Por su nombre, las que más hay primero", dibujos::menu("Book"), [e] { abrirClases(e, false, 2); });
+        tarjeta_("Marcar una zona", "Para ordenar solo una parte de la isla", dibujos::menu("ToolPennantRcm"), [e] {
             e->modo = Marcar;
             e->esquina = false;
             volver();
-        }});
-        bs.push_back({{}, "Goma…", [e] { abrirGoma(e, 2); }});
-        bs.push_back({{}, "Ordenar toda la isla…", [e] { abrirOrdenar(e, false, 2); }});
-        bs.push_back({{}, "Cada cosa por separado…", [e] { abrirClases(e, false, 2); }});
-        bs.push_back({{}, std::string("Capa: ") + CAPAS[e->capa], [e] { e->capa = 1 - e->capa; }});
-        bs.push_back({{}, std::string("Cuadrícula: ") + (e->cuadricula ? "sí" : "no"), [e] { e->cuadricula = !e->cuadricula; }});
-        bs.push_back({{}, "Ver toda la isla", [e] {
+        });
+        tarjeta_("Goma", "Pasa por encima de lo que quieras quitar", dibujos::menu("Duster"), [e] { abrirGoma(e, 2); });
+        tarjeta_(std::string("Capa: ") + CAPAS_CORTO[e->capa], std::string("Cambiar a: ") + CAPAS_MIN[1 - e->capa], dibujos::menu("Leaf"),
+            [e] { e->capa = 1 - e->capa; });
+        tarjeta_(std::string("Cuadrícula: ") + (e->cuadricula ? "sí" : "no"), "Las líneas de los cuadros al acercarse", dibujos::menu("Fence"),
+            [e] { e->cuadricula = !e->cuadricula; });
+        tarjeta_("Ver toda la isla", "Alejarse hasta verla entera", dibujos::menu("PltPalm"), [e] {
             verIsla(*e);
             volver();
-        }});
-        bs.push_back({{}, "Deshacer" + (g_deshacer.empty() ? std::string() : " (" + std::to_string(g_deshacer.size()) + ")"), [] { deshacer(); }, !g_deshacer.empty()});
+        });
+        tarjeta_(textoDeshacer(), g_deshacer.empty() ? "Aún no has cambiado nada" : "Vuelve atrás el último cambio", dibujos::menu("Timer"),
+            [] { deshacer(); }, !g_deshacer.empty());
         const auto& solas = sinApoyoAhora();
         if (!solas.empty())
-            bs.push_back({{}, "Encima de nada: " + numero((uint32_t)solas.size()), [e] {
+            tarjeta_("Encima de nada: " + numero((uint32_t)solas.size()), "Cosas que en el juego pueden quedar flotando", dibujos::menu("Balloon"), [e] {
                 // Al primero, en la capa de encima (lo que no tiene nada debajo).
                 const Punto p = sinApoyoAhora()[0];
                 e->capa = 1;
@@ -541,55 +661,33 @@ void abrirHerramientas(std::shared_ptr<Estado> e)
                 seguir(*e);
                 volver();
                 avisar("Esto está encima de otra cosa, pero debajo no hay nada: en el juego puede quedar flotando.");
-            }});
+            });
+        const int filas = ((int)bs.size() + 1) / 2;
+        const int alto = std::min(96, (ABAJO - 80 - 112) / filas - 12);
         for (size_t i = 0; i < bs.size(); i++)
         {
-            bs[i].r = {60 + (int)(i % 2) * 590, 150 + (int)(i / 2) * 84, 570, 70};
+            bs[i].r = {60 + (int)(i % 2) * 590, 112 + (int)(i / 2) * (alto + 12), 570, alto};
             v.b.push_back(bs[i]);
         }
-        v.b.push_back({{440, ABAJO - 70, 400, 56}, "Volver", [] { volver(); }});
+        v.b.push_back({{W - 60 - 300, ABAJO - 66, 300, 56}, "Volver", [] { volver(); }});
     });
 }
 
-// Qué hay en el cursor (A): la cosa de la capa, o el edificio, o el cuadro vacío.
-void abrirSitio(std::shared_ptr<Estado> e)
+// El sitio del cursor como lo usan la pantalla de un sitio y el panel: la cosa de la capa, o el cuadro vacío. false si
+// está fuera de la isla.
+bool crearSitio(std::shared_ptr<Estado> e, Sitio& s, bool conIguales)
 {
     Objeto o;
     int rx, ry;
     const bool hay = cosaEn(*e, e->cx, e->cy, o, rx, ry);
     if (!hay)
     {
-        if (const Edificio* b = edificioEn(e->cx + 1, e->cy + 1))
-        {
-            const std::string n = b->casa() && b->nombre != "Parcela libre" ? "Casa de " + b->nombre : b->nombre;
-            const uint16_t icono = iconoDeEdificio(b->tipo);
-            abrir([n, icono](Vista& v) {
-                v.titulo = n;
-                v.explicacion = "Este sitio es de un edificio. Los edificios se cambian de sitio en el propio juego, en los Servicios a residentes.";
-                v.dibujo = [n, icono] {
-                    redondo({60, 170, 1160, 140}, 16, BLANCO);
-                    redondo({84, 186, 108, 108}, 54, CREMA);
-                    if (SDL_Texture* d = icono ? dibujos::de(icono) : nullptr)
-                    {
-                        SDL_Rect r = {104, 206, 68, 68};
-                        SDL_RenderCopy(g_r, d, nullptr, &r);
-                    }
-                    texto(encajar(n, 980, g_grande), 216, 214, MARRON, g_grande);
-                };
-                v.b.push_back({{440, ABAJO - 70, 400, 56}, "Volver", [] { volver(); }});
-            });
-            return;
-        }
         Rejilla r = capaActiva(*e);
         if (!r.dentro(e->cx - ORIGEN_X, e->cy - ORIGEN_Y))
-        {
-            avisar("Ahí no se puede poner nada: está fuera de la isla.");
-            return;
-        }
+            return false;
         rx = e->cx - ORIGEN_X, ry = e->cy - ORIGEN_Y;
     }
     auto pos = std::make_shared<std::pair<int, int>>(rx, ry);
-    Sitio s;
     s.donde = CAPAS[e->capa];
     s.posicion = [pos] { return std::make_pair(pos->first + ORIGEN_X, pos->second + ORIGEN_Y); };
     s.plantas = e->capa == 0;
@@ -599,7 +697,6 @@ void abrirSitio(std::shared_ptr<Estado> e)
         return esRaiz(o) ? o : nada();
     };
     s.aviso = [e] { return e->aviso; };
-    e->aviso.clear();
     s.poner = [e, pos](const Objeto& n) {
         // Lo que no es planta ni mueble queda tirado en el suelo, como al soltarlo en el juego.
         Objeto c = n;
@@ -654,28 +751,62 @@ void abrirSitio(std::shared_ptr<Estado> e)
             e->dx = pos->first + ORIGEN_X - e->cx, e->dy = pos->second + ORIGEN_Y - e->cy;
             e->modo = Llevar;
         };
-        const uint64_t clave = claveNombre(o);
-        const int iguales = (int)buscarNombre(capaActiva(*e), {}, clave).size();
-        const std::string n = nombre(o);
-        if (iguales >= 2)
+        if (conIguales)
         {
-            s.mas.push_back({"Quitar todas iguales (" + numero(iguales) + ")", [e, clave, n, iguales] {
-                confirmar("Quitar", "¿Quitar «" + n + "» (" + numero(iguales) + ") de toda la isla? Se puede deshacer.", "Sí, quitar", [e, clave] {
-                    recordar();
-                    Rejilla r = capaActiva(*e);
-                    const int q = quitarNombre(r, clave);
+            const uint64_t clave = claveNombre(o);
+            const int iguales = (int)buscarNombre(capaActiva(*e), {}, clave).size();
+            const std::string n = nombre(o);
+            if (iguales >= 2)
+            {
+                s.mas.push_back({"Quitar iguales\nLas " + numero(iguales) + " de toda la isla", [e, clave, n, iguales] {
+                    confirmar("Quitar", "¿Quitar «" + n + "» (" + numero(iguales) + ") de toda la isla? Se puede deshacer.", "Sí, quitar", [e, clave] {
+                        recordar();
+                        Rejilla r = capaActiva(*e);
+                        const int q = quitarNombre(r, clave);
+                        volver();
+                        hecho("Quitadas " + numero(q));
+                    });
+                }});
+                s.mas.push_back({"Goma para estas\nAl pasar, quita solo estas", [e, clave, n] {
+                    usarGoma(*e, Todo, clave, n);
                     volver();
-                    hecho("Quitadas " + numero(q));
-                });
-            }});
-            s.mas.push_back({"Goma solo para estas", [e, clave, n] {
-                e->gomaTipo = Todo;
-                e->gomaClave = clave;
-                e->gomaNombre = n;
-                e->modo = Goma;
-                volver();
-            }});
+                }});
+            }
         }
+    }
+    return true;
+}
+
+// Qué hay en el cursor (A): la cosa de la capa, o el edificio, o el cuadro vacío.
+void abrirSitio(std::shared_ptr<Estado> e)
+{
+    Objeto o;
+    int rx, ry;
+    if (!cosaEn(*e, e->cx, e->cy, o, rx, ry))
+        if (const Edificio* b = edificioEn(e->cx + 1, e->cy + 1))
+        {
+            // Como el Mac: su dibujo en un círculo, su nombre y que se cambia en el juego.
+            const std::string n = nombreEdificio(*b);
+            const uint16_t icono = iconoDeEdificio(b->tipo);
+            abrir([n, icono](Vista& v) {
+                v.titulo = n;
+                v.dibujo = [icono] {
+                    tarjeta({60, 112, 1160, 200});
+                    foto({84, 136, 152, 152}, icono ? dibujos::de(icono) : nullptr, {}, true);
+                    texto("Este sitio es de un edificio.", 264, 150, MARRON, g_negrita);
+                    texto("Los edificios se cambian de sitio en el propio juego, en los Servicios a residentes.", 264, 192, MARRON_SUAVE, g_pequena,
+                        Izquierda, 920);
+                };
+                v.b.push_back({{W - 60 - 300, ABAJO - 66, 300, 56}, "Volver", [] { volver(); }});
+            });
+            return;
+        }
+    Sitio s;
+    e->aviso.clear();
+    if (!crearSitio(e, s, true))
+    {
+        avisar("Ahí no se puede poner nada: está fuera de la isla.");
+        return;
     }
     abrir(panelSitio(s));
 }
@@ -719,6 +850,14 @@ void borrarAqui(Estado& e)
     }
 }
 
+void empezarGoma(Estado& e)
+{
+    recordar();
+    e.borrando = true;
+    e.borradas = 0;
+    borrarAqui(e);
+}
+
 void terminarGoma(Estado& e)
 {
     if (!e.borrando)
@@ -730,6 +869,48 @@ void terminarGoma(Estado& e)
         cambiado("Quitadas " + numero(e.borradas));
 }
 
+void dejarModo(Estado& e)
+{
+    if (e.modo == Goma)
+        terminarGoma(e);
+    e.modo = Mirar;
+    e.esquina = false;
+}
+
+// La zona entre la esquina y el cursor.
+void terminarZona(Estado& e)
+{
+    const int x0 = std::max(0, std::min(e.ex, e.cx)), y0 = std::max(ORIGEN_Y, std::min(e.ey, e.cy));
+    const int x1 = std::min(MAPA_ANCHO, std::max(e.ex, e.cx) + 2), y1 = std::min(ORIGEN_Y + ALTO, std::max(e.ey, e.cy) + 2);
+    e.esquina = false;
+    e.modo = Mirar;
+    if (x1 <= x0 || y1 <= y0)
+    {
+        avisar("Esa zona está fuera de la isla.", true);
+        return;
+    }
+    e.hayZona = true;
+    e.zona = {x0 - ORIGEN_X, y0 - ORIGEN_Y, x1 - x0, y1 - y0};
+    avisar("Zona marcada: a la derecha, lo que hay en ella.");
+}
+
+void dejarLlevado(Estado& e)
+{
+    Rejilla r = capaActiva(e);
+    const int x = e.cx + e.dx - ORIGEN_X, y = e.cy + e.dy - ORIGEN_Y;
+    recordar();
+    Objeto estorbo;
+    const Resultado res = mover(r, e.desdeX, e.desdeY, x, y, &estorbo);
+    if (res != Bien)
+    {
+        olvidarUltimo();
+        avisar(noCabe(res, estorbo), true);
+        return;
+    }
+    e.modo = Mirar;
+    hecho("Movido: " + nombre(e.llevado));
+}
+
 void pulsarA(std::shared_ptr<Estado> e)
 {
     switch (e->modo)
@@ -739,45 +920,16 @@ void pulsarA(std::shared_ptr<Estado> e)
             abrirSitio(e);
             break;
         case Llevar:
-        {
-            Rejilla r = capaActiva(*e);
-            const int x = e->cx + e->dx - ORIGEN_X, y = e->cy + e->dy - ORIGEN_Y;
-            recordar();
-            Objeto estorbo;
-            const Resultado res = mover(r, e->desdeX, e->desdeY, x, y, &estorbo);
-            if (res != Bien)
-            {
-                olvidarUltimo();
-                avisar(noCabe(res, estorbo), true);
-                return;
-            }
-            e->modo = Mirar;
-            hecho("Movido: " + nombre(e->llevado));
+            dejarLlevado(*e);
             break;
-        }
         case Marcar:
             if (!e->esquina)
             {
                 e->esquina = true;
                 e->ex = e->cx, e->ey = e->cy;
-                avisar("Ahora mueve el cursor a la otra esquina y pulsa A.");
             }
             else
-            {
-                const int x0 = std::max(0, std::min(e->ex, e->cx)), y0 = std::max(ORIGEN_Y, std::min(e->ey, e->cy));
-                const int x1 = std::min(MAPA_ANCHO, std::max(e->ex, e->cx) + 2), y1 = std::min(ORIGEN_Y + ALTO, std::max(e->ey, e->cy) + 2);
-                e->esquina = false;
-                e->modo = Mirar;
-                if (x1 <= x0 || y1 <= y0)
-                {
-                    avisar("Esa zona está fuera de la isla.", true);
-                    return;
-                }
-                e->hayZona = true;
-                e->zona = {x0 - ORIGEN_X, y0 - ORIGEN_Y, x1 - x0, y1 - y0};
-                avisar("");
-                abrirOrdenar(e, true, 1);
-            }
+                terminarZona(*e);
             break;
         case Goma:
             break;
@@ -793,6 +945,13 @@ void moverCursor(Estado& e, int dx, int dy)
     seguir(e);
 }
 
+// El cuadro del mapa en un punto de la pantalla.
+void cuadroEn(const Estado& s, int px, int py, int& mx, int& my)
+{
+    mx = std::clamp(((int)std::floor(s.vx + (px - AREA.x) / s.zoom)) & ~1, 0, MAPA_ANCHO - 2);
+    my = std::clamp(((int)std::floor(s.vy + (py - AREA.y) / s.zoom)) & ~1, 0, MAPA_ALTO - 2);
+}
+
 bool entrada(std::shared_ptr<Estado> e, u64 down, u64 held, int tx, int ty)
 {
     Estado& s = *e;
@@ -806,97 +965,108 @@ bool entrada(std::shared_ptr<Estado> e, u64 down, u64 held, int tx, int ty)
     if (dx || dy)
         moverCursor(s, dx, dy);
 
-    // Tocar: un toque elige el cuadro (y otro toque en el mismo, lo abre); arrastrar mueve el mapa.
+    // Tocar: los botones del panel y de encima del mapa; en el mapa, un toque elige el cuadro (y otro toque en el
+    // mismo, lo abre) y arrastrar mueve el mapa (con la goma, borra; marcando, marca la zona).
     HidTouchScreenState ts = {};
     hidGetTouchScreenStates(&ts, 1);
     const bool toca = ts.count > 0;
-    const int px = toca ? (int)ts.touches[0].x : 0, py = toca ? (int)ts.touches[0].y : 0;
-    if (toca && !s.tocando)
+    const int rx = toca ? (int)ts.touches[0].x : 0, ry = toca ? (int)ts.touches[0].y : 0;
+    if (tx >= 0)
     {
-        if (px >= AREA.x && px < AREA.x + AREA.w && py >= AREA.y && py < AREA.y + AREA.h)
+        if (s.chips.tocar(tx, ty))
+            return true;
+        if (tx >= AREA.x && tx < AREA.x + AREA.w && ty >= AREA.y && ty < AREA.y + AREA.h)
         {
             s.tocando = true;
             s.arrastrado = false;
-            s.t0x = px, s.t0y = py, s.v0x = s.vx, s.v0y = s.vy;
+            s.t0x = tx, s.t0y = ty, s.r0x = rx, s.r0y = ry, s.v0x = s.vx, s.v0y = s.vy;
+            if (s.modo == Goma || s.modo == Marcar)
+            {
+                cuadroEn(s, tx, ty, s.cx, s.cy);
+                if (s.modo == Goma)
+                    empezarGoma(s);
+                else
+                    s.esquina = true, s.ex = s.cx, s.ey = s.cy;
+            }
         }
+        return true;
     }
-    else if (toca && s.tocando)
+    if (toca && s.tocando)
     {
+        const int px = s.t0x + (int)std::lround((rx - s.r0x) / ESCALA), py = s.t0y + (int)std::lround((ry - s.r0y) / ESCALA);
         if (std::abs(px - s.t0x) + std::abs(py - s.t0y) > 12)
             s.arrastrado = true;
-        if (s.arrastrado)
+        if (s.modo == Goma || s.modo == Marcar)
+        {
+            const int ax = s.cx, ay = s.cy;
+            cuadroEn(s, std::clamp(px, AREA.x, AREA.x + AREA.w - 1), std::clamp(py, AREA.y, AREA.y + AREA.h - 1), s.cx, s.cy);
+            if (s.modo == Goma && s.borrando && (ax != s.cx || ay != s.cy))
+                borrarAqui(s);
+        }
+        else if (s.arrastrado)
         {
             s.vx = s.v0x - (px - s.t0x) / s.zoom;
             s.vy = s.v0y - (py - s.t0y) / s.zoom;
             ajustar(s);
         }
+        return true;
     }
-    else if (!toca && s.tocando)
+    if (!toca && s.tocando)
     {
         s.tocando = false;
-        if (!s.arrastrado)
+        if (s.modo == Goma)
+            terminarGoma(s);
+        else if (s.modo == Marcar)
         {
-            const int mx = ((int)std::floor(s.vx + (s.t0x - AREA.x) / s.zoom)) & ~1;
-            int my = ((int)std::floor(s.vy + (s.t0y - AREA.y) / s.zoom)) & ~1;
+            if (s.arrastrado)
+                terminarZona(s);
+            // Un toque sin arrastrar deja la primera esquina: el siguiente toque o A pone la otra.
+        }
+        else if (!s.arrastrado)
+        {
+            int mx, my;
+            cuadroEn(s, s.t0x, s.t0y, mx, my);
             // Los árboles se dibujan más altos que su cuadro: tocar su copa también los elige.
             Objeto o;
-            int rx, ry;
-            if (!cosaEn(s, mx, my, o, rx, ry) && cosaEn(s, mx, my + 2, o, rx, ry) && clasePlanta(o.id) == 3)
+            int ox, oy;
+            if (!cosaEn(s, mx, my, o, ox, oy) && cosaEn(s, mx, my + 2, o, ox, oy) && clasePlanta(o.id) == 3)
                 my += 2;
             const bool mismo = mx == s.cx && my == s.cy;
-            s.cx = std::clamp(mx, 0, MAPA_ANCHO - 2), s.cy = std::clamp(my, 0, MAPA_ALTO - 2);
-            if (mismo && s.modo != Goma)
+            s.cx = mx, s.cy = my;
+            if (mismo)
                 pulsarA(e);
         }
-    }
-    // Los botones del panel (solo al tocar).
-    if (tx >= PANEL_X)
-    {
-        const int i = (ty - 420) / 56;
-        if (ty >= 420 && i >= 0 && i < 4)
-        {
-            if (i == 0) pulsarA(e);
-            if (i == 1) s.capa = 1 - s.capa;
-            if (i == 2)
-            {
-                if (s.modo == Goma)
-                    abrirGoma(e, 1);
-                else
-                    abrirHerramientas(e);
-            }
-            if (i == 3) deshacer();
-        }
-        if (ty >= 360 && ty < 410)
-            acercar(s, tx < PANEL_X + 200 ? 1 / 1.5 : 1.5);
         return true;
     }
 
     if (s.modo == Goma)
     {
         if ((down & HidNpadButton_A) || ((held & HidNpadButton_A) && !s.borrando))
-        {
-            recordar();
-            s.borrando = true;
-            s.borradas = 0;
-            borrarAqui(s);
-        }
+            empezarGoma(s);
         else if ((held & HidNpadButton_A) && s.borrando && (dx || dy))
             borrarAqui(s);
         else if (!(held & HidNpadButton_A))
             terminarGoma(s);
-        return false; // B, X, Y, L y R los mira la vista
+        return (down & HidNpadButton_A) || dx || dy; // B, X, Y, L y R los mira la vista
     }
     if (down & HidNpadButton_A)
+    {
         pulsarA(e);
-    return false;
+        return true;
+    }
+    return dx || dy;
 }
 
+// --------------------------------------------------------------------------------------------- dibujar el mapa
 void dibujarMapa(std::shared_ptr<Estado> e)
 {
     Estado& s = *e;
+    // El recuadro del mapa, con las esquinas redondeadas como el Mac.
+    redondo({AREA.x - 2, AREA.y - 2, AREA.w + 4, AREA.h + 4}, 16, BORDE_MAC);
     if (!lienzo().listo())
     {
-        rect(AREA, {70, 170, 204, 255});
+        rect(AREA, {0x6F, 0xC3, 0xD8, 255});
+        esquinas(AREA, 14, BORDE_MAC);
         texto("Dibujando la isla…", AREA.x + AREA.w / 2, AREA.y + AREA.h / 2, BLANCO, g_grande, Centro);
         if (s.fotogramas++ >= 1)
         {
@@ -917,6 +1087,7 @@ void dibujarMapa(std::shared_ptr<Estado> e)
         s.ajustado = true;
     }
     lienzo().actualizar(principal(), s.capa);
+    rect(AREA, {0x6F, 0xC3, 0xD8, 255});
     lienzo().dibujar(principal(), AREA, s.vx, s.vy, s.zoom);
 
     SDL_RenderSetClipRect(g_r, &AREA);
@@ -929,7 +1100,7 @@ void dibujarMapa(std::shared_ptr<Estado> e)
         for (int y = ((int)s.vy) & ~1; y <= s.vy + AREA.h / s.zoom; y += 2)
             linea(AREA.x, pantallaY(s, y), AREA.x + AREA.w, pantallaY(s, y));
     }
-    // Los nombres de los edificios (las casas solo si caben).
+    // Los nombres de los edificios en etiquetas blancas (las casas solo si caben), dentro del mapa.
     std::vector<SDL_Rect> puestos;
     for (int pasada = 0; pasada < 2; pasada++)
         for (const auto& b : losEdificios())
@@ -939,43 +1110,39 @@ void dibujarMapa(std::shared_ptr<Estado> e)
             if (b.casa() && b.w * s.zoom < 46)
                 continue;
             const int ax = pantallaX(s, b.x), ay = pantallaY(s, b.y + b.h / 2);
-            if (ax < AREA.x - 80 || ax > AREA.x + AREA.w + 80 || ay < AREA.y - 40 || ay > AREA.y + AREA.h + 40)
-                continue;
-            const int w = anchoTexto(b.nombre, g_pequena) + 14;
+            const int w = anchoTexto(b.nombre, g_pequena) + 18;
             const SDL_Rect pill = {ax - w / 2, ay + 2, w, 28};
+            if (pill.x < AREA.x + 4 || pill.y < AREA.y + 4 || pill.x + pill.w > AREA.x + AREA.w - 4 || pill.y + pill.h > AREA.y + AREA.h - 4)
+                continue;
             bool choca = false;
+            for (const auto& p : s.flotantes)
+                choca = choca || SDL_HasIntersection(&p, &pill);
             for (const auto& p : puestos)
                 choca = choca || SDL_HasIntersection(&p, &pill);
             if (choca)
                 continue;
             puestos.push_back(pill);
-            redondo(pill, 14, {255, 251, 240, 235});
-            texto(b.nombre, ax, ay + 16, {58, 51, 42, 255}, g_pequena, Centro);
+            redondo({pill.x, pill.y + 1, pill.w, pill.h}, 10, {0, 0, 0, 0x28});
+            redondo(pill, 10, {255, 255, 255, 240});
+            texto(b.nombre, ax, ay + 16, MARRON, g_pequena, Centro);
         }
     // La zona marcada.
-    auto marco = [](SDL_Rect r, SDL_Color c, int grosor) {
-        SDL_SetRenderDrawColor(g_r, c.r, c.g, c.b, c.a);
-        for (int i = 0; i < grosor; i++)
-        {
-            SDL_Rect q = {r.x - i, r.y - i, r.w + 2 * i, r.h + 2 * i};
-            borde(q);
-        }
-    };
     if (s.hayZona)
     {
         const SDL_Rect z = pantalla(s, s.zona.x + ORIGEN_X, s.zona.y + ORIGEN_Y, s.zona.w, s.zona.h);
-        SDL_SetRenderDrawColor(g_r, 255, 255, 255, 0x30);
-        SDL_RenderFillRect(g_r, &z);
+        rect(z, {255, 255, 255, 0x38});
         marco(z, BLANCO, 2);
     }
     if (s.modo == Marcar && s.esquina)
     {
         const int x0 = std::min(s.ex, s.cx), y0 = std::min(s.ey, s.cy);
         const SDL_Rect z = pantalla(s, x0, y0, std::abs(s.ex - s.cx) + 2, std::abs(s.ey - s.cy) + 2);
-        SDL_SetRenderDrawColor(g_r, 255, 255, 255, 0x30);
-        SDL_RenderFillRect(g_r, &z);
+        rect(z, {255, 255, 255, 0x38});
         marco(z, BLANCO, 2);
-        texto(std::to_string(std::abs(s.ex - s.cx) / 2 + 1) + " × " + std::to_string(std::abs(s.ey - s.cy) / 2 + 1), z.x + 6, z.y + 4, BLANCO, g_pequena);
+        const std::string t = std::to_string(std::abs(s.ex - s.cx) / 2 + 1) + " × " + std::to_string(std::abs(s.ey - s.cy) / 2 + 1);
+        const int tw = anchoTexto(t, g_pequena) + 14;
+        redondo({z.x + 4, z.y + 4, tw, 28}, 8, {0, 0, 0, 0x90});
+        texto(t, z.x + 11, z.y + 18 - TTF_FontHeight(g_pequena) / 2, BLANCO, g_pequena);
     }
     // El cursor: lo que hay, el edificio o el cuadro.
     if (s.modo == Llevar)
@@ -988,8 +1155,7 @@ void dibujarMapa(std::shared_ptr<Estado> e)
         const SDL_Color c = cabe ? SDL_Color{0x2F, 0x9E, 0x62, 255} : SDL_Color{0xD0, 0x40, 0x40, 255};
         if (SDL_Texture* d = dibujoDe(s.llevado))
         {
-            SDL_SetRenderDrawColor(g_r, c.r, c.g, c.b, 0x50);
-            SDL_RenderFillRect(g_r, &r);
+            rect(r, {c.r, c.g, c.b, 0x50});
             SDL_SetTextureAlphaMod(d, 0xD8);
             const int l = std::min(r.w, r.h);
             SDL_Rect q = {r.x + (r.w - l) / 2, r.y + (r.h - l) / 2, l, l};
@@ -1000,8 +1166,7 @@ void dibujarMapa(std::shared_ptr<Estado> e)
         {
             SDL_Color f = colorDe(s.llevado);
             f.a = 200;
-            SDL_SetRenderDrawColor(g_r, f.r, f.g, f.b, f.a);
-            SDL_RenderFillRect(g_r, &r);
+            rect(r, f);
         }
         marco(r, c, 3);
     }
@@ -1009,8 +1174,7 @@ void dibujarMapa(std::shared_ptr<Estado> e)
     {
         const SDL_Rect p = pincel(s);
         const SDL_Rect r = pantalla(s, p.x, p.y, p.w, p.h);
-        SDL_SetRenderDrawColor(g_r, 0xE0, 0x4A, 0x3C, 0x50);
-        SDL_RenderFillRect(g_r, &r);
+        rect(r, {0xE0, 0x4A, 0x3C, 0x50});
         marco(r, {0xE0, 0x4A, 0x3C, 255}, 2);
     }
     else
@@ -1038,84 +1202,348 @@ void dibujarMapa(std::shared_ptr<Estado> e)
     }
     SDL_SetRenderDrawBlendMode(g_r, SDL_BLENDMODE_NONE);
     SDL_RenderSetClipRect(g_r, nullptr);
+    esquinas(AREA, 14, BORDE_MAC);
+}
+
+// Los controles que flotan encima del mapa, como en el Mac: la capa arriba a la izquierda, acercar y alejar arriba a
+// la derecha, las herramientas abajo a la izquierda y deshacer abajo a la derecha.
+void dibujarControles(std::shared_ptr<Estado> e)
+{
+    Estado& s = *e;
+    Chips& ch = s.chips;
+    s.flotantes.clear();
+    if (!lienzo().listo())
+        return;
+    // La capa.
+    {
+        const SDL_Rect r = {AREA.x + 12, AREA.y + 12, 380, 60};
+        s.flotantes.push_back(r);
+        flotante(r);
+        segmentado(ch, {r.x + 8, r.y + 8, r.w - 54, 44}, {CAPAS_CORTO[0], CAPAS_CORTO[1]}, s.capa, [e](int i) {
+            e->capa = i;
+            e->hayZona = false;
+        });
+        tecla("X", r.x + r.w - 23, r.y + r.h / 2);
+    }
+    // Acercar, alejar, toda la isla y la cuadrícula.
+    {
+        const SDL_Rect r = {AREA.x + AREA.w - 12 - 318, AREA.y + 12, 318, 60};
+        s.flotantes.push_back(r);
+        flotante(r);
+        int x = r.x + 8;
+        auto boton = [&](int ancho, const std::string& t, std::function<void()> f, bool marcado = false, SDL_Texture* icono = nullptr) {
+            Chip c{{x, r.y + 8, ancho, 44}, t, std::move(f)};
+            c.marcado = marcado;
+            c.icono = icono;
+            ch.poner(c);
+            x += ancho + 6;
+        };
+        boton(44, "−", [e] { acercar(*e, 1 / 1.5); });
+        boton(44, "+", [e] { acercar(*e, 1.5); });
+        boton(50, "", [e] { verIsla(*e); }, false, dibujos::menu("PltPalm"));
+        boton(r.x + r.w - 8 - x, "Cuadrícula", [e] { e->cuadricula = !e->cuadricula; }, s.cuadricula);
+    }
+    // Las herramientas: elegir, marcar zona y goma.
+    {
+        const char* ayuda = s.modo == Goma ? "Pasa por encima de lo que quieras quitar."
+                            : s.modo == Marcar ? "Arrastra el dedo, o A en cada esquina."
+                            : s.modo == Llevar ? "Llévalo a su nuevo sitio y pulsa A."
+                                               : "Toca un sitio para ver qué hay.";
+        const SDL_Rect r = {AREA.x + 12, AREA.y + AREA.h - 12 - 96, 470, 96};
+        s.flotantes.push_back(r);
+        flotante(r);
+        const int elegida = s.modo == Marcar ? 1 : s.modo == Goma ? 2 : 0;
+        segmentado(ch, {r.x + 8, r.y + 8, r.w - 16, 44}, {"Elegir", "Marcar zona", "Goma"}, elegida, [e](int i) {
+            dejarModo(*e);
+            if (i == 1)
+                e->modo = Marcar;
+            else if (i == 2)
+                e->modo = Goma, e->hayZona = false;
+        }, {dibujos::menu("Net"), dibujos::menu("ToolPennantRcm"), dibujos::menu("Duster")});
+        texto(encajar(ayuda, r.w - 28, g_pequena), r.x + 14, r.y + 60, MARRON_SUAVE, g_pequena);
+    }
+    // Deshacer.
+    if (!g_deshacer.empty())
+    {
+        const std::string t = textoDeshacer();
+        const int w = anchoTexto(t, g_pequena) + 74;
+        const SDL_Rect r = {AREA.x + AREA.w - 12 - w - 16, AREA.y + AREA.h - 12 - 60, w + 16, 60};
+        s.flotantes.push_back(r);
+        flotante(r);
+        Chip c{{r.x + 8, r.y + 8, w, 44}, t, [] { deshacer(); }};
+        c.tecla = "−";
+        ch.poner(c);
+    }
+}
+
+// --------------------------------------------------------------------------------------------- el panel
+// «Ordenar la isla» (o la zona) en el panel, como el Mac: un título con «Más…», cada tipo con su dibujo, cuántas hay
+// y sus botones, y abajo «Cada cosa por separado» (y «extra», si hay).
+void tablaOrdenar(std::shared_ptr<Estado> e, bool enZona, int x, int y, int ancho, int hasta, const std::string& titulo, const Chip* extra = nullptr)
+{
+    Chips& ch = e->chips;
+    const Cuenta& c = contarTodo(*e, enZona);
+    texto(encajar(titulo, ancho - 140, g_negrita), x, y + 22 - TTF_FontHeight(g_negrita) / 2, MARRON, g_negrita);
+    const int mw = enZona ? 130 : 100;
+    Chip mas{{x + ancho - mw, y, mw, 44}, "Más…", [e, enZona] { abrirOrdenar(e, enZona, 1); }};
+    if (enZona)
+        mas.tecla = "Y";
+    ch.poner(mas);
+    y += 54;
+    const int n = (int)c.filas.size();
+    const int alto = std::clamp((hasta - y - 52) / std::max(1, n), 44, 50);
+    for (int k = 0; k < n; k++)
+    {
+        const Tipo t = c.filas[k].first;
+        const int cuantas = c.filas[k].second;
+        const int fy = y + k * alto;
+        if (fy + 44 > hasta - 52)
+            break;
+        if (SDL_Texture* d = dibujos::de(iconoTipo(t)))
+        {
+            SDL_Rect r = {x, fy + (44 - 32) / 2, 32, 32};
+            SDL_RenderCopy(g_r, d, nullptr, &r);
+        }
+        // Los botones a la derecha; el número antes; el nombre en lo que quede.
+        int bx = x + ancho;
+        auto boton = [&](int w, const std::string& txt, std::function<void()> f) {
+            bx -= w;
+            Chip b{{bx, fy, w, 44}, txt, std::move(f)};
+            b.activo = cuantas > 0;
+            ch.poner(b);
+            bx -= 6;
+        };
+        boton(84, t == Hoyos ? "Tapar" : "Quitar", [e, t, cuantas, enZona] { quitarTipo(e, t, cuantas, enZona); });
+        if (t == Flores)
+            boton(76, "Regar", [e, enZona] { regarZona(e, enZona); });
+        const std::string num = numero(cuantas);
+        texto(num, bx - 4, fy + 22 - TTF_FontHeight(g_negrita) / 2, MARRON, g_negrita, Derecha);
+        const int libre = bx - 14 - anchoTexto(num, g_negrita) - (x + 42);
+        const std::string n = anchoTexto(tipoNombre(t), g_pequena) <= libre ? tipoNombre(t) : corto(t);
+        texto(encajar(n, libre, g_pequena), x + 42, fy + 22 - TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena);
+    }
+    const int fy = hasta - 44;
+    const std::string porNombres = extra ? "Por nombres" : "Cada cosa por separado (" + numero(c.clases) + ")";
+    const int w = extra ? (ancho - 8) / 2 : ancho;
+    Chip clases_{{x, fy, w, 44}, porNombres, [e, enZona] { abrirClases(e, enZona, 1); }};
+    clases_.activo = c.clases > 0;
+    ch.poner(clases_);
+    if (extra)
+    {
+        Chip x2 = *extra;
+        x2.r = {x + w + 8, fy, ancho - w - 8, 44};
+        ch.poner(x2);
+    }
 }
 
 void dibujarPanel(std::shared_ptr<Estado> e)
 {
     Estado& s = *e;
-    rect({PANEL_X, 96, W - PANEL_X, ABAJO - 96}, CREMA);
-    redondo({PANEL_X + 16, 108, W - PANEL_X - 32, 240}, 14, BLANCO);
-    const int x = PANEL_X + 34, ancho = W - PANEL_X - 68;
-    texto(CAPAS[s.capa], x, 120, VERDE_OSCURO, g_pequena);
-    std::string titulo, detalle;
-    SDL_Color color = CREMA_OSCURA;
-    SDL_Texture* foto = nullptr;
-    Objeto o;
-    int rx, ry;
+    Chips& ch = s.chips;
+    tarjeta(PANEL);
+    const int x = PANEL.x + 20, ancho = PANEL.w - 40, abajo = PANEL.y + PANEL.h - 16;
+    int y = PANEL.y + 18;
+    if (!lienzo().listo())
+        return;
+    // Lo de arriba: lo elegido con su dibujo grande, su nombre y dónde está.
+    auto cabecera = [&](SDL_Texture* t, SDL_Color color, const std::string& titulo, const std::string& debajo, bool redonda = false) {
+        foto({x, y, 96, 96}, t, color, redonda);
+        const int tx = x + 112, tw = ancho - 112;
+        const int h = texto(titulo, tx, y + 4, MARRON, g_negrita, Izquierda, tw);
+        texto(encajar(debajo, tw, g_pequena), tx, y + 4 + std::min(h, 70) - 4, MARRON_SUAVE, g_pequena);
+        y += 96 + 16;
+    };
+    auto fila = [&](std::vector<Chip> cs) {
+        const int n = (int)cs.size();
+        const int w = (ancho - 8 * (n - 1)) / n;
+        for (int i = 0; i < n; i++)
+        {
+            cs[i].r = {x + i * (w + 8), y, i == n - 1 ? x + ancho - (x + i * (w + 8)) : w, 44};
+            ch.poner(cs[i]);
+        }
+        y += 52;
+    };
     if (s.modo == Llevar)
     {
-        titulo = "Moviendo: " + nombre(s.llevado);
-        detalle = "Lleva el cursor a su nuevo sitio y pulsa A. B para dejarlo donde estaba.";
-        color = colorDe(s.llevado);
-        foto = dibujoDe(s.llevado);
+        cabecera(dibujoDe(s.llevado), colorDe(s.llevado), nombre(s.llevado), "Moviéndolo");
+        y = encabezado("", "Lleva el cursor a su nuevo sitio (o tócalo) y pulsa A. Verde: cabe; rojo: algo estorba.", x, y, ancho) + 16;
+        Chip dejar{{}, "Dejar aquí", [e] { dejarLlevado(*e); }};
+        dejar.principal = true;
+        dejar.tecla = "A";
+        Chip cancelar{{}, "Cancelar", [e] { e->modo = Mirar; }};
+        cancelar.tecla = "B";
+        fila({dejar, cancelar});
+        return;
     }
-    else if (s.modo == Marcar)
+    if (s.modo == Marcar)
     {
-        titulo = "Marcar una zona";
-        detalle = s.esquina ? "Mueve el cursor a la otra esquina y pulsa A. B para dejarlo." : "Lleva el cursor a una esquina de la zona y pulsa A. B para dejarlo.";
-    }
-    else if (s.modo == Goma)
-    {
-        titulo = "Goma: " + (s.gomaClave ? "solo " + s.gomaNombre : tipoNombre(s.gomaTipo));
-        detalle = "Mantén A y mueve el cursor por encima. Y para cambiar la goma, B para dejarla.";
-        color = {0xE0, 0x4A, 0x3C, 255};
-    }
-    else if (cosaEn(s, s.cx, s.cy, o, rx, ry))
-    {
-        titulo = nombre(o);
-        detalle = enterrado(o) ? "Enterrado. A para cambiarlo, girarlo, moverlo o quitarlo." : "A para cambiarlo, girarlo, moverlo o quitarlo.";
-        color = colorDe(o);
-        foto = dibujoDe(o);
-    }
-    else if (const Edificio* b = edificioEn(s.cx + 1, s.cy + 1))
-    {
-        titulo = b->casa() && b->nombre != "Parcela libre" ? "Casa de " + b->nombre : b->nombre;
-        detalle = "Los edificios se cambian de sitio en el juego.";
-        if (const uint16_t i = iconoDeEdificio(b->tipo))
-            foto = dibujos::de(i);
-    }
-    else
-    {
-        titulo = "Sitio vacío";
-        detalle = "A para poner algo aquí.";
-    }
-    redondo({x, 152, 44, 44}, 8, foto ? CREMA : color);
-    if (foto)
-    {
-        SDL_Rect r = {x + 2, 154, 40, 40};
-        SDL_RenderCopy(g_r, foto, nullptr, &r);
-    }
-    const int alto = std::max(44, texto(titulo, x + 56, 156, MARRON, nullptr, Izquierda, ancho - 56));
-    texto(detalle, x, 152 + std::min(alto, 100) + 12, MARRON_SUAVE, g_pequena, Izquierda, ancho);
-    // Botones para tocar.
-    auto boton = [](SDL_Rect r, const std::string& k, const std::string& t, bool activo = true) {
-        // As the buttons of NHSE for Mac: white with a grey edge, and the key in a dark circle.
-        redondo(r, 10, {0xD1, 0xD1, 0xD6, 255});
-        redondo({r.x + 2, r.y + 2, r.w - 4, r.h - 4}, 8, activo ? BLANCO : GRIS);
-        const int kw = k.empty() ? 0 : std::max(30, anchoTexto(k, g_pequena) + 16);
-        if (!k.empty())
+        cabecera(dibujos::menu("ToolPennantRcm"), {}, "Marcar una zona", "Solo una parte");
+        y = encabezado("", s.esquina ? "Ahora la otra esquina: mueve el cursor y pulsa A (o toca)." : "Arrastra el dedo sobre el mapa, o pon el cursor en una esquina y pulsa A.", x, y, ancho) + 16;
+        if (s.esquina)
         {
-            redondo({r.x + 8, r.y + (r.h - 30) / 2, kw, 30}, 15, activo ? MARRON : MARRON_SUAVE);
-            texto(k, r.x + 8 + kw / 2, r.y + r.h / 2, BLANCO, g_pequena, Centro);
+            Chip c{{}, "Aquí", [e] { terminarZona(*e); }};
+            c.principal = true;
+            c.tecla = "A";
+            Chip no{{}, "Cancelar", [e] { dejarModo(*e); }};
+            no.tecla = "B";
+            fila({c, no});
         }
-        texto(encajar(t, r.w - kw - 26, g_pequena), k.empty() ? r.x + r.w / 2 : r.x + kw + 18, r.y + r.h / 2 - (k.empty() ? 0 : 14), activo ? MARRON : MARRON_SUAVE, g_pequena, k.empty() ? Centro : Izquierda);
-    };
-    boton({PANEL_X + 16, 360, 176, 46}, "L", "Alejar");
-    boton({PANEL_X + 208, 360, 176, 46}, "R", "Acercar");
-    boton({PANEL_X + 16, 420, W - PANEL_X - 32, 48}, "A", s.modo == Mirar ? "Qué hay aquí" : s.modo == Llevar ? "Dejarlo aquí" : s.modo == Marcar ? "Esquina" : "Borrar");
-    boton({PANEL_X + 16, 476, W - PANEL_X - 32, 48}, "X", std::string("Capa: ") + (s.capa ? "encima" : "en el suelo"));
-    boton({PANEL_X + 16, 532, W - PANEL_X - 32, 48}, "Y", s.modo == Goma ? "Cambiar la goma" : "Herramientas");
-    boton({PANEL_X + 16, 588, W - PANEL_X - 32, 48}, "−", "Deshacer" + (g_deshacer.empty() ? std::string() : " (" + std::to_string(g_deshacer.size()) + ")"), !g_deshacer.empty());
+        else
+        {
+            Chip no{{}, "Cancelar", [e] { dejarModo(*e); }};
+            no.tecla = "B";
+            fila({no});
+        }
+        return;
+    }
+    if (s.modo == Goma)
+    {
+        cabecera(dibujos::menu("Duster"), {}, "Goma", s.gomaClave ? "Solo: " + s.gomaNombre : "Borra: " + tipoNombre(s.gomaTipo, true));
+        texto("Tamaño", x, y + 22 - TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena);
+        std::vector<std::string> tam = {"1", "3", "5"};
+        segmentado(ch, {x + 90, y, ancho - 90, 44}, tam, s.goma / 2, [e](int i) { e->goma = i * 2 + 1; });
+        y += 60;
+        texto("Qué borra", x, y, MARRON, g_pequena);
+        y += 32;
+        // Cada tipo con su dibujo, de dos en dos (y «solo estas», si se eligió).
+        std::vector<Chip> cs;
+        if (s.gomaClave)
+        {
+            Chip c{{}, "Solo: " + s.gomaNombre, [] {}};
+            c.marcado = true;
+            cs.push_back(c);
+        }
+        for (const auto& t : TIPOS)
+        {
+            const Tipo tipo = t.tipo;
+            Chip c{{}, t.corto, [e, tipo] {
+                e->gomaTipo = tipo;
+                e->gomaClave = 0;
+            }};
+            c.marcado = !s.gomaClave && s.gomaTipo == tipo;
+            c.icono = dibujos::de(t.icono);
+            cs.push_back(c);
+        }
+        const int w = (ancho - 8) / 2;
+        for (size_t i = 0; i < cs.size(); i++)
+        {
+            const int fy = y + (int)(i / 2) * 50;
+            if (fy + 44 > abajo - 52)
+                break;
+            cs[i].r = {x + (int)(i % 2) * (w + 8), fy, w, 44};
+            ch.poner(cs[i]);
+        }
+        Chip dejar{{x, abajo - 44, ancho, 44}, "Dejar la goma", [e] { dejarModo(*e); }};
+        dejar.tecla = "B";
+        ch.poner(dejar);
+        return;
+    }
+    // Elegir: la zona marcada, la cosa del cursor, el edificio, o el sitio vacío con «Ordenar la isla».
+    if (s.hayZona)
+    {
+        Chip olvidar{{}, "Olvidar", [e] { e->hayZona = false; }};
+        olvidar.tecla = "B";
+        tablaOrdenar(e, true, x, y, ancho, abajo, "Zona de " + std::to_string(s.zona.w / 2) + " × " + std::to_string(s.zona.h / 2), &olvidar);
+        return;
+    }
+    Objeto o;
+    int rx, ry;
+    if (cosaEn(s, s.cx, s.cy, o, rx, ry))
+    {
+        int w, h;
+        tamano(o, w, h);
+        std::string donde = CAPAS[s.capa];
+        if (enterrado(o))
+            donde += " · enterrado";
+        cabecera(dibujoDe(o), colorDe(o), nombre(o), donde);
+        auto sitio = [e](std::function<void(Sitio&)> f) {
+            return [e, f] {
+                Sitio st;
+                e->aviso.clear();
+                if (crearSitio(e, st, false))
+                    f(st);
+            };
+        };
+        std::vector<Chip> a;
+        a.push_back({{}, "Quitar", sitio([](Sitio& st) {
+            const std::string n = nombre(st.objeto());
+            st.quitar();
+            cambiado("Quitado: " + n);
+        })});
+        if (girable(o))
+            a.push_back({{}, "Girar", sitio([](Sitio& st) {
+                if (st.girar)
+                    st.girar();
+            })});
+        a.push_back({{}, "Mover", sitio([](Sitio& st) { st.mover(); })});
+        fila(a);
+        Chip cambiar{{}, "Cambiar por…", sitio([](Sitio& st) {
+            buscarObjeto([st](const Objeto& n) {
+                if (st.poner(n))
+                    cambiado("Puesto: " + nombre(n));
+            }, "ponerlo en su lugar");
+        })};
+        Chip mas{{}, "Más", [e] { abrirSitio(e); }};
+        mas.tecla = "A";
+        fila({cambiar, mas});
+        // Las que se llaman igual (se cuentan al mover el cursor).
+        if (s.igualesVersion != g_version || s.igualesX != rx || s.igualesY != ry || s.igualesCapa != s.capa)
+        {
+            s.iguales = (int)buscarNombre(capaActiva(s), {}, claveNombre(o)).size();
+            s.igualesVersion = g_version, s.igualesX = rx, s.igualesY = ry, s.igualesCapa = s.capa;
+        }
+        if (s.iguales >= 2)
+        {
+            y += 8;
+            texto("Hay " + numero(s.iguales) + " iguales en la isla", x, y, MARRON, g_pequena);
+            y += 34;
+            const uint64_t clave = claveNombre(o);
+            const std::string n = nombre(o);
+            const int iguales = s.iguales;
+            fila({Chip{{}, "Quitar las " + numero(iguales), [e, clave, n, iguales] {
+                confirmar("Quitar", "¿Quitar «" + n + "» (" + numero(iguales) + ") de toda la isla? Se puede deshacer.", "Sí, quitar", [e, clave] {
+                    recordar();
+                    Rejilla r = capaActiva(*e);
+                    const int q = quitarNombre(r, clave);
+                    hecho("Quitadas " + numero(q));
+                });
+            }}});
+            Chip goma{{}, "Goma solo para estas", [e, clave, n] { usarGoma(*e, Todo, clave, n); }};
+            goma.icono = dibujos::menu("Duster");
+            fila({goma});
+        }
+        y += 8;
+        if (w > 2 || h > 2)
+            texto("Ocupa " + std::to_string(std::max(1, w / 2)) + " × " + std::to_string(std::max(1, h / 2)) + " cuadros.", x, y, MARRON_SUAVE, g_pequena);
+        return;
+    }
+    if (const Edificio* b = edificioEn(s.cx + 1, s.cy + 1))
+    {
+        const uint16_t i = iconoDeEdificio(b->tipo);
+        foto({x + (ancho - 120) / 2, y, 120, 120}, i ? dibujos::de(i) : nullptr, {}, true);
+        y += 136;
+        encabezado(nombreEdificio(*b), "Este sitio es de un edificio. Los edificios se cambian de sitio en el propio juego, en los Servicios a residentes.", x, y,
+            ancho);
+        return;
+    }
+    // Un sitio vacío: lo que se puede poner, y ordenar la isla como el Mac (si no cabe todo, solo ordenar).
+    const int filas = (int)contarTodo(s, false).filas.size();
+    if (abajo - y - (54 + filas * 46 + 52) >= 66)
+    {
+        Sitio st;
+        const bool dentro = crearSitio(e, st, false);
+        texto(dentro ? "Sitio vacío" : "Fuera de la isla", x, y + 22 - TTF_FontHeight(g_negrita) / 2, MARRON, g_negrita);
+        if (dentro)
+        {
+            Chip poner{{x + ancho - 170, y, 170, 44}, "Poner algo", [e] { abrirSitio(e); }};
+            poner.tecla = "A";
+            ch.poner(poner);
+        }
+        y += 56;
+        rect({x, y, ancho, 2}, CREMA_OSCURA);
+        y += 12;
+    }
+    tablaOrdenar(e, false, x, y, ancho, abajo, "Ordenar la isla");
 }
 
 Pantalla pantallaMapa()
@@ -1128,34 +1556,33 @@ Pantalla pantallaMapa()
     e->cx = MAPA_ANCHO / 2, e->cy = MAPA_ALTO / 2;
     return [e](Vista& v) {
         v.titulo = "Mapa de la isla";
+        v.explicacion = "Toca un sitio para ver qué hay y cambiarlo; arrastra para moverte. Con la cruceta, el cursor; L y R alejan y acercan.";
         v.dibujo = [e] {
+            e->chips.limpiar();
             dibujarMapa(e);
+            dibujarControles(e);
             dibujarPanel(e);
+            e->chips.dibujar();
         };
         v.entrada = [e](u64 down, u64 held, int tx, int ty) { return entrada(e, down, held, tx, ty); };
         v.x = [e] {
             e->capa = 1 - e->capa;
+            e->hayZona = false;
             avisar(std::string("Ahora: ") + CAPAS[e->capa] + ".");
         };
         v.y = [e] {
             if (e->modo == Goma)
                 abrirGoma(e, 1);
+            else if (e->hayZona)
+                abrirOrdenar(e, true, 1);
             else
                 abrirHerramientas(e);
         };
         v.menos = [] { deshacer(); };
         v.paginar = [e](int d) { acercar(*e, d > 0 ? (d > 1 ? 4 : 1.5) : (d < -1 ? 0.25 : 1 / 1.5)); };
         v.atras = [e] {
-            if (e->modo == Goma)
-            {
-                terminarGoma(*e);
-                e->modo = Mirar;
-            }
-            else if (e->modo != Mirar)
-            {
-                e->modo = Mirar;
-                e->esquina = false;
-            }
+            if (e->modo != Mirar)
+                dejarModo(*e);
             else if (e->hayZona)
                 e->hayZona = false;
             else if (g_tocado && !sinApoyoAhora().empty())
@@ -1170,7 +1597,12 @@ Pantalla pantallaMapa()
             case Llevar: v.teclas = {{"A", "Dejar aquí"}, {"L R", "Zoom"}, {"B", "Cancelar"}}; break;
             case Marcar: v.teclas = {{"A", "Esquina"}, {"L R", "Zoom"}, {"B", "Cancelar"}}; break;
             case Goma: v.teclas = {{"A", "Borrar"}, {"Y", "Goma"}, {"L R", "Zoom"}, {"B", "Dejar la goma"}}; break;
-            default: v.teclas = {{"A", "Qué hay"}, {"X", "Capa"}, {"Y", "Herramientas"}, {"L R", "Zoom"}, {"B", "Volver"}}; break;
+            default:
+                if (e->hayZona)
+                    v.teclas = {{"A", "Qué hay"}, {"Y", "La zona"}, {"L R", "Zoom"}, {"B", "Olvidar la zona"}};
+                else
+                    v.teclas = {{"A", "Qué hay"}, {"X", "Capa"}, {"Y", "Herramientas"}, {"L R", "Zoom"}, {"B", "Volver"}};
+                break;
         }
     };
 }

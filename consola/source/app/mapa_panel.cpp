@@ -5,7 +5,9 @@
 #include <memory>
 #include "../core/mapa_objetos.hpp"
 #include "../core/objetos.hpp"
+#include "dibujos.hpp"
 #include "mapa_pintor.hpp"
+#include "mapa_vista.hpp"
 
 using namespace ui;
 
@@ -67,32 +69,36 @@ Pantalla panelSitio(Sitio s)
         const Objeto o = s.objeto();
         const bool vacio = esNada(o);
         v.titulo = "Qué hay aquí";
+        v.explicacion = vacio ? "No hay nada: elige qué poner." : "Lo que se puede hacer con lo que hay en este sitio.";
         v.dibujo = [s, o, vacio] {
-            redondo({60, 112, 1160, 140}, 16, BLANCO);
-            const SDL_Color c = vacio ? CREMA_OSCURA : colorDe(o);
-            SDL_Texture* foto = vacio ? nullptr : dibujoDe(o);
-            redondo({84, 136, 92, 92}, 14, foto ? CREMA : c);
-            if (foto)
-            {
-                SDL_Rect d = {92, 144, 76, 76};
-                SDL_RenderCopy(g_r, foto, nullptr, &d);
-            }
+            // Como el panel del Mac: el dibujo grande, el nombre, dónde está y cuánto ocupa.
+            tarjeta({60, 112, 1160, 196});
+            foto({84, 136, 148, 148}, vacio ? dibujos::menu("Leaf") : dibujoDe(o), vacio ? SDL_Color{} : colorDe(o));
             int w, h;
             tamano(o, w, h);
-            if (!vacio && !foto)
-                texto(std::to_string(w / 2) + (w % 2 ? ",5" : "") + "×" + std::to_string(h / 2) + (h % 2 ? ",5" : ""), 130, 182, BLANCO, g_pequena, Centro);
-            texto(encajar(vacio ? "Sitio vacío" : nombre(o), 1000, g_grande), 200, 128, MARRON, g_grande);
+            texto(encajar(vacio ? "Sitio vacío" : nombre(o), 940, g_titulo), 256, 140, MARRON, g_titulo);
             std::string donde = s.donde;
             if (!vacio && enterrado(o))
                 donde += " · Enterrado";
-            if (vacio)
-                donde += " · No hay nada: elige algo para poner aquí.";
-            texto(encajar(donde, 1000, g_pequena), 200, 182, MARRON_SUAVE, g_pequena);
+            if (!vacio && (w > 2 || h > 2))
+                donde += " · Ocupa " + std::to_string(std::max(1, w / 2)) + " × " + std::to_string(std::max(1, h / 2)) + " cuadros";
+            texto(encajar(donde, 940, g_fuente), 256, 196, MARRON_SUAVE);
             const std::string aviso = s.aviso ? s.aviso() : "";
             if (!aviso.empty())
-                texto(encajar(aviso, 1000, g_pequena), 200, 214, ROJO, g_pequena);
+            {
+                const int aw = std::min(940, anchoTexto(aviso, g_pequena) + 28);
+                redondo({256, 240, aw, 40}, 10, {0xFB, 0xE4, 0xE0, 255});
+                texto(encajar(aviso, aw - 28, g_pequena), 270, 260 - TTF_FontHeight(g_pequena) / 2, ROJO, g_pequena);
+            }
         };
         std::vector<Boton> bs;
+        auto tarjeta_ = [&](const std::string& t, const std::string& d, const char* icono, std::function<void()> f) {
+            Boton b{{}, t, std::move(f)};
+            b.detalle = d;
+            b.grande = true;
+            b.imagen = dibujos::menu(icono);
+            bs.push_back(b);
+        };
         auto buscar = [s] {
             buscarObjeto([s](const Objeto& n) {
                 if (s.poner(n))
@@ -109,68 +115,79 @@ Pantalla panelSitio(Sitio s)
         };
         if (!vacio)
         {
-            bs.push_back({{}, "Quitar", [s] {
+            tarjeta_("Quitar", "Deja el sitio vacío", "Can", [s] {
                 const std::string n = nombre(s.objeto());
                 s.quitar();
                 volver();
                 cambiado("Quitado: " + n);
-            }});
+            });
             if (s.girar)
-                bs.push_back({{}, "Girar", [s] { s.girar(); }});
+            {
+                const char* const MIRA[] = {"Mira hacia abajo", "Mira a la derecha", "Mira hacia arriba", "Mira a la izquierda"};
+                tarjeta_("Girar", MIRA[giro(o)], "Windmill", [s] { s.girar(); });
+            }
             if (s.mover)
-                bs.push_back({{}, "Mover a otro sitio", [s] {
+                tarjeta_("Mover", "Llévalo a otro sitio", "OneroomCardboard", [s] {
                     volver();
                     s.mover();
-                }});
-            bs.push_back({{}, "Cambiar por un objeto…", buscar});
+                });
+            tarjeta_("Otro objeto", "Búscalo por su nombre", "Present", buscar);
             if (s.plantas)
-                bs.push_back({{}, "Cambiar por una planta…", planta});
+                tarjeta_("Una planta", "Cambiarlo por árbol, flor…", "PltCosmos0", planta);
         }
         else
         {
-            bs.push_back({{}, "Poner un objeto…", buscar});
+            tarjeta_("Poner un objeto", "Búscalo por su nombre", "Present", buscar);
             if (s.plantas)
-                bs.push_back({{}, "Poner una planta, valla o roca…", planta});
+                tarjeta_("Poner una planta", "Árboles, flores, rocas…", "Seedling", planta);
         }
+        // Los de más: «título\ndetalle».
         for (const auto& m : s.mas)
-            bs.push_back({{}, m.first, m.second});
-        bs.push_back({{}, "Opciones avanzadas…", [s] {
+        {
+            const size_t k = m.first.find('\n');
+            tarjeta_(m.first.substr(0, k), k == std::string::npos ? "" : m.first.substr(k + 1), m.first.rfind("Goma", 0) == 0 ? "Duster" : "Can", m.second);
+        }
+        tarjeta_("Avanzado", "Cada valor, uno a uno", "ToolChangeStick", [s] {
             abrir(editorBruto("Opciones avanzadas", s.objeto, s.poner, [s] {
                 std::string d = s.donde;
                 if (s.posicion)
                     d += " · casilla " + std::to_string(s.posicion().first) + ", " + std::to_string(s.posicion().second);
                 return d;
             }));
-        }});
-        for (size_t i = 0; i < bs.size() && i < 8; i++)
+        });
+        for (size_t i = 0; i < bs.size() && i < 9; i++)
         {
-            bs[i].r = {60 + (int)(i % 2) * 590, 270 + (int)(i / 2) * 80, 570, 66};
+            bs[i].r = {60 + (int)(i % 3) * 392, 324 + (int)(i / 3) * 90, 376, 80};
             v.b.push_back(bs[i]);
         }
-        v.b.push_back({{440, ABAJO - 70, 400, 56}, "Volver", [] { volver(); }});
+        v.b.push_back({{W - 60 - 300, ABAJO - 66, 300, 56}, "Volver", [] { volver(); }});
     };
 }
 
 void buscarObjeto(std::function<void(const Objeto&)> elegido, const std::string& para, int cat)
 {
-    std::string q;
-    const char* pista = cat == 2 ? "Escribe parte del nombre (por ejemplo, «papel» o «suelo»)" : "Escribe parte del nombre (por ejemplo, «silla» o «manzana»)";
-    if (!pedirTexto("Buscar objeto", pista, q) || q.empty())
-        return;
+    // En tiempo real, con su teclado. Para paredes y suelos, sin escribir nada salen todos.
     auto hallados = std::make_shared<std::vector<int>>();
-    for (int i : buscarObjetos(q))
-        if (cat < 0 || categoria(OBJETOS[i].id) == cat)
-            hallados->push_back(i);
-    if (hallados->empty())
-    {
-        avisar("No hay ningún objeto que se llame «" + q + "»" + (cat == 2 ? " entre los papeles, suelos y alfombras." : "."), true);
-        return;
-    }
-    Lista l;
-    l.titulo = "«" + q + "»: " + (hallados->size() == 1 ? std::string("1 objeto") : numero((uint32_t)hallados->size()) + " objetos");
-    l.explicacion = [para] { return para.empty() ? std::string("Elige el objeto.") : "Elige el objeto para " + para + "."; };
-    l.cuantas = [hallados] { return (int)hallados->size(); };
-    l.fila = [hallados, elegido](int k) {
+    Buscador b;
+    b.titulo = cat == 2 ? "Papel, suelo o alfombra" : "Buscar objeto";
+    b.explicacion = std::string(cat == 2 ? "Escribe parte del nombre (por ejemplo, «madera» o «azul»)" : "Escribe parte del nombre (por ejemplo, «silla» o «manzana»)") +
+                    (para.empty() ? "." : " para " + para + ".");
+    b.filtrar = [hallados, cat](const std::string& t) {
+        hallados->clear();
+        if (t.empty())
+        {
+            if (cat >= 0)
+                for (int i = 0; i < (int)(sizeof(OBJETOS) / sizeof(OBJETOS[0])); i++)
+                    if (categoria(OBJETOS[i].id) == cat)
+                        hallados->push_back(i);
+            return (int)hallados->size();
+        }
+        for (int i : buscarObjetos(t))
+            if (cat < 0 || categoria(OBJETOS[i].id) == cat)
+                hallados->push_back(i);
+        return (int)hallados->size();
+    };
+    b.fila = [hallados, elegido](int k) {
         const int i = (*hallados)[k];
         Fila f{OBJETOS[i].nombre, [elegido, i] {
             Objeto n;
@@ -186,13 +203,7 @@ void buscarObjeto(std::function<void(const Objeto&)> elegido, const std::string&
             f.color = colorDe(n);
         return f;
     };
-    l.abajo.push_back([elegido, para, cat] {
-        return Fila{"Buscar otra cosa", [elegido, para, cat] {
-            volver();
-            buscarObjeto(elegido, para, cat);
-        }};
-    });
-    abrir(lista(l));
+    abrir(buscador(b));
 }
 
 namespace {
@@ -241,22 +252,35 @@ void ponerDibujo(Fila& f, uint16_t id)
         f.color = colorDe(o);
 }
 
-Lista listaPlantas(std::shared_ptr<Plantas> e, const std::string& titulo, const std::string& para)
+// La lista de plantas, con buscar en tiempo real (X). «filaDe(i, niveles)»: la fila de PLANTAS_LISTA[i]; «niveles», a
+// cuántas pantallas está la lista (1 desde ella, 2 desde el buscador).
+Lista listaPlantas(std::shared_ptr<Plantas> e, const std::string& titulo, const std::string& para, std::function<Fila(int, int)> filaDe)
 {
     Lista l;
     l.titulo = titulo;
     l.explicacion = [e, para] {
         std::string t = e->busqueda.empty() ? "Árboles, arbustos, flores, vallas, rocas..." : "Las que se llaman «" + e->busqueda + "».";
-        return t + " " + para + " X para buscar.";
+        return t + " " + para;
     };
     l.cuantas = [e] { return (int)e->vistas.size(); };
     l.porColumna = 7;
-    auto buscar = [e] {
-        std::string q = e->busqueda;
-        if (!pedirTexto("Buscar planta", "Escribe parte del nombre (vacío: todas)", q))
-            return;
-        e->busqueda = q;
-        e->filtrar();
+    l.fila = [e, filaDe](int k) { return filaDe(e->vistas[k], 1); };
+    auto buscar = [e, titulo, filaDe] {
+        Buscador b;
+        b.titulo = "Buscar planta";
+        b.explicacion = "Escribe parte del nombre (por ejemplo, «rosa» o «manzano»).";
+        b.texto = e->busqueda;
+        b.filtrar = [e](const std::string& t) {
+            e->busqueda = t;
+            e->filtrar();
+            return (int)e->vistas.size();
+        };
+        b.fila = [e, filaDe](int k) { return filaDe(e->vistas[k], 2); };
+        b.alSalir = [e](const std::string& t) {
+            e->busqueda = t;
+            e->filtrar();
+        };
+        abrir(buscador(b));
     };
     l.abajo.push_back([buscar] { return Fila{"Buscar…", buscar}; });
     l.extra = [buscar](Vista& v) {
@@ -272,16 +296,16 @@ void elegirPlanta(std::function<void(uint16_t)> elegida, const std::string& para
 {
     auto e = std::make_shared<Plantas>();
     e->filtrar();
-    Lista l = listaPlantas(e, "Plantas, vallas y rocas", "Elige una para " + para + ".");
-    l.fila = [e, elegida](int k) {
-        const auto& p = PLANTAS_LISTA[e->vistas[k]];
-        Fila f{p.nombre, [elegida, id = p.id] {
-            volver();
+    Lista l = listaPlantas(e, "Plantas, vallas y rocas", "Elige una para " + para + ".", [elegida](int i, int niveles) {
+        const auto& p = PLANTAS_LISTA[i];
+        Fila f{p.nombre, [elegida, id = p.id, niveles] {
+            for (int k = 0; k < niveles; k++)
+                volver();
             elegida(id);
         }};
         ponerDibujo(f, p.id);
         return f;
-    };
+    });
     abrir(lista(l));
 }
 
@@ -289,9 +313,8 @@ void elegirPlantas(std::function<void(const std::vector<uint16_t>&, bool)> elegi
 {
     auto e = std::make_shared<Plantas>();
     e->filtrar();
-    Lista l = listaPlantas(e, "Cambiar por…", "Marca una o varias para " + para + " (con varias, se mezclan).");
-    l.fila = [e](int k) {
-        const auto& p = PLANTAS_LISTA[e->vistas[k]];
+    Lista l = listaPlantas(e, "Cambiar por…", "Marca una o varias para " + para + " (con varias, se mezclan).", [e](int i, int) {
+        const auto& p = PLANTAS_LISTA[i];
         const bool marcada = std::find(e->elegidas.begin(), e->elegidas.end(), p.id) != e->elegidas.end();
         Fila f{std::string(marcada ? "● " : "") + p.nombre, [e, id = p.id] {
             auto it = std::find(e->elegidas.begin(), e->elegidas.end(), id);
@@ -302,7 +325,7 @@ void elegirPlantas(std::function<void(const std::vector<uint16_t>&, bool)> elegi
         }, true, marcada};
         ponerDibujo(f, p.id);
         return f;
-    };
+    });
     l.abajo.push_back([e] { return Fila{e->alAzar ? "Al azar" : "Alternando", [e] { e->alAzar = !e->alAzar; }}; });
     l.abajo.push_back([e, elegidas] {
         return Fila{e->elegidas.empty() ? "Cambiar" : "Cambiar (" + std::to_string(e->elegidas.size()) + ")", [e, elegidas] {
@@ -326,16 +349,10 @@ Pantalla editorBruto(const std::string& titulo, std::function<Objeto()> leer, st
         v.titulo = titulo;
         v.explicacion = "Cada valor del objeto por separado, como en el editor de objetos de NHSE. Para quien sabe lo que toca.";
         v.dibujo = [o, donde] {
-            redondo({60, 140, 1160, 96}, 16, BLANCO);
-            SDL_Texture* foto = dibujoDe(o);
-            redondo({76, 150, 76, 76}, 12, foto ? CREMA : esNada(o) ? CREMA_OSCURA : colorDe(o));
-            if (foto)
-            {
-                SDL_Rect d = {82, 156, 64, 64};
-                SDL_RenderCopy(g_r, foto, nullptr, &d);
-            }
-            texto(encajar(esNada(o) ? std::string("Nada") : nombre(o), 1020), 172, 152, MARRON);
-            texto(encajar(donde ? donde() : "", 1020, g_pequena), 172, 194, MARRON_SUAVE, g_pequena);
+            tarjeta({60, 120, 1160, 116});
+            foto({76, 132, 92, 92}, esNada(o) ? nullptr : dibujoDe(o), esNada(o) ? CREMA_OSCURA : colorDe(o));
+            texto(encajar(esNada(o) ? std::string("Nada") : nombre(o), 1000, g_negrita), 188, 144, MARRON, g_negrita);
+            texto(encajar(donde ? donde() : "", 1000, g_pequena), 188, 186, MARRON_SUAVE, g_pequena);
         };
         auto cambiar = [leer, poner](std::function<void(Objeto&)> f, const std::string& que) {
             Objeto n = leer();
@@ -375,7 +392,7 @@ Pantalla editorBruto(const std::string& titulo, std::function<Objeto()> leer, st
             bs[i].r = {60 + (int)(i % 3) * 393, 256 + (int)(i / 3) * 84, 373, 74};
             v.b.push_back(bs[i]);
         }
-        v.b.push_back({{440, ABAJO - 66, 400, 56}, "Volver", [] { volver(); }});
+        v.b.push_back({{W - 60 - 300, ABAJO - 66, 300, 56}, "Volver", [] { volver(); }});
     };
 }
 

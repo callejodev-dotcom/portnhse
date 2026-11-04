@@ -18,6 +18,7 @@
 #include "dibujos.hpp"
 #include "mapa_panel.hpp"
 #include "mapa_pintor.hpp"
+#include "mapa_vista.hpp"
 #include "partida.hpp"
 #include "ui.hpp"
 
@@ -34,8 +35,10 @@ using acnh::TEJADOS;
 
 namespace {
 
-const SDL_Rect AREA = {0, 96, 880, ABAJO - 96};
-constexpr int PANEL_X = 880;
+// Arriba las habitaciones y lo que se edita (pestañas); debajo la habitación; a la derecha, el panel.
+const SDL_Rect AREA = {60, 216, 680, 444};
+constexpr int PANEL_X = 756, PANEL_W = 464;
+constexpr int ARRIBA_PARED = 66; // en las paredes, las pestañas de cada pared van dentro del recuadro
 
 // Lo que se edita (las capas de la habitación, en el orden del Mac: muebles, mesas, alfombras, paredes, techo).
 struct Superficie {
@@ -58,6 +61,13 @@ const char* const AYUDAS[] = {"Todo lo que está en el suelo.", "Cosas pequeñas
     "Las alfombras van debajo de los muebles.", "Lo que está colgado en las paredes.", "Lo que está colgado en las paredes.",
     "Lo que está colgado en las paredes.", "Lo que está colgado en las paredes.", "Lámparas y cosas colgadas del techo."};
 
+// Las pestañas de lo que se edita, como el Mac (las cuatro paredes van juntas en «Paredes»).
+const char* const GRUPOS[] = {"Muebles", "Sobre las mesas", "Alfombras", "Paredes", "Techo"};
+int grupoDe(int sup) { return sup < 3 ? sup : sup <= 6 ? 3 : 4; }
+int supDeGrupo(int g, int ahora) { return g < 3 ? g : g == 3 ? (ahora >= 3 && ahora <= 6 ? ahora : 3) : 7; }
+const char* const PAREDES_CORTO[] = {"Fondo", "Izquierda", "Entrada", "Derecha"};
+const char* const HABITACIONES_CORTO[] = {"Principal", "Del fondo", "Izquierda", "Derecha", "Arriba", "Sótano"};
+
 const char* const HABITACIONES[] = {"Habitación principal", "Habitación del fondo", "Habitación izquierda", "Habitación derecha",
     "Planta de arriba", "Sótano"};
 const char* const HABITACIONES_MIN[] = {"habitación principal", "habitación del fondo", "habitación izquierda", "habitación derecha",
@@ -74,6 +84,7 @@ struct Estado {
     Objeto llevado;
     int desdeX = 0, desdeY = 0, dx = 0, dy = 0;
     std::string aviso;
+    Chips chips; // los botones de las pestañas y del panel (se ponen al dibujar)
 };
 
 std::vector<uint8_t>& principal() { return partida::principal(); }
@@ -132,7 +143,8 @@ struct Medidas {
 Medidas medir(const Estado& e)
 {
     const Zona l = limites(e);
-    const double fx = AREA.x + 12, fy = AREA.y + 12, fw = AREA.w - 24, fh = AREA.h - 24;
+    const double arriba = esPared(e) ? ARRIBA_PARED : 16;
+    const double fx = AREA.x + 16, fy = AREA.y + arriba, fw = AREA.w - 32, fh = AREA.h - arriba - 16;
     Medidas m;
     m.x0 = l.x, m.y0 = l.y;
     if (esPared(e))
@@ -229,7 +241,8 @@ void mosaico(SDL_Texture* t, const SDL_Rect& zona, double lado, double cx, doubl
         return;
     int w = 1, h = 1;
     SDL_QueryTexture(t, nullptr, nullptr, &w, &h);
-    const SDL_Rect src = {(int)(w * cx), (int)(h * cy), std::max(1, (int)(w * cw)), std::max(1, (int)(h * ch))};
+    // Un punto hacia dentro: al escalar, los bordes cogerían algo de lo de al lado (rayas claras entre piezas).
+    const SDL_Rect src = {(int)(w * cx) + 1, (int)(h * cy) + 1, std::max(1, (int)(w * cw) - 2), std::max(1, (int)(h * ch) - 2)};
     const double alto = lado * src.h / src.w;
     SDL_RenderSetClipRect(g_r, &zona);
     SDL_SetTextureAlphaMod(t, alfa);
@@ -239,7 +252,7 @@ void mosaico(SDL_Texture* t, const SDL_Rect& zona, double lado, double cx, doubl
         int col = 0;
         for (double x = zona.x; x < zona.x + zona.w; x += lado, col++)
         {
-            const SDL_FRect d = {(float)x, (float)y, (float)(lado + 0.5), (float)(alto + 0.5)};
+            const SDL_FRect d = {(float)std::floor(x), (float)std::floor(y), (float)std::ceil(lado + 1.5), (float)std::ceil(alto + 1.5)};
             const int vuelta = ((col & 1) ? SDL_FLIP_HORIZONTAL : 0) | ((fila & 1) ? SDL_FLIP_VERTICAL : 0);
             SDL_RenderCopyExF(g_r, t, &src, &d, 0, nullptr, (SDL_RendererFlip)vuelta);
         }
@@ -573,58 +586,9 @@ void dibujarHabitacion(Estado& e)
     SDL_SetRenderDrawBlendMode(g_r, SDL_BLENDMODE_NONE);
 }
 
-void dibujarPanel(Estado& e)
-{
-    rect({PANEL_X, 96, W - PANEL_X, ABAJO - 96}, CREMA);
-    redondo({PANEL_X + 16, 108, W - PANEL_X - 32, 296}, 14, BLANCO);
-    const int x = PANEL_X + 34, ancho = W - PANEL_X - 68;
-    texto(encajar(std::string("Editando: ") + SUPERFICIES[e.sup].nombre, ancho, g_pequena), x, 124, VERDE_OSCURO, g_pequena);
-    std::string titulo, detalle;
-    SDL_Color color = CREMA_OSCURA;
-    SDL_Texture* foto = nullptr;
-    Objeto o;
-    int rx, ry;
-    if (e.modo == Llevar || e.modo == Poniendo)
-    {
-        titulo = std::string(e.modo == Llevar ? "Moviendo: " : "Poniendo: ") + nombre(e.llevado);
-        detalle = e.modo == Llevar ? "Lleva el cursor a su nuevo sitio y pulsa A. B para dejarlo donde estaba."
-                                   : "Pulsa A donde lo quieras; cada vez pone uno más. B para terminar.";
-        color = colorDe(e.llevado);
-        foto = dibujoDe(e.llevado);
-    }
-    else if (cosaEn(e, e.cx, e.cy, o, rx, ry))
-    {
-        titulo = nombre(o);
-        detalle = "A para cambiarlo, girarlo, moverlo o quitarlo.";
-        color = colorDe(o);
-        foto = dibujoDe(o);
-    }
-    else
-    {
-        titulo = "Sitio vacío";
-        detalle = std::string(AYUDAS[e.sup]) + " A para poner algo aquí.";
-    }
-    redondo({x, 160, 44, 44}, 8, foto ? CREMA : color);
-    if (foto)
-        dibujoEn(foto, {x + 2, 162, 40, 40}, 255);
-    const int alto = std::max(44, texto(titulo, x + 56, 164, MARRON, nullptr, Izquierda, ancho - 56));
-    texto(detalle, x, 160 + std::min(alto, 100) + 12, MARRON_SUAVE, g_pequena, Izquierda, ancho);
-    auto boton = [](SDL_Rect r, const std::string& k, const std::string& t) {
-        redondo(r, 10, {0xD1, 0xD1, 0xD6, 255});
-        redondo({r.x + 2, r.y + 2, r.w - 4, r.h - 4}, 8, BLANCO);
-        const int kw = std::max(30, anchoTexto(k, g_pequena) + 16);
-        redondo({r.x + 8, r.y + (r.h - 30) / 2, kw, 30}, 15, MARRON);
-        texto(k, r.x + 8 + kw / 2, r.y + r.h / 2, BLANCO, g_pequena, Centro);
-        texto(encajar(t, r.w - kw - 26, g_pequena), r.x + kw + 18, r.y + r.h / 2 - 14, MARRON, g_pequena);
-    };
-    boton({PANEL_X + 16, 420, W - PANEL_X - 32, 48}, "L R", "Otra habitación");
-    boton({PANEL_X + 16, 476, W - PANEL_X - 32, 48}, "A", e.modo == Mirar ? "Qué hay aquí" : e.modo == Llevar ? "Dejarlo aquí" : "Poner uno");
-    boton({PANEL_X + 16, 532, W - PANEL_X - 32, 48}, "X", "Editar otra cosa");
-    boton({PANEL_X + 16, 588, W - PANEL_X - 32, 48}, "Y", "La casa y la habitación");
-}
-
 // ------------------------------------------------------------------------------------------------------ acciones
-void abrirSitio(std::shared_ptr<Estado> e)
+// El sitio del cursor (lo que hay, o el cuadro vacío), para la pantalla de un sitio y el panel.
+Sitio crearSitio(std::shared_ptr<Estado> e)
 {
     Objeto o;
     int rx, ry;
@@ -640,7 +604,6 @@ void abrirSitio(std::shared_ptr<Estado> e)
         return esRaiz(o) ? o : mapa::nada();
     };
     s.aviso = [e] { return e->aviso; };
-    e->aviso.clear();
     s.poner = [e, pos](const Objeto& n) {
         Rejilla r = rejilla(*e);
         Objeto estorbo;
@@ -685,7 +648,13 @@ void abrirSitio(std::shared_ptr<Estado> e)
             e->dx = pos->first - e->cx, e->dy = pos->second - e->cy;
             e->modo = Llevar;
         };
-    abrir(panelSitio(s));
+    return s;
+}
+
+void abrirSitio(std::shared_ptr<Estado> e)
+{
+    e->aviso.clear();
+    abrir(panelSitio(crearSitio(e)));
 }
 
 void pulsarA(std::shared_ptr<Estado> e)
@@ -754,16 +723,61 @@ void ponerPuerta(int casa, int diseno, bool recta)
 void abrirFuera(std::shared_ptr<Estado> e);
 void abrirAvanzado(std::shared_ptr<Estado> e);
 
+// El papel pintado o el suelo de la habitación (con los papeles, suelos y alfombras del juego).
+void cambiarPared(std::shared_ptr<Estado> e, bool suelo)
+{
+    buscarObjeto([e, suelo](const Objeto& o) {
+        Objeto n = mapa::nada();
+        n.id = o.id;
+        casas::ponerPared(principal(), e->casa, e->hab, suelo, n);
+        partida::cambiaPrincipal();
+        cambiado((suelo ? "Suelo: " : "Papel pintado: ") + nombre(n));
+    }, suelo ? "el suelo" : "las paredes", 2);
+}
+
+void cambiarTamano(std::shared_ptr<Estado> e)
+{
+    const uint32_t nivel = casas::nivel(principal(), e->casa);
+    std::vector<std::string> ops(NIVELES, NIVELES + 8);
+    elegir("Tamaño de la casa", "Hasta dónde está ampliada.", ops, (int)nivel - 1, [e](int i) {
+        casas::ponerNivel(principal(), e->casa, (uint32_t)(i + 1));
+        const auto habs = casas::habitaciones(principal(), e->casa);
+        if (std::find(habs.begin(), habs.end(), e->hab) == habs.end())
+            ponerHabitacion(*e, habs[0]);
+        else
+            alCentro(*e);
+        partida::cambiaPrincipal();
+        cambiado(std::string("Tamaño: ") + NIVELES[i]);
+    });
+}
+
+// Buscar algo y luego ponerlo donde se quiera (como «Poner algo nuevo» del Mac: el cursor lo lleva por el medio).
+void ponerNuevo(std::shared_ptr<Estado> e, int niveles)
+{
+    buscarObjeto([e, niveles](const Objeto& o) {
+        e->llevado = o;
+        int w, h;
+        tamano(o, w, h);
+        e->dx = -((w - 1) / 2), e->dy = -((h - 1) / 2);
+        e->modo = Poniendo;
+        for (int i = 0; i < niveles; i++)
+            volver();
+    }, "ponerlo en la habitación");
+}
+
+std::string nombreNivel(uint32_t nivel) { return nivel >= 1 && nivel <= 8 ? NIVELES[nivel - 1] : std::to_string(nivel); }
+
 void abrirCasa(std::shared_ptr<Estado> e)
 {
     abrir([e](Vista& v) {
         const int c = e->casa;
         v.titulo = nombreCasa(c);
-        v.explicacion = std::string("Habitación: ") + HABITACIONES[e->hab] + ".";
+        v.explicacion = std::string("La casa y la ") + HABITACIONES_MIN[e->hab] + ".";
         std::vector<Boton> bs;
-        auto fila = [&](const std::string& t, const std::string& d, std::function<void()> f, bool activo = true, SDL_Texture* imagen = nullptr) {
-            Boton b{{}, t, f, activo};
+        auto fila = [&](const std::string& t, const std::string& d, std::function<void()> f, SDL_Texture* imagen) {
+            Boton b{{}, t, std::move(f)};
             b.detalle = d;
+            b.grande = true;
             b.imagen = imagen;
             bs.push_back(b);
         };
@@ -776,104 +790,92 @@ void abrirCasa(std::shared_ptr<Estado> e)
                     e->casa = i;
                     ponerHabitacion(*e, casas::habitaciones(principal(), i)[0]);
                 });
-            });
-        fila("Habitación", HABITACIONES[e->hab], [e] {
-            const auto habs = casas::habitaciones(principal(), e->casa);
-            std::vector<std::string> ops;
-            int actual = 0;
-            for (size_t i = 0; i < habs.size(); i++)
-            {
-                ops.push_back(HABITACIONES[habs[i]]);
-                if (habs[i] == e->hab)
-                    actual = (int)i;
-            }
-            elegir("Habitación", "Elige la habitación.", ops, actual, [e, habs](int i) { ponerHabitacion(*e, habs[i]); });
-        });
+            }, dibujos::menu("Porch"));
         const Objeto papel = casas::pared(principal(), c, e->hab, false), suelo = casas::pared(principal(), c, e->hab, true);
-        fila("Papel pintado", nombrePared(papel), [e] {
-            buscarObjeto([e](const Objeto& o) {
-                Objeto n = mapa::nada();
-                n.id = o.id;
-                casas::ponerPared(principal(), e->casa, e->hab, false, n);
-                partida::cambiaPrincipal();
-                cambiado("Papel pintado: " + nombre(n));
-            }, "las paredes", 2);
-        }, true, papel.id != mapa::NADA && papel.id != 0 ? dibujoDe(papel) : nullptr);
-        fila("Suelo", nombrePared(suelo), [e] {
-            buscarObjeto([e](const Objeto& o) {
-                Objeto n = mapa::nada();
-                n.id = o.id;
-                casas::ponerPared(principal(), e->casa, e->hab, true, n);
-                partida::cambiaPrincipal();
-                cambiado("Suelo: " + nombre(n));
-            }, "el suelo", 2);
-        }, true, suelo.id != mapa::NADA && suelo.id != 0 ? dibujoDe(suelo) : nullptr);
-        const uint32_t nivel = casas::nivel(principal(), c);
-        fila("Tamaño", nivel >= 1 && nivel <= 8 ? NIVELES[nivel - 1] : std::to_string(nivel), [e, nivel] {
-            std::vector<std::string> ops(NIVELES, NIVELES + 8);
-            elegir("Tamaño de la casa", "Hasta dónde está ampliada.", ops, (int)nivel - 1, [e](int i) {
-                casas::ponerNivel(principal(), e->casa, (uint32_t)(i + 1));
-                const auto habs = casas::habitaciones(principal(), e->casa);
-                if (std::find(habs.begin(), habs.end(), e->hab) == habs.end())
-                    ponerHabitacion(*e, habs[0]);
-                else
-                    alCentro(*e);
-                partida::cambiaPrincipal();
-                cambiado(std::string("Tamaño: ") + NIVELES[i]);
-            });
-        });
-        fila("La casa por fuera…", "El tejado, la fachada y la puerta", [e] { abrirFuera(e); });
-        fila("Poner algo nuevo…", "Lo buscas y luego lo pones donde quieras", [e] {
-            buscarObjeto([e](const Objeto& o) {
-                // Como en el Mac, el cursor lo lleva por el medio.
-                e->llevado = o;
-                int w, h;
-                tamano(o, w, h);
-                e->dx = -((w - 1) / 2), e->dy = -((h - 1) / 2);
-                e->modo = Poniendo;
-                volver();
-            }, "ponerlo en la habitación");
-        });
-        fila("Opciones avanzadas…", "Sucesos, valores sueltos, pasar a la tarjeta SD", [e] { abrirAvanzado(e); });
+        fila("Papel pintado", nombrePared(papel), [e] { cambiarPared(e, false); },
+            papel.id != mapa::NADA && papel.id != 0 ? dibujoDe(papel) : dibujos::menu("Wall"));
+        fila("Suelo", nombrePared(suelo), [e] { cambiarPared(e, true); },
+            suelo.id != mapa::NADA && suelo.id != 0 ? dibujoDe(suelo) : dibujos::menu("Floor"));
+        fila("Tamaño", nombreNivel(casas::nivel(principal(), c)), [e] { cambiarTamano(e); }, dibujos::menu("OneroomCardboard"));
+        fila("La casa por fuera", "El tejado, la fachada y la puerta", [e] { abrirFuera(e); },
+            casas_fuera::foto(casas::aspecto(principal(), c, 0), casas::aspecto(principal(), c, 1), casas::aspecto(principal(), c, 2)));
+        fila("Poner algo nuevo", "Lo buscas y luego lo pones donde quieras", [e] { ponerNuevo(e, 2); }, dibujos::menu("Present"));
+        fila("Opciones avanzadas", "Sucesos, valores sueltos, la tarjeta SD", [e] { abrirAvanzado(e); }, dibujos::menu("ToolChangeStick"));
         for (size_t i = 0; i < bs.size(); i++)
         {
-            bs[i].r = {60 + (int)(i % 2) * 590, 150 + (int)(i / 2) * 100, 570, 86};
+            bs[i].r = {60 + (int)(i % 2) * 590, 112 + (int)(i / 2) * 108, 570, 96};
             v.b.push_back(bs[i]);
         }
-        v.b.push_back({{440, ABAJO - 66, 400, 56}, "Volver", [] { volver(); }});
+        v.b.push_back({{W - 60 - 300, ABAJO - 66, 300, 56}, "Volver", [] { volver(); }});
     });
 }
 
 // ------------------------------------------------------------------------------------------- la casa por fuera
-// Elegir un tejado, una fachada o una puerta por su dibujo (HousePartPicker del Mac): los que el juego ofrece, y el que
-// tiene ahora aunque no esté entre ellos.
-void elegirParte(casas_fuera::Parte parte, const std::string& titulo, std::vector<std::pair<uint16_t, std::string>> ops, uint16_t ahora,
-    std::function<void(uint16_t)> elegido)
+// El nombre sin «tejado», «fachada» o «puerta» delante (en las vistas previas ya se ve qué es).
+std::string sinParte(const std::string& n)
 {
+    for (const char* p : {"tejado ", "fachada ", "puerta "})
+        if (n.rfind(p, 0) == 0 && n.size() > strlen(p) && n.compare(strlen(p), 3, "de ") != 0)
+            return n.substr(strlen(p));
+    return n;
+}
+
+// Elegir un tejado, una fachada o una puerta viendo la casa con cada uno (las vistas previas de HousePartPicker del
+// Mac), en páginas: los que el juego ofrece, y el que tiene ahora aunque no esté entre ellos.
+void elegirParte(std::shared_ptr<Estado> e, casas_fuera::Parte parte, const std::string& titulo, std::vector<std::pair<uint16_t, std::string>> ops,
+    uint16_t ahora, std::function<void(uint16_t)> elegido)
+{
+    constexpr int COLS = 4, FILAS = 2, POR_PAGINA = COLS * FILAS;
     auto lista_ = std::make_shared<std::vector<std::pair<uint16_t, std::string>>>(std::move(ops));
-    Lista l;
-    l.titulo = titulo;
-    l.explicacion = [] {
-        return casas_fuera::hayDibujos() ? std::string("Elige cómo quieres que sea.")
-                                         : std::string("Elige cómo quieres que sea (sin fachadas.bin en la tarjeta SD, con su color).");
-    };
-    l.columnas = 3;
-    l.porColumna = 5;
-    l.alto = 84;
-    l.cuantas = [lista_] { return (int)lista_->size(); };
-    l.fila = [lista_, parte, ahora, elegido](int i) {
-        const auto& o = (*lista_)[i];
-        Fila f{o.second, [elegido, v = o.first] {
-            volver();
-            elegido(v);
-        }};
-        f.marcado = o.first == ahora;
-        f.imagen = casas_fuera::dibujo(parte, o.first);
-        if (!f.imagen)
-            f.color = casas_fuera::color(parte, o.first);
-        return f;
-    };
-    abrir(lista(l));
+    int actual = 0;
+    for (size_t i = 0; i < lista_->size(); i++)
+        if ((*lista_)[i].first == ahora)
+            actual = (int)i;
+    auto pagina = std::make_shared<int>(actual / POR_PAGINA);
+    abrir([e, parte, titulo, lista_, ahora, elegido, pagina](Vista& v) {
+        const int total = (int)lista_->size();
+        const int paginas = std::max(1, (total + POR_PAGINA - 1) / POR_PAGINA);
+        int& p = *pagina;
+        p = std::clamp(p, 0, paginas - 1);
+        v.titulo = titulo;
+        v.explicacion = std::string(parte == casas_fuera::Tejado ? "Elige cómo quieres que sea" : "Así quedaría la casa con cada uno") +
+                        (paginas > 1 ? " · página " + std::to_string(p + 1) + " de " + std::to_string(paginas) : "") + ".";
+        const int c = e->casa;
+        const uint16_t asp[3] = {casas::aspecto(principal(), c, 0), casas::aspecto(principal(), c, 1), casas::aspecto(principal(), c, 2)};
+        const int w = (W - 120 - (COLS - 1) * 16) / COLS, h = 222;
+        for (int k = 0; k < POR_PAGINA && p * POR_PAGINA + k < total; k++)
+        {
+            const auto& o = (*lista_)[p * POR_PAGINA + k];
+            uint16_t a[3] = {asp[0], asp[1], asp[2]};
+            a[parte] = o.first;
+            Boton b{{60 + (k % COLS) * (w + 16), 112 + (k / COLS) * (h + 12), w, h}, sinParte(o.second), [elegido, val = o.first] {
+                volver();
+                elegido(val);
+            }};
+            // Si no cabe en una línea, la última palabra debajo (el color, casi siempre).
+            const size_t corte = b.texto.rfind(' ');
+            if (anchoTexto(b.texto) > w - 16 && corte != std::string::npos)
+            {
+                b.detalle = b.texto.substr(corte + 1);
+                b.texto = b.texto.substr(0, corte);
+            }
+            b.vertical = true;
+            b.marcado = o.first == ahora;
+            // Los tejados con su propio dibujo (en muchas fachadas el tejado ya va pintado y no cambiaría), y lo demás
+            // en la casa entera.
+            b.imagen = parte == casas_fuera::Tejado ? casas_fuera::dibujo(parte, o.first) : nullptr;
+            if (!b.imagen)
+                b.imagen = casas_fuera::foto(a[0], a[1], a[2]);
+            v.b.push_back(b);
+        }
+        if (paginas > 1)
+        {
+            v.b.push_back({{60, ABAJO - 66, 220, 56}, "Anteriores", [pagina] { (*pagina)--; }, p > 0});
+            v.b.push_back({{294, ABAJO - 66, 220, 56}, "Siguientes", [pagina] { (*pagina)++; }, p + 1 < paginas});
+            v.paginar = [pagina, paginas](int d) { *pagina = std::clamp(*pagina + d, 0, paginas - 1); };
+        }
+        v.b.push_back({{W - 60 - 300, ABAJO - 66, 300, 56}, "Volver", [] { volver(); }});
+    }, actual % POR_PAGINA);
 }
 
 template <size_t N>
@@ -891,60 +893,76 @@ std::vector<std::pair<uint16_t, std::string>> opciones(const Aspecto (&lista)[N]
     return v;
 }
 
+void elegirTejado(std::shared_ptr<Estado> e)
+{
+    constexpr size_t NT = sizeof(NOMBRES_TEJADO) / sizeof(NOMBRES_TEJADO[0]);
+    const uint16_t tejado = casas::aspecto(principal(), e->casa, 0);
+    elegirParte(e, casas_fuera::Tejado, "Tejado", opciones(TEJADOS, NOMBRES_TEJADO, NT, tejado), tejado, [e](uint16_t v) {
+        casas::ponerAspecto(principal(), e->casa, 0, v);
+        partida::cambiaPrincipal();
+        cambiado(std::string("Tejado: ") + NOMBRE_DE(NOMBRES_TEJADO, v));
+    });
+}
+
+void elegirFachada(std::shared_ptr<Estado> e)
+{
+    constexpr size_t NF = sizeof(NOMBRES_FACHADA) / sizeof(NOMBRES_FACHADA[0]);
+    const uint16_t fachada = casas::aspecto(principal(), e->casa, 1);
+    elegirParte(e, casas_fuera::Fachada, "Fachada", opciones(FACHADAS, NOMBRES_FACHADA, NF, fachada), fachada, [e](uint16_t v) {
+        casas::ponerAspecto(principal(), e->casa, 1, v);
+        partida::cambiaPrincipal();
+        cambiado(std::string("Fachada: ") + NOMBRE_DE(NOMBRES_FACHADA, v));
+    });
+}
+
+void elegirPuerta(std::shared_ptr<Estado> e)
+{
+    // Las puertas por su diseño, con la forma que tiene ahora (recta o en arco).
+    const uint16_t puerta = casas::aspecto(principal(), e->casa, 2);
+    const int d = disenoPuerta(puerta);
+    const bool recta = d >= 0 && PUERTAS[d].recta == puerta;
+    std::vector<std::pair<uint16_t, std::string>> ops;
+    for (const auto& p : PUERTAS)
+        ops.push_back({recta && p.recta >= 0 ? (uint16_t)p.recta : p.arco, p.nombre});
+    elegirParte(e, casas_fuera::Puerta, "Puerta", ops, puerta, [e, recta](uint16_t v) { ponerPuerta(e->casa, disenoPuerta(v), recta); });
+}
+
 void abrirFuera(std::shared_ptr<Estado> e)
 {
     abrir([e](Vista& v) {
         const int c = e->casa;
         const uint16_t tejado = casas::aspecto(principal(), c, 0), fachada = casas::aspecto(principal(), c, 1), puerta = casas::aspecto(principal(), c, 2);
         v.titulo = nombreCasa(c) + " por fuera";
-        v.explicacion = casas_fuera::hayDibujos() ? "Se ve así en el juego desde el día siguiente."
+        v.explicacion = casas_fuera::hayDibujos() ? "Así se verá en el juego desde el día siguiente."
                                                   : "Desde el día siguiente. Dibujo aproximado (con fachadas.bin en /switch/NHSE, como en el juego).";
         v.dibujo = [tejado, fachada, puerta] {
-            const SDL_Rect r = {60, 160, 580, 418};
-            redondo({r.x - 6, r.y - 6, r.w + 12, r.h + 12}, 16, BLANCO);
-            casas_fuera::dibujar(r, tejado, fachada, puerta);
+            const SDL_Rect r = {60, 112, 600, ABAJO - 12 - 112};
+            tarjeta(r);
+            const SDL_Rect d = {r.x + 16, r.y + 16, r.w - 32, r.h - 32};
+            casas_fuera::dibujar(d, tejado, fachada, puerta);
+            esquinas(d, 12, BLANCO);
+            texto("Forma de la puerta", 680, 444, MARRON, g_negrita);
         };
-        auto boton = [&](int y, int h, const std::string& t, const std::string& d, std::function<void()> f, SDL_Texture* imagen, bool activo = true) {
-            Boton b{{690, y, 530, h}, t, std::move(f), activo};
+        auto boton = [&](int y, const std::string& t, const std::string& d, std::function<void()> f, SDL_Texture* imagen) {
+            Boton b{{680, y, 540, 96}, t, std::move(f)};
             b.detalle = d;
             b.imagen = imagen;
+            b.grande = true;
             v.b.push_back(b);
         };
-        constexpr size_t NT = sizeof(NOMBRES_TEJADO) / sizeof(NOMBRES_TEJADO[0]), NF = sizeof(NOMBRES_FACHADA) / sizeof(NOMBRES_FACHADA[0]);
-        boton(154, 96, "Tejado", NOMBRE_DE(NOMBRES_TEJADO, tejado), [e, tejado] {
-            elegirParte(casas_fuera::Tejado, "Tejado", opciones(TEJADOS, NOMBRES_TEJADO, NT, tejado), tejado, [e](uint16_t v) {
-                casas::ponerAspecto(principal(), e->casa, 0, v);
-                partida::cambiaPrincipal();
-                cambiado(std::string("Tejado: ") + NOMBRE_DE(NOMBRES_TEJADO, v));
-            });
-        }, casas_fuera::dibujo(casas_fuera::Tejado, tejado));
-        boton(262, 96, "Fachada", NOMBRE_DE(NOMBRES_FACHADA, fachada), [e, fachada] {
-            elegirParte(casas_fuera::Fachada, "Fachada", opciones(FACHADAS, NOMBRES_FACHADA, NF, fachada), fachada, [e](uint16_t v) {
-                casas::ponerAspecto(principal(), e->casa, 1, v);
-                partida::cambiaPrincipal();
-                cambiado(std::string("Fachada: ") + NOMBRE_DE(NOMBRES_FACHADA, v));
-            });
-        }, casas_fuera::dibujo(casas_fuera::Fachada, fachada));
+        boton(112, "Tejado", sinParte(NOMBRE_DE(NOMBRES_TEJADO, tejado)), [e] { elegirTejado(e); }, casas_fuera::dibujo(casas_fuera::Tejado, tejado));
+        boton(220, "Fachada", sinParte(NOMBRE_DE(NOMBRES_FACHADA, fachada)), [e] { elegirFachada(e); }, casas_fuera::dibujo(casas_fuera::Fachada, fachada));
+        boton(328, "Puerta", sinParte(NOMBRE_DE(NOMBRES_PUERTA, puerta)), [e] { elegirPuerta(e); }, casas_fuera::dibujo(casas_fuera::Puerta, puerta));
         const int diseno = disenoPuerta(puerta);
         const bool recta = diseno >= 0 && PUERTAS[diseno].recta == puerta;
-        boton(370, 96, "Puerta", NOMBRE_DE(NOMBRES_PUERTA, puerta), [e, recta] {
-            std::vector<std::pair<uint16_t, std::string>> ops;
-            for (const auto& p : PUERTAS)
-                ops.push_back({p.arco, p.nombre});
-            const int d = disenoPuerta(casas::aspecto(principal(), e->casa, 2));
-            elegirParte(casas_fuera::Puerta, "Puerta", ops, d >= 0 ? PUERTAS[d].arco : 0xFFFF, [e, recta](uint16_t v) {
-                ponerPuerta(e->casa, disenoPuerta(v), recta);
-            });
-        }, casas_fuera::dibujo(casas_fuera::Puerta, puerta));
-        boton(478, 96, "Forma de la puerta", diseno < 0 ? "—" : recta ? "Recta (pulsa para en arco)" : "En arco (pulsa para recta)", [e, diseno, recta] {
-            if (!recta && PUERTAS[diseno].recta < 0)
-            {
-                avisar("Esta puerta solo es en arco.", true);
-                return;
-            }
-            ponerPuerta(e->casa, diseno, !recta);
-        }, nullptr, diseno >= 0);
-        v.b.push_back({{690, ABAJO - 66, 530, 56}, "Volver", [] { volver(); }});
+        const bool puedeRecta = diseno >= 0 && PUERTAS[diseno].recta >= 0;
+        Boton arco{{680, 486, 264, 56}, "En arco", [e, diseno] { ponerPuerta(e->casa, diseno, false); }, diseno >= 0};
+        arco.marcado = diseno >= 0 && !recta;
+        Boton rectaB{{956, 486, 264, 56}, "Recta", [e, diseno] { ponerPuerta(e->casa, diseno, true); }, puedeRecta};
+        rectaB.marcado = recta;
+        v.b.push_back(arco);
+        v.b.push_back(rectaB);
+        v.b.push_back({{W - 60 - 300, ABAJO - 66, 300, 56}, "Volver", [] { volver(); }});
     });
 }
 
@@ -1163,7 +1181,7 @@ void abrirValores(std::shared_ptr<Estado> e)
             bs[i].r = {60 + (int)(i % 3) * 393, 140 + (int)(i / 3) * 90, 373, 80};
             v.b.push_back(bs[i]);
         }
-        v.b.push_back({{440, ABAJO - 66, 400, 56}, "Volver", [] { volver(); }});
+        v.b.push_back({{W - 60 - 300, ABAJO - 66, 300, 56}, "Volver", [] { volver(); }});
     });
 }
 
@@ -1176,8 +1194,14 @@ void abrirAvanzado(std::shared_ptr<Estado> e)
                         "se pueden pasar al Mac y del Mac.";
         std::vector<Boton> bs;
         auto fila = [&](const std::string& t, const std::string& d, std::function<void()> f) {
+            static const std::pair<const char*, const char*> ICONOS[] = {{"Sucesos", "Timer"}, {"Valores", "ToolChangeStick"},
+                {"Exportar la casa", "Porch"}, {"Importar una casa", "Porch"}, {"Exportar esta", "Cardboard"}, {"Importar una hab", "Cardboard"}};
             Boton b{{}, t, std::move(f)};
             b.detalle = d;
+            b.grande = true;
+            for (const auto& i : ICONOS)
+                if (t.rfind(i.first, 0) == 0)
+                    b.imagen = dibujos::menu(i.second);
             bs.push_back(b);
         };
         fila("Sucesos de la casa…", "Ampliaciones pedidas y días", [e] { abrirSucesos(e); });
@@ -1233,11 +1257,173 @@ void abrirAvanzado(std::shared_ptr<Estado> e)
         });
         for (size_t i = 0; i < bs.size(); i++)
         {
-            bs[i].r = {60 + (int)(i % 2) * 590, 170 + (int)(i / 2) * 110, 570, 94};
+            bs[i].r = {60 + (int)(i % 2) * 590, 144 + (int)(i / 2) * 108, 570, 96};
             v.b.push_back(bs[i]);
         }
-        v.b.push_back({{440, ABAJO - 66, 400, 56}, "Volver", [] { volver(); }});
+        v.b.push_back({{W - 60 - 300, ABAJO - 66, 300, 56}, "Volver", [] { volver(); }});
     });
+}
+
+// ---------------------------------------------------------------------------------------------- la pantalla
+// Las pestañas de arriba (habitación y lo que se edita) y, en las paredes, las de cada pared.
+void dibujarPestanas(std::shared_ptr<Estado> e)
+{
+    Chips& ch = e->chips;
+    const auto habs = casas::habitaciones(principal(), e->casa);
+    std::vector<std::string> nombres;
+    int elegida = 0;
+    for (size_t i = 0; i < habs.size(); i++)
+    {
+        nombres.push_back(HABITACIONES_CORTO[habs[i]]);
+        if (habs[i] == e->hab)
+            elegida = (int)i;
+    }
+    const int ancho = std::min(AREA.w - 60, (int)habs.size() * 150);
+    segmentado(ch, {AREA.x, 112, ancho, 44}, nombres, elegida, [e, habs](int i) { ponerHabitacion(*e, habs[i]); });
+    tecla("L R", AREA.x + ancho + 32, 134);
+    std::vector<std::string> grupos(GRUPOS, GRUPOS + 5);
+    segmentado(ch, {AREA.x, 164, AREA.w - 60, 44}, grupos, grupoDe(e->sup), [e](int g) {
+        e->sup = supDeGrupo(g, e->sup);
+        e->modo = Mirar;
+        alCentro(*e);
+    });
+    tecla("X", AREA.x + AREA.w - 28, 186);
+    tarjeta(AREA);
+    if (esPared(*e))
+    {
+        std::vector<std::string> paredes(PAREDES_CORTO, PAREDES_CORTO + 4);
+        segmentado(ch, {AREA.x + 16, AREA.y + 12, AREA.w - 32, 44}, paredes, e->sup - 3, [e](int i) {
+            e->sup = 3 + i;
+            e->modo = Mirar;
+            alCentro(*e);
+        });
+    }
+}
+
+// El panel de la derecha, como el del Mac: lo que hay en el sitio elegido, el papel y el suelo de la habitación, y la
+// casa por fuera.
+void dibujarLado(std::shared_ptr<Estado> e)
+{
+    Estado& s = *e;
+    Chips& ch = s.chips;
+    const int x = PANEL_X + 16, ancho = PANEL_W - 32;
+    // ---- lo que hay aquí
+    {
+        const SDL_Rect r = {PANEL_X, 112, PANEL_W, 236};
+        tarjeta(r);
+        int y = r.y + 16;
+        Objeto o;
+        int rx, ry;
+        auto cabecera = [&](SDL_Texture* t, SDL_Color c, const std::string& titulo, const std::string& debajo) {
+            foto({x, y, 88, 88}, t, c);
+            const int tx = x + 104, tw = ancho - 104;
+            const int h = texto(titulo, tx, y + 2, MARRON, g_negrita, Izquierda, tw);
+            texto(debajo, tx, y + std::min(h, 66) - 2, MARRON_SUAVE, g_pequena, Izquierda, tw);
+            y += 88 + 14;
+        };
+        auto fila = [&](std::vector<Chip> cs, int fy) {
+            const int n = (int)cs.size();
+            const int w = (ancho - 8 * (n - 1)) / n;
+            for (int i = 0; i < n; i++)
+            {
+                cs[i].r = {x + i * (w + 8), fy, i == n - 1 ? x + ancho - (x + i * (w + 8)) : w, 44};
+                ch.poner(cs[i]);
+            }
+        };
+        if (s.modo == Llevar || s.modo == Poniendo)
+        {
+            cabecera(dibujoDe(s.llevado), colorDe(s.llevado), s.modo == Llevar ? "Moviendo" : "Poniendo", nombre(s.llevado));
+            texto(s.modo == Llevar ? "Llévalo a su sitio y pulsa A." : "Pulsa A donde lo quieras; cada vez pone uno.", x, y, MARRON_SUAVE, g_pequena,
+                Izquierda, ancho);
+            Chip dejar{{}, s.modo == Llevar ? "Dejarlo aquí" : "Poner uno", [e] { pulsarA(e); }};
+            dejar.principal = true;
+            dejar.tecla = "A";
+            Chip no{{}, s.modo == Llevar ? "Cancelar" : "Terminar", [e] { e->modo = Mirar; }};
+            no.tecla = "B";
+            fila({dejar, no}, r.y + r.h - 16 - 44);
+        }
+        else if (cosaEn(s, s.cx, s.cy, o, rx, ry))
+        {
+            cabecera(dibujoDe(o), colorDe(o), nombre(o), SUPERFICIES[s.sup].donde);
+            auto sitio = [e](std::function<void(Sitio&)> f) {
+                return [e, f] {
+                    e->aviso.clear();
+                    Sitio st = crearSitio(e);
+                    f(st);
+                };
+            };
+            std::vector<Chip> a;
+            a.push_back({{}, "Quitar", sitio([](Sitio& st) {
+                const std::string n = nombre(st.objeto());
+                st.quitar();
+                cambiado("Quitado: " + n);
+            })});
+            if (girable(o) && !esPared(s))
+                a.push_back({{}, "Girar", sitio([](Sitio& st) {
+                    if (st.girar)
+                        st.girar();
+                })});
+            a.push_back({{}, "Mover", sitio([](Sitio& st) {
+                if (st.mover)
+                    st.mover();
+            })});
+            fila(a, r.y + r.h - 16 - 44 - 52);
+            Chip cambiar{{}, "Cambiar por…", sitio([](Sitio& st) {
+                buscarObjeto([st](const Objeto& n) {
+                    if (st.poner(n))
+                        cambiado("Puesto: " + nombre(n));
+                }, "ponerlo en su lugar", st.soloCategoria);
+            })};
+            Chip mas{{}, "Más", [e] { abrirSitio(e); }};
+            mas.tecla = "A";
+            fila({cambiar, mas}, r.y + r.h - 16 - 44);
+        }
+        else
+        {
+            const char* const ICONOS[] = {"Cardboard", "Lantern", "Carpet", "Wall", "Wall", "Wall", "Wall", "Lantern"};
+            cabecera(dibujos::menu(ICONOS[s.sup]), {}, "Sitio vacío", AYUDAS[s.sup]);
+            Chip poner{{}, "Poner algo aquí", [e] { abrirSitio(e); }};
+            poner.tecla = "A";
+            Chip nuevo{{}, "Buscar y poner", [e] { ponerNuevo(e, 1); }};
+            fila({poner}, r.y + r.h - 16 - 44 - 52);
+            fila({nuevo}, r.y + r.h - 16 - 44);
+        }
+    }
+    // ---- esta habitación: el papel y el suelo
+    {
+        const SDL_Rect r = {PANEL_X, 360, PANEL_W, 140};
+        tarjeta(r);
+        texto(encajar(std::string("Esta habitación · ") + HABITACIONES_CORTO[s.hab], ancho, g_negrita), x, r.y + 10, MARRON, g_negrita);
+        for (int k = 0; k < 2; k++)
+        {
+            const bool suelo = k == 1;
+            const Objeto p = casas::pared(principal(), s.casa, s.hab, suelo);
+            const bool hay = p.id != mapa::NADA && p.id != 0;
+            const int fy = r.y + 46 + k * 46;
+            foto({x, fy, 42, 42}, hay ? dibujoDe(p) : nullptr);
+            const int tw = ancho - 52 - 112;
+            texto(suelo ? "Suelo" : "Papel pintado", x + 52, fy - 3, MARRON_SUAVE, g_pequena);
+            texto(encajar(nombrePared(p), tw, g_pequena), x + 52, fy + 18, MARRON, g_pequena);
+            ch.poner({{x + ancho - 104, fy - 1, 104, 44}, "Cambiar", [e, suelo] { cambiarPared(e, suelo); }});
+        }
+    }
+    // ---- la casa por fuera
+    {
+        const SDL_Rect r = {PANEL_X, 512, PANEL_W, ABAJO - 12 - 512};
+        tarjeta(r);
+        texto("La casa", x, r.y + 10, MARRON, g_negrita);
+        const int tl = anchoTexto("La casa", g_negrita) + 14;
+        texto(encajar(nombreNivel(casas::nivel(principal(), s.casa)), ancho - tl, g_pequena), x + tl, r.y + 15, MARRON_SUAVE, g_pequena);
+        const SDL_Rect d = {x, r.y + 46, 170, r.h - 46 - 14};
+        const int c = s.casa;
+        casas_fuera::dibujar(d, casas::aspecto(principal(), c, 0), casas::aspecto(principal(), c, 1), casas::aspecto(principal(), c, 2));
+        esquinas(d, 8, BLANCO);
+        const int tx = d.x + d.w + 14, tw = x + ancho - tx;
+        ch.poner({{tx, r.y + r.h - 14 - 44 - 50, tw, 44}, "Por fuera…", [e] { abrirFuera(e); }});
+        Chip mas{{tx, r.y + r.h - 14 - 44, tw, 44}, "Más", [e] { abrirCasa(e); }};
+        mas.tecla = "Y";
+        ch.poner(mas);
+    }
 }
 
 Pantalla pantallaCasa()
@@ -1246,11 +1432,14 @@ Pantalla pantallaCasa()
     e->casa = std::clamp(partida::yo, 0, numCasas() - 1);
     ponerHabitacion(*e, casas::habitaciones(principal(), e->casa)[0]);
     return [e](Vista& v) {
-        v.titulo = nombreCasa(e->casa) + " · " + HABITACIONES[e->hab];
+        v.titulo = nombreCasa(e->casa);
+        v.explicacion = "Toca un sitio para ver qué hay, y otra vez para cambiarlo. L y R: otra habitación; X: qué editas.";
         v.dibujo = [e] {
-            rect(AREA, {0xF0, 0xE8, 0xD8, 255});
+            e->chips.limpiar();
+            dibujarPestanas(e);
             dibujarHabitacion(*e);
-            dibujarPanel(*e);
+            dibujarLado(e);
+            e->chips.dibujar();
         };
         v.entrada = [e](u64 down, u64, int tx, int ty) {
             int dx = 0, dy = 0;
@@ -1263,30 +1452,27 @@ Pantalla pantallaCasa()
                 e->cx = std::clamp(e->cx + dx * 2, 0, casas::LADO - 2);
                 e->cy = std::clamp(e->cy + dy * 2, 0, (esPared(*e) ? casas::FILAS_PARED : casas::LADO) - 2);
             }
-            if (tx >= 0 && tx < PANEL_X && ty >= AREA.y && ty < AREA.y + AREA.h)
+            if (tx >= 0)
             {
+                if (e->chips.tocar(tx, ty))
+                    return true;
                 const Medidas m = medir(*e);
                 if (tx >= m.suelo.x && ty >= m.suelo.y && tx < m.suelo.x + m.suelo.w && ty < m.suelo.y + m.suelo.h)
                 {
                     const int x = (m.x0 + (int)((tx - m.suelo.x) / m.u)) & ~1, y = (m.y0 + (int)((ty - m.suelo.y) / m.u)) & ~1;
                     const bool mismo = x == e->cx && y == e->cy;
                     e->cx = x, e->cy = y;
-                    if (mismo)
+                    if (mismo || e->modo != Mirar)
                         pulsarA(e);
                 }
-            }
-            if (tx >= PANEL_X && ty >= 420)
-            {
-                const int i = (ty - 420) / 56;
-                if (i == 0) otraHabitacion(*e, 1);
-                if (i == 1) pulsarA(e);
-                if (i == 2) e->sup = (e->sup + 1) % NUM_SUPERFICIES, e->modo = Mirar, alCentro(*e);
-                if (i == 3) abrirCasa(e);
                 return true;
             }
             if (down & HidNpadButton_A)
+            {
                 pulsarA(e);
-            return false;
+                return true;
+            }
+            return dx || dy;
         };
         v.x = [e] {
             e->sup = (e->sup + 1) % NUM_SUPERFICIES;
