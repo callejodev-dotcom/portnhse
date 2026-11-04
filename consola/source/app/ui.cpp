@@ -362,7 +362,7 @@ static void dibujarBoton(const Boton& b, bool foco)
     }
     const int margen = std::min(24, w0 / 8);
     // Small letters if the button is low or the text does not fit with the normal ones.
-    TTF_Font* f = b.pequena || b.r.h < 40 || anchoTexto(b.texto) > w0 - margen ? g_pequena : g_fuente;
+    TTF_Font* f = b.pequena || b.r.h < 50 || anchoTexto(b.texto) > w0 - margen ? g_pequena : g_fuente;
     const SDL_Color gris = b.principal ? BLANCO : !b.activo ? APAGADO : MARRON_SUAVE;
     // With a picture, the text on the left, as the lists of the Mac; if not, centred.
     const int ancho = conDibujo ? w0 - 12 : w0 - margen;
