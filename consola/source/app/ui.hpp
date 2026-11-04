@@ -48,6 +48,7 @@ struct Boton {
     std::string detalle; // second line, smaller
     bool grande = false;  // white card with a stripe (home and sections)
     SDL_Color color = {0, 0, 0, 0}; // a square of this colour on the left (designs, maps), if alpha > 0
+    SDL_Texture* imagen = nullptr;  // a picture on the left (the item's, see dibujos.hpp)
 };
 void dibujar(const Boton& b, bool foco);
 
@@ -100,6 +101,7 @@ struct Fila {
     bool marcado = false;
     std::string detalle;
     SDL_Color color = {0, 0, 0, 0};
+    SDL_Texture* imagen = nullptr;
 };
 
 struct Lista {

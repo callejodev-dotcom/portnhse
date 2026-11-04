@@ -1,5 +1,6 @@
 #include "objetos_ui.hpp"
 #include "../core/objetos.hpp"
+#include "dibujos.hpp"
 #include <algorithm>
 #include <memory>
 
@@ -65,13 +66,15 @@ void buscar(std::function<void(const Objeto&)> elegido, const std::string& para)
         std::string t = OBJETOS[i].nombre;
         if (OBJETOS[i].pila > 1)
             t += " (hasta " + std::to_string(OBJETOS[i].pila) + ")";
-        return Fila{t, [elegido, i] {
+        Fila f{t, [elegido, i] {
             Objeto n;
             n.id = OBJETOS[i].id;
             n.cuenta = OBJETOS[i].pila > 1 ? OBJETOS[i].pila - 1 : OBJETOS[i].cuenta;
             volver();
             elegido(n);
         }};
+        f.imagen = dibujos::de(OBJETOS[i].id);
+        return f;
     };
     l.abajo.push_back([elegido, para] {
         return Fila{"Buscar otra cosa", [elegido, para] {
@@ -180,14 +183,31 @@ Pantalla editor(Huecos h, int i)
             h.escribir(i, Objeto{});
             cambiado("Vaciado");
         }, !o.vacio()});
+        const int cols = opciones.size() > 8 ? 3 : 2;
+        const int ancho = (W - 120 - (cols - 1) * 20) / cols;
         for (int j = 0; j < (int)opciones.size(); j++)
         {
-            opciones[j].r = {60 + (j % 2) * 590, 150 + (j / 2) * 86, 570, 72};
+            opciones[j].r = {60 + (j % cols) * (ancho + 20), 250 + (j / cols) * 80, ancho, 68};
             v.b.push_back(opciones[j]);
         }
         v.b.push_back({{W / 2 - 200, ABAJO - 76, 400, 64}, "Volver", [] { volver(); }});
         v.x = buscarOtro;
         v.teclas = {{"A", "Elegir"}, {"X", "Buscar"}, {"B", "Volver"}};
+        // What there is now, big, at the top.
+        SDL_Texture* t = dibujos::de(o);
+        const std::string ahora = o.vacio() ? "Vacío" : nombre(o);
+        v.explicacion.clear();
+        v.dibujo = [t, ahora] {
+            redondo({60, 120, W - 120, 110}, 14, BLANCO);
+            int x = 84;
+            if (t)
+            {
+                SDL_Rect d = {x, 127, 96, 96};
+                SDL_RenderCopy(g_r, t, nullptr, &d);
+                x += 116;
+            }
+            texto(encajar(ahora, W - 60 - x - 24, g_grande), x, 175 - 24, MARRON, g_grande);
+        };
     };
 }
 
@@ -202,8 +222,10 @@ Pantalla todos(Huecos h, int porColumna)
     l.fila = [h](int i) {
         const bool abierto = !h.abierto || h.abierto(i);
         const Objeto o = h.leer(i);
-        return Fila{std::to_string(i + 1) + ". " + (!abierto ? "(sin ampliar)" : o.vacio() ? "—" : nombre(o)),
+        Fila f{std::to_string(i + 1) + ". " + (!abierto ? "(sin ampliar)" : o.vacio() ? "—" : nombre(o)),
             [h, i] { abrir(editor(h, i)); }, abierto, abierto && !o.vacio()};
+        f.imagen = abierto ? dibujos::de(o) : nullptr;
+        return f;
     };
     return lista(l);
 }
@@ -229,7 +251,10 @@ Pantalla usados(Huecos h)
     l.alto = 40;
     l.fila = [h, cache](int k) {
         const int i = (*cache)[k];
-        return Fila{nombre(h.leer(i)), [h, i] { abrir(editor(h, i)); }, true, true};
+        const Objeto o = h.leer(i);
+        Fila f{nombre(o), [h, i] { abrir(editor(h, i)); }, true, true};
+        f.imagen = dibujos::de(o);
+        return f;
     };
     auto anadir = [h] {
         int libre = -1;

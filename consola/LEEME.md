@@ -24,6 +24,9 @@ escrito para comprobar que es exactamente lo que quería guardar y que la partid
   - `main.cpp`: inicio (secciones, guardar, salir).
   - Una sección por archivo (`jugador.cpp`, `vecinos.cpp`, `isla.cpp`...): cada una pone sus tarjetas con un
     `Registro` y no toca las demás.
+- Dibujos de los objetos: `romfs/iconos.bin` (iconos genéricos de NHSE, van en la app) y, si está en la SD,
+  `/switch/NHSE/dibujos.bin` con el dibujo de cada objeto. Los dos los hace `herramientas/dibujos.py` (el de la SD, a
+  partir de los dibujos que descarga NHSE para Mac; no se sube al repo). En la app: `dibujos::de(objeto)`.
 - `prueba`: el núcleo desde la línea de órdenes, `prueba <carpeta> <orden> ...`. Cada archivo registra sus órdenes con
   `OrdenPrueba`. `tests/NHSE.Mac.Tests/Consola*Tests.cs` lo compila y comprueba que cada cambio deja la partida byte a
   byte igual que NHSE (con `ConsolaTests.Both`).

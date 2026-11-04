@@ -132,6 +132,14 @@ void dibujar(const Boton& b, bool foco)
         x0 += lado + 12;
         w0 -= lado + 12;
     }
+    if (b.imagen)
+    {
+        const int lado = std::min(b.r.h - 4, 64);
+        SDL_Rect d = {b.r.x + 8, b.r.y + (b.r.h - lado) / 2, lado, lado};
+        SDL_RenderCopy(g_r, b.imagen, nullptr, &d);
+        x0 += lado + 12;
+        w0 -= lado + 12;
+    }
     if (b.grande)
     {
         redondo({b.r.x, b.r.y, 10, b.r.h}, 5, b.marcado ? AMARILLO : b.activo ? VERDE : GRIS);
@@ -304,6 +312,7 @@ Pantalla lista(Lista l)
             Fila f = l.fila(p * porPagina + k);
             Boton bt{{60 + (k / l.porColumna) * (ancho + 20), arriba + (k % l.porColumna) * (alto + hueco), ancho, alto}, f.texto, f.accion, f.activo, f.marcado, f.detalle};
             bt.color = f.color;
+            bt.imagen = f.imagen;
             v.b.push_back(bt);
         }
         std::vector<Fila> abajo;
