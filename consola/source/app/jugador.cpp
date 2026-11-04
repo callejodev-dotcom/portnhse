@@ -4,6 +4,7 @@
 #include <cstring>
 #include <functional>
 #include "dibujos.hpp"
+#include "jugador_comun.hpp"
 #include "objetos_ui.hpp"
 #include "partida.hpp"
 #include "ui.hpp"
@@ -108,9 +109,23 @@ void nombres(Vista& v)
 {
     v.titulo = "Nombres";
     v.explicacion = "El nombre se cambia en todas partes: cartas, recuerdos de los vecinos, fotos…";
-    v.b.push_back({{60, 170, 1160, 100}, "Jugador: " + partida::jugador().nombre, [] { renombrar(false); }});
-    v.b.push_back({{60, 290, 1160, 100}, "Isla: " + partida::isla, [] { renombrar(true); }});
-    v.b.push_back({{440, ABAJO - 90, 400, 70}, "Volver", [] { volver(); }});
+    const std::string jugador = partida::jugador().nombre, isla = partida::isla;
+    v.dibujo = [jugador, isla] {
+        auto tarjeta = [](int x, const char* titulo, const char* icono, const std::string& nombre, const char* nota) {
+            const int y = panel({x, 112, 570, 300}, titulo, icono, nota);
+            texto(encajar(nombre, 520, g_titulo), x + 24, y + 16, MARRON, g_titulo);
+            texto("Hasta 10 letras", x + 24, y + 70, MARRON_SUAVE, g_pequena);
+        };
+        tarjeta(60, "Jugador", "Onepiece", jugador, "Como te llaman los vecinos.");
+        tarjeta(650, "Isla", "PltPalm", isla, "La isla de todos los jugadores.");
+    };
+    Boton a{{84, 330, 300, 60}, "Cambiar el nombre", [] { renombrar(false); }};
+    a.principal = true;
+    Boton b{{674, 330, 300, 60}, "Cambiar el nombre", [] { renombrar(true); }};
+    b.principal = true;
+    v.b.push_back(a);
+    v.b.push_back(b);
+    v.b.push_back({{1036, ABAJO - 66, 184, 56}, "Volver", [] { volver(); }});
 }
 
 objetos::Huecos bolsillos()
@@ -157,23 +172,50 @@ objetos::Huecos papelera()
 
 void aprenderTodo(Vista& v)
 {
-    v.titulo = "Aprender todo: " + partida::jugador().nombre;
+    v.titulo = "Aprender todo";
     v.explicacion = "Lo que ya tiene se queda como está; lo nuevo sale como nuevo en el juego.";
     const Progreso r = recetas(partida::personal()), c = catalogo(partida::personal()), e = reacciones(partida::personal());
-    auto fila = [&](int i, const std::string& t, Progreso p, int (*hacer)(std::vector<uint8_t>&), const char* cosa) {
-        const std::string que = cosa;
-        Boton bt{{60, 160 + i * 120, 1160, 100}, t, [hacer, que] {
-            const int n = hacer(partida::personal());
+    struct Parte {
+        const char* titulo;
+        const char* icono;
+        const char* boton;
+        Progreso p;
+        int (*hacer)(std::vector<uint8_t>&);
+        const char* cosa;
+    };
+    const Parte partes[3] = {
+        {"Recetas de bricolaje", "BookRecipe", "Aprender todas", r, aprenderRecetas, "recetas"},
+        {"Catálogo (con todos los colores)", "Book", "Completarlo", c, completarCatalogo, "cosas"},
+        {"Reacciones", "Love", "Aprender todas", e, aprenderReacciones, "reacciones"},
+    };
+    v.dibujo = [partes] {
+        for (int i = 0; i < 3; i++)
+        {
+            const Parte& p = partes[i];
+            const int y0 = 112 + i * 162;
+            const std::string nota = p.p.tiene < p.p.total ? "Tiene " + numero(p.p.tiene) + " de " + numero(p.p.total)
+                                                             : "Ya lo tiene todo (" + numero(p.p.total) + ")";
+            const int y = panel({60, y0, 1160, 148}, p.titulo, p.icono, nota);
+            // How far it is, as a bar.
+            const int ancho = 760, lleno = p.p.total ? (int)((long)ancho * p.p.tiene / p.p.total) : 0;
+            redondo({148, y + 8, ancho, 16}, 8, jugador::GRIS_CLARO);
+            if (lleno > 0)
+                redondo({148, y + 8, std::max(lleno, 16), 16}, 8, p.p.tiene == p.p.total ? VERDE : AZUL);
+        }
+    };
+    for (int i = 0; i < 3; i++)
+    {
+        const Parte p = partes[i];
+        const std::string que = p.cosa;
+        Boton b{{956, 112 + i * 162 + 44, 240, 60}, p.boton, [p, que] {
+            const int n = p.hacer(partida::personal());
             partida::cambiaPersonal();
             cambiado(std::to_string(n) + " " + que + " nuevas");
-        }, p.tiene < p.total};
-        bt.detalle = p.tiene < p.total ? "Tiene " + numero(p.tiene) + " de " + numero(p.total) : "Ya lo tiene todo (" + numero(p.total) + ")";
-        v.b.push_back(bt);
-    };
-    fila(0, "Aprender todas las recetas de bricolaje", r, aprenderRecetas, "recetas");
-    fila(1, "Completar el catálogo (con todos los colores)", c, completarCatalogo, "cosas");
-    fila(2, "Aprender todas las reacciones", e, aprenderReacciones, "reacciones");
-    v.b.push_back({{440, ABAJO - 90, 400, 70}, "Volver", [] { volver(); }});
+        }, p.p.tiene < p.p.total};
+        b.principal = p.p.tiene < p.p.total;
+        v.b.push_back(b);
+    }
+    v.b.push_back({{1036, ABAJO - 66, 184, 56}, "Volver", [] { volver(); }});
 }
 
 Registro r1({SeccionJugador, 10, [] { return std::string("Dinero y millas"); },
