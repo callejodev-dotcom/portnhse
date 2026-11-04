@@ -1,4 +1,5 @@
 #include "dibujos.hpp"
+#include "../core/objetos_colores.hpp"
 #include "cache_texturas.hpp"
 #include "ui.hpp"
 #include <algorithm>
@@ -130,5 +131,29 @@ SDL_Texture* de(const acnh::Objeto& o)
 }
 
 bool completos() { return sd().f != nullptr; }
+
+SDL_Texture* menu(const char* nombre)
+{
+    static Paquete p = [] {
+        Paquete q;
+        q.abrir("romfs:/menu.bin");
+        return q;
+    }();
+    static CacheTexturas<uint32_t> cache(80);
+    const uint32_t clave = (uint32_t)crc32(0, (const Bytef*)nombre, (uInt)strlen(nombre));
+    bool hallada;
+    if (SDL_Texture* ya = cache.buscar(clave, hallada); hallada)
+        return ya;
+    const Paquete::Entrada* e = p.f ? p.buscar(clave) : nullptr;
+    return cache.poner(clave, e ? p.textura(*e) : nullptr);
+}
+
+SDL_Color color(uint16_t id)
+{
+    if (id >= acnh::NUM_COLORES_OBJETO)
+        return {0, 0, 0, 0};
+    const uint32_t c = acnh::COLORES_CLASE[acnh::CLASE_OBJETO[id]];
+    return {(uint8_t)(c >> 16), (uint8_t)(c >> 8), (uint8_t)c, 255};
+}
 
 } // namespace dibujos

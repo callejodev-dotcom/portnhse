@@ -22,6 +22,8 @@ extern SDL_Renderer* g_r;
 extern TTF_Font* g_fuente;  // 28
 extern TTF_Font* g_pequena; // 22
 extern TTF_Font* g_grande;  // 40
+extern TTF_Font* g_negrita; // 28, bold (titles of cards)
+extern TTF_Font* g_titulo;  // 40, bold (title of the screen)
 
 extern const SDL_Color CREMA, CREMA_OSCURA, VERDE, VERDE_OSCURO, MARRON, MARRON_SUAVE, BLANCO, GRIS, ROJO, AMARILLO, AZUL;
 
@@ -49,6 +51,10 @@ struct Boton {
     bool grande = false;  // white card with a stripe (home and sections)
     SDL_Color color = {0, 0, 0, 0}; // a square of this colour on the left (designs, maps), if alpha > 0
     SDL_Texture* imagen = nullptr;  // a picture on the left (the item's, see dibujos.hpp)
+    bool principal = false;         // the main action (blue, as «Guardar» in the Mac)
+    bool casilla = false;           // a square of items, as the Mac: «color» is its background, «imagen» in the middle,
+                                    // «detalle» (how many) at the bottom right
+    bool vertical = false;          // a card with the picture big on top and the text below (villagers, as the Mac)
 };
 void dibujar(const Boton& b, bool foco);
 
@@ -149,11 +155,30 @@ struct Tarjeta {
     std::function<std::string()> detalle;
     std::function<void()> abrir;
     std::function<bool()> activa; // null = always
+    const char* icono = nullptr;  // a menu icon of NHSE («Bag», «Kabu»...), as the cards of the Mac
 };
 std::vector<Tarjeta>& tarjetas();
 struct Registro {
     explicit Registro(Tarjeta t) { tarjetas().push_back(std::move(t)); }
 };
+
+// La barra de la izquierda, como la de NHSE para Mac: cada jugador, las secciones, guardar y salir. La pone main.cpp.
+struct EntradaLateral {
+    std::string texto;
+    SDL_Texture* icono;   // or nullptr: then «inicial» in a circle
+    std::string inicial;
+    bool elegida;
+    std::function<void()> accion;
+};
+struct Lateral {
+    std::vector<EntradaLateral> entradas;
+    bool hayCambios;
+    std::function<void()> guardar, salir;
+};
+void ponerLateral(std::function<Lateral()> f);
+// La pila de pantallas pasa a ser solo esta (al elegir una sección en la barra).
+void raiz(Pantalla p);
+int profundidad(); // 1 = the screen at the bottom of the stack
 
 // Cuántos fotogramas se han dibujado (para saber qué se ha usado en este).
 uint64_t fotograma();

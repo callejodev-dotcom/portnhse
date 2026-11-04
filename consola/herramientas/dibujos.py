@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Dibujos de los objetos para NHSE para Switch.
 
-    python3 dibujos.py                 rehace romfs/iconos.bin (los iconos de menú de NHSE, van en la app)
+    python3 dibujos.py                 rehace romfs/iconos.bin (los iconos de menú de NHSE, van en la app) y
+                                       romfs/menu.bin (los mismos por su nombre, para las tarjetas: «Bag», «Kabu»...)
     python3 dibujos.py --sd CARPETA    además hace dibujos.bin con los dibujos de cada objeto de CARPETA (la de NHSE
                                        para Mac: ~/Library/Application Support/NHSE/img), para copiar a la SD en
                                        /switch/NHSE/dibujos.bin. No se sube al repo: son imágenes del juego.
@@ -75,6 +76,18 @@ def iconos():
     escribir(os.path.join(AQUI, "../romfs/iconos.bin"), entradas)
 
 
+def menu():
+    """Los iconos de menú por su nombre (clave: CRC-32 del nombre), como los usa NHSE para Mac en sus tarjetas."""
+    carpeta = os.path.join(AQUI, "../../NHSE/NHSE.Sprites/Resources")
+    entradas = {}
+    for sub in ("MenuIcon", "Misc"):
+        for nombre in sorted(os.listdir(os.path.join(carpeta, sub))):
+            base, ext = os.path.splitext(nombre)
+            if ext == ".png":
+                entradas[zlib.crc32(base.encode())] = comprimir(os.path.join(carpeta, sub, nombre))
+    escribir(os.path.join(AQUI, "../romfs/menu.bin"), entradas)
+
+
 def paquete(carpeta, salida):
     entradas = {}
     for nombre in sorted(os.listdir(carpeta)):
@@ -94,5 +107,6 @@ def paquete(carpeta, salida):
 
 if __name__ == "__main__":
     iconos()
+    menu()
     if len(sys.argv) >= 3 and sys.argv[1] == "--sd":
         paquete(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else os.path.join(AQUI, "dibujos.bin"))

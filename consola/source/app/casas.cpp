@@ -610,11 +610,12 @@ void dibujarPanel(Estado& e)
     const int alto = std::max(44, texto(titulo, x + 56, 164, MARRON, nullptr, Izquierda, ancho - 56));
     texto(detalle, x, 160 + std::min(alto, 100) + 12, MARRON_SUAVE, g_pequena, Izquierda, ancho);
     auto boton = [](SDL_Rect r, const std::string& k, const std::string& t) {
-        redondo(r, 12, VERDE);
+        redondo(r, 10, {0xD1, 0xD1, 0xD6, 255});
+        redondo({r.x + 2, r.y + 2, r.w - 4, r.h - 4}, 8, BLANCO);
         const int kw = std::max(30, anchoTexto(k, g_pequena) + 16);
-        redondo({r.x + 8, r.y + (r.h - 30) / 2, kw, 30}, 15, CREMA);
-        texto(k, r.x + 8 + kw / 2, r.y + r.h / 2, VERDE_OSCURO, g_pequena, Centro);
-        texto(encajar(t, r.w - kw - 26, g_pequena), r.x + kw + 18, r.y + r.h / 2 - 14, BLANCO, g_pequena);
+        redondo({r.x + 8, r.y + (r.h - 30) / 2, kw, 30}, 15, MARRON);
+        texto(k, r.x + 8 + kw / 2, r.y + r.h / 2, BLANCO, g_pequena, Centro);
+        texto(encajar(t, r.w - kw - 26, g_pequena), r.x + kw + 18, r.y + r.h / 2 - 14, MARRON, g_pequena);
     };
     boton({PANEL_X + 16, 420, W - PANEL_X - 32, 48}, "L R", "Otra habitación");
     boton({PANEL_X + 16, 476, W - PANEL_X - 32, 48}, "A", e.modo == Mirar ? "Qué hay aquí" : e.modo == Llevar ? "Dejarlo aquí" : "Poner uno");

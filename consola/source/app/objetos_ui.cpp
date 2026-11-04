@@ -211,51 +211,134 @@ Pantalla editor(Huecos h, int i)
     };
 }
 
-Pantalla todos(Huecos h, int porColumna)
+namespace {
+// Huecos en casillas, como los bolsillos de NHSE para Mac: 10 × 4 por página y, a la derecha, el hueco elegido con lo
+// que se puede hacer. A (o tocar otra vez) en una casilla abre todo lo del hueco. «indices» dice qué huecos se ven (todos,
+// o solo los usados en el almacén); con «anadir», el botón «Añadir objeto».
+Pantalla rejilla(Huecos h, std::function<std::vector<int>()> indices, std::function<std::string(int)> explicacion, std::function<void()> anadir)
 {
-    Lista l;
-    l.titulo = h.nombre;
-    l.explicacion = [] { return std::string("Elige un hueco para poner otro objeto o cambiarlo."); };
-    l.cuantas = h.cuantos;
-    l.porColumna = porColumna;
-    l.alto = 40;
-    l.fila = [h](int i) {
-        const bool abierto = !h.abierto || h.abierto(i);
-        const Objeto o = h.leer(i);
-        Fila f{std::to_string(i + 1) + ". " + (!abierto ? "(sin ampliar)" : o.vacio() ? "—" : nombre(o)),
-            [h, i] { abrir(editor(h, i)); }, abierto, abierto && !o.vacio()};
-        f.imagen = abierto ? dibujos::de(o) : nullptr;
-        return f;
+    struct Estado {
+        int pagina = 0;
+        int elegida = -1;   // the square selected last frame (to open it when chosen again)
+        std::vector<int> vistos;
     };
-    return lista(l);
+    auto e = std::make_shared<Estado>();
+    return [h, indices, explicacion, anadir, e](Vista& v) {
+        constexpr int COLS = 10, FILAS = 4, POR_PAGINA = COLS * FILAS, LADO = 70, PASO = 76;
+        e->vistos = indices();
+        const int total = (int)e->vistos.size();
+        const int paginas = std::max(1, (total + POR_PAGINA - 1) / POR_PAGINA);
+        e->pagina = std::clamp(e->pagina, 0, paginas - 1);
+        v.titulo = h.nombre;
+        v.explicacion = explicacion(total) + (paginas > 1 ? " (página " + std::to_string(e->pagina + 1) + " de " + std::to_string(paginas) + ")" : "");
+        const int primero = e->pagina * POR_PAGINA;
+        const int enPagina = std::min(POR_PAGINA, total - primero);
+        // The selected square is the one with the cursor (or the last one that had it).
+        const int f = foco();
+        if (f >= 0 && f < enPagina)
+            e->elegida = f;
+        if (e->elegida >= enPagina)
+            e->elegida = enPagina - 1;
+        for (int k = 0; k < enPagina; k++)
+        {
+            const int i = e->vistos[primero + k];
+            const bool abierto = !h.abierto || h.abierto(i);
+            const Objeto o = h.leer(i);
+            Boton b{{60 + (k % COLS) * PASO, 132 + (k / COLS) * PASO, LADO, LADO}, abierto ? "" : "×", [h, i, e, k] {
+                if (e->elegida == k)
+                    abrir(editor(h, i));
+                else
+                    e->elegida = k;
+            }, abierto};
+            b.casilla = true;
+            b.marcado = k == e->elegida;
+            if (abierto && !o.vacio())
+            {
+                b.imagen = dibujos::de(o);
+                b.color = dibujos::color(o.id);
+                const int obj = objetoDe(o);
+                if (obj >= 0 && OBJETOS[obj].pila > 1)
+                    b.detalle = std::to_string(o.cuenta + 1);
+            }
+            v.b.push_back(b);
+        }
+        // Below the squares: pages, add.
+        int y = 132 + FILAS * PASO + 10, x = 60;
+        if (paginas > 1)
+        {
+            v.b.push_back({{x, y, 180, 56}, "Anteriores", [e] { e->pagina--; }, e->pagina > 0});
+            v.b.push_back({{x + 196, y, 180, 56}, "Siguientes", [e] { e->pagina++; }, e->pagina + 1 < paginas});
+            x += 392;
+            v.paginar = [e, paginas](int d) { e->pagina = std::clamp(e->pagina + d, 0, paginas - 1); };
+        }
+        if (anadir)
+        {
+            Boton b{{x, y, 250, 56}, "Añadir objeto…", anadir};
+            v.b.push_back(b);
+            v.x = anadir;
+        }
+        // On the right, the selected one, as the panel of the Mac.
+        const int px = 60 + COLS * PASO + 20, pw = W - 60 - px;
+        if (e->elegida >= 0 && e->elegida < enPagina)
+        {
+            const int i = e->vistos[primero + e->elegida];
+            const Objeto o = h.leer(i);
+            const bool abierto = !h.abierto || h.abierto(i);
+            SDL_Texture* t = dibujos::de(o);
+            const SDL_Color fondo = o.vacio() ? BLANCO : dibujos::color(o.id);
+            const std::string nom = !abierto ? "Hueco sin ampliar" : o.vacio() ? "Hueco " + std::to_string(i + 1) + " vacío" : nombre(o);
+            v.dibujo = [=] {
+                redondo({px, 132, pw, 456}, 14, {0xD1, 0xD1, 0xD6, 255});
+                redondo({px + 1, 133, pw - 2, 454}, 13, BLANCO);
+                redondo({px + 20, 152, 96, 96}, 10, fondo);
+                if (t)
+                {
+                    SDL_Rect d = {px + 24, 156, 88, 88};
+                    SDL_RenderCopy(g_r, t, nullptr, &d);
+                }
+                texto(nom, px + 20, 262, MARRON, g_negrita, Izquierda, pw - 40);
+            };
+            auto buscarAqui = [h, i] {
+                buscar([h, i](const Objeto& n) {
+                    h.escribir(i, n);
+                    cambiado("Puesto: " + nombre(n));
+                }, "el hueco " + std::to_string(i + 1));
+            };
+            int by = 588 - 3 * 62;
+            v.b.push_back({{px + 20, by, pw - 40, 54}, o.vacio() ? "Poner un objeto…" : "Cambiar por otro…", buscarAqui, abierto});
+            v.b.push_back({{px + 20, by + 62, pw - 40, 54}, "Más opciones…", [h, i] { abrir(editor(h, i)); }, abierto && !o.vacio()});
+            v.b.push_back({{px + 20, by + 124, pw - 40, 54}, "Vaciar", [h, i] {
+                h.escribir(i, Objeto{});
+                cambiado("Vaciado");
+            }, abierto && !o.vacio()});
+            if (!v.x)
+                v.x = buscarAqui;
+        }
+        v.teclas = {{"A", "Elegir"}, {"X", anadir ? "Añadir" : "Buscar"}};
+        if (paginas > 1)
+            v.teclas.push_back({"L R", "Página"});
+        v.teclas.push_back({"B", "Volver"});
+    };
+}
+} // namespace
+
+Pantalla todos(Huecos h, int)
+{
+    return rejilla(h, [h] {
+        std::vector<int> r(h.cuantos());
+        for (int i = 0; i < (int)r.size(); i++)
+            r[i] = i;
+        return r;
+    }, [h](int total) {
+        int usados = 0;
+        for (int i = 0; i < total; i++)
+            usados += !h.leer(i).vacio();
+        return std::to_string(usados) + " objetos. Elige una casilla y luego qué hacer a la derecha; A otra vez abre todo.";
+    }, nullptr);
 }
 
 Pantalla usados(Huecos h)
 {
-    auto usadosAhora = [h] {
-        std::vector<int> r;
-        for (int i = 0; i < h.cuantos(); i++)
-            if (!h.leer(i).vacio())
-                r.push_back(i);
-        return r;
-    };
-    auto cache = std::make_shared<std::vector<int>>();
-    Lista l;
-    l.titulo = h.nombre;
-    l.explicacion = [h, cache, usadosAhora] {
-        *cache = usadosAhora();
-        return numero((uint32_t)cache->size()) + " de " + numero((uint32_t)h.cuantos()) + " huecos usados.";
-    };
-    l.cuantas = [cache] { return (int)cache->size(); };
-    l.porColumna = 10;
-    l.alto = 40;
-    l.fila = [h, cache](int k) {
-        const int i = (*cache)[k];
-        const Objeto o = h.leer(i);
-        Fila f{nombre(o), [h, i] { abrir(editor(h, i)); }, true, true};
-        f.imagen = dibujos::de(o);
-        return f;
-    };
     auto anadir = [h] {
         int libre = -1;
         for (int i = 0; i < h.cuantos() && libre < 0; i++)
@@ -271,12 +354,13 @@ Pantalla usados(Huecos h)
             cambiado("Añadido: " + nombre(n));
         });
     };
-    l.abajo.push_back([anadir] { return Fila{"Añadir objeto…", anadir}; });
-    l.extra = [anadir](Vista& v) {
-        v.x = anadir;
-        v.teclas = {{"A", "Elegir"}, {"X", "Añadir"}, {"L R", "Página"}, {"B", "Volver"}};
-    };
-    return lista(l);
+    return rejilla(h, [h] {
+        std::vector<int> r;
+        for (int i = 0; i < h.cuantos(); i++)
+            if (!h.leer(i).vacio())
+                r.push_back(i);
+        return r;
+    }, [h](int total) { return numero((uint32_t)total) + " de " + numero((uint32_t)h.cuantos()) + " huecos usados."; }, anadir);
 }
 
 } // namespace objetos

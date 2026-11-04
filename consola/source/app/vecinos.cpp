@@ -416,7 +416,9 @@ void lista(Vista& v)
     for (int i = 0; i < NUM_VECINOS; i++)
     {
         const bool vacio = vecinoEn(partida::principal(), i).empty();
-        Boton b{{60 + (i / 5) * 590, 140 + (i % 5) * 86, 570, 76}, nombre(i), [i] { abrir([i](Vista& vi) { ficha(vi, i); }); }, !vacio};
+        // Como NHSE para Mac: tarjetas con la cara grande, 5 por fila.
+        Boton b{{60 + (i % 5) * 236, 136 + (i / 5) * 222, 220, 206}, nombre(i), [i] { abrir([i](Vista& vi) { ficha(vi, i); }); }, !vacio};
+        b.vertical = true;
         if (!vacio)
         {
             b.imagen = retratos::deHueco(i);

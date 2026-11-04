@@ -13,18 +13,27 @@ SDL_Renderer* g_r;
 TTF_Font* g_fuente;
 TTF_Font* g_pequena;
 TTF_Font* g_grande;
+TTF_Font* g_negrita;
+TTF_Font* g_titulo;
 
-const SDL_Color CREMA = {0xF7, 0xF2, 0xE4, 255};
-const SDL_Color CREMA_OSCURA = {0xEA, 0xE2, 0xCC, 255};
-const SDL_Color VERDE = {0x3F, 0x9E, 0x5C, 255};
-const SDL_Color VERDE_OSCURO = {0x2C, 0x6E, 0x40, 255};
-const SDL_Color MARRON = {0x5A, 0x4A, 0x3A, 255};
-const SDL_Color MARRON_SUAVE = {0x8C, 0x7C, 0x68, 255};
+// Los colores de NHSE para Mac (claro, como macOS). Los nombres son los de antes para que las pantallas sigan igual.
+const SDL_Color CREMA = {0xF5, 0xF5, 0xF7, 255};        // background
+const SDL_Color CREMA_OSCURA = {0xE5, 0xE5, 0xEA, 255}; // bars, lines
+const SDL_Color VERDE = {0x34, 0xA8, 0x5A, 255};        // the green of selections
+const SDL_Color VERDE_OSCURO = {0x24, 0x8A, 0x46, 255};
+const SDL_Color MARRON = {0x1D, 0x1D, 0x1F, 255};       // text
+const SDL_Color MARRON_SUAVE = {0x6E, 0x6E, 0x73, 255}; // secondary text
 const SDL_Color BLANCO = {255, 255, 255, 255};
-const SDL_Color GRIS = {0xCF, 0xC8, 0xB6, 255};
-const SDL_Color ROJO = {0xC0, 0x45, 0x38, 255};
+const SDL_Color GRIS = {0xEF, 0xEF, 0xF2, 255};         // disabled
+const SDL_Color ROJO = {0xD7, 0x3A, 0x2F, 255};
 const SDL_Color AMARILLO = {0xF2, 0xC1, 0x4E, 255};
-const SDL_Color AZUL = {0x3E, 0x7C, 0xB8, 255};
+const SDL_Color AZUL = {0x0A, 0x7A, 0xFF, 255};         // main action and focus
+namespace {
+const SDL_Color BORDE = {0xD1, 0xD1, 0xD6, 255};
+const SDL_Color VERDE_CLARO = {0xE3, 0xF4, 0xE8, 255};
+const SDL_Color LATERAL_FONDO = {0xE8, 0xE8, 0xED, 255};
+const SDL_Color APAGADO = {0xAE, 0xAE, 0xB2, 255};
+} // namespace
 
 // ---------------------------------------------------------------------------------------------------------- dibujo
 // Las letras ya dibujadas se guardan: dibujar texto cada vez es lento.
@@ -64,17 +73,37 @@ void rect(const SDL_Rect& r, SDL_Color c)
 
 void redondo(const SDL_Rect& r, int radio, SDL_Color c)
 {
-    radio = std::min({radio, r.w / 2, r.h / 2});
-    SDL_SetRenderDrawColor(g_r, c.r, c.g, c.b, c.a);
-    SDL_Rect centro = {r.x, r.y + radio, r.w, r.h - 2 * radio};
-    SDL_RenderFillRect(g_r, &centro);
-    for (int dy = 0; dy < radio; dy++)
+    // With triangles (not lines): the screens are drawn scaled, and lines of one point would get lost.
+    radio = std::max(0, std::min({radio, r.w / 2, r.h / 2}));
+    if (radio == 0)
     {
-        const double d = radio - dy - 0.5;
-        const int dx = radio - (int)std::lround(std::sqrt(std::max(0.0, (double)radio * radio - d * d)));
-        SDL_RenderDrawLine(g_r, r.x + dx, r.y + dy, r.x + r.w - 1 - dx, r.y + dy);
-        SDL_RenderDrawLine(g_r, r.x + dx, r.y + r.h - 1 - dy, r.x + r.w - 1 - dx, r.y + r.h - 1 - dy);
+        rect(r, c);
+        return;
     }
+    constexpr int TRAMOS = 6;
+    static std::vector<SDL_Vertex> v;
+    static std::vector<int> idx;
+    v.clear();
+    idx.clear();
+    const SDL_Color col = c;
+    v.push_back({{r.x + r.w / 2.0f, r.y + r.h / 2.0f}, col, {0, 0}});
+    const float cx[4] = {(float)(r.x + r.w - radio), (float)(r.x + radio), (float)(r.x + radio), (float)(r.x + r.w - radio)};
+    const float cy[4] = {(float)(r.y + radio), (float)(r.y + radio), (float)(r.y + r.h - radio), (float)(r.y + r.h - radio)};
+    for (int q = 0; q < 4; q++)
+        for (int i = 0; i <= TRAMOS; i++)
+        {
+            const double a = (q * 90.0 + i * 90.0 / TRAMOS) * 3.14159265358979 / 180.0;
+            v.push_back({{cx[q] + (float)(radio * std::cos(a)), cy[q] - (float)(radio * std::sin(a))}, col, {0, 0}});
+        }
+    const int n = (int)v.size() - 1;
+    for (int i = 1; i <= n; i++)
+    {
+        idx.push_back(0);
+        idx.push_back(i);
+        idx.push_back(i % n + 1);
+    }
+    SDL_SetRenderDrawBlendMode(g_r, SDL_BLENDMODE_BLEND);
+    SDL_RenderGeometry(g_r, nullptr, v.data(), (int)v.size(), idx.data(), (int)idx.size());
 }
 
 int texto(const std::string& s, int x, int y, SDL_Color c, TTF_Font* f, Alinear a, int ancho)
@@ -115,53 +144,120 @@ std::string encajar(std::string s, int ancho, TTF_Font* f)
     return s + "…";
 }
 
+// Un rectángulo redondeado con borde.
+static void tarjeta(const SDL_Rect& r, int radio, SDL_Color fondo, SDL_Color borde, int grosor = 1)
+{
+    redondo(r, radio, borde);
+    redondo({r.x + grosor, r.y + grosor, r.w - 2 * grosor, r.h - 2 * grosor}, std::max(0, radio - grosor), fondo);
+}
+
 void dibujar(const Boton& b, bool foco)
 {
-    SDL_Color fondo = !b.activo ? GRIS : b.marcado ? VERDE_OSCURO : b.grande ? BLANCO : VERDE;
-    SDL_Color letra = !b.activo ? MARRON_SUAVE : b.grande && !b.marcado ? MARRON : BLANCO;
+    if (b.vertical)
+    {
+        if (foco)
+            redondo({b.r.x - 4, b.r.y - 4, b.r.w + 8, b.r.h + 8}, 16, AZUL);
+        tarjeta(b.r, 12, !b.activo ? GRIS : BLANCO, b.marcado ? VERDE : BORDE, b.marcado ? 3 : 2);
+        const int lado = std::min(b.r.w - 40, b.r.h - 70);
+        if (b.imagen)
+        {
+            SDL_Rect d = {b.r.x + (b.r.w - lado) / 2, b.r.y + 12, lado, lado};
+            SDL_RenderCopy(g_r, b.imagen, nullptr, &d);
+        }
+        const SDL_Color letra = b.activo ? MARRON : MARRON_SUAVE;
+        const int y = b.imagen ? b.r.y + 12 + lado + 6 : b.r.y + b.r.h / 2 - 16;
+        texto(encajar(b.texto, b.r.w - 16), b.r.x + b.r.w / 2, y + 16, letra, nullptr, Centro);
+        if (!b.detalle.empty())
+            texto(encajar(b.detalle, b.r.w - 16, g_pequena), b.r.x + b.r.w / 2, y + 44, MARRON_SUAVE, g_pequena, Centro);
+        return;
+    }
+    if (b.casilla)
+    {
+        if (foco)
+            redondo({b.r.x - 4, b.r.y - 4, b.r.w + 8, b.r.h + 8}, 10, AZUL);
+        const SDL_Color fondo = !b.activo ? GRIS : b.color.a ? b.color : BLANCO;
+        tarjeta(b.r, 6, fondo, b.marcado ? VERDE : BORDE, b.marcado ? 3 : 1);
+        if (b.imagen)
+        {
+            const int lado = b.r.w - 12;
+            SDL_Rect d = {b.r.x + 6, b.r.y + (b.r.h - lado) / 2, lado, lado};
+            SDL_RenderCopy(g_r, b.imagen, nullptr, &d);
+        }
+        else if (!b.texto.empty())
+            texto(b.texto, b.r.x + b.r.w / 2, b.r.y + b.r.h / 2, APAGADO, g_pequena, Centro);
+        if (!b.detalle.empty())
+        {
+            // The number with a white edge, so it is read on any colour.
+            const int x = b.r.x + b.r.w - 5, y = b.r.y + b.r.h - 26;
+            for (int dx = -1; dx <= 1; dx++)
+                for (int dy = -1; dy <= 1; dy++)
+                    if (dx || dy)
+                        texto(b.detalle, x + dx, y + dy, BLANCO, g_pequena, Derecha);
+            texto(b.detalle, x, y, MARRON, g_pequena, Derecha);
+        }
+        return;
+    }
+    const int radio = std::min(12, b.r.h / 3);
+    SDL_Color fondo = !b.activo ? GRIS : b.principal ? AZUL : b.marcado ? VERDE_CLARO : BLANCO;
+    SDL_Color borde = !b.activo ? CREMA_OSCURA : b.principal ? AZUL : b.marcado ? VERDE : BORDE;
+    const SDL_Color letra = !b.activo ? APAGADO : b.principal ? BLANCO : MARRON;
     if (foco)
-        redondo({b.r.x - 5, b.r.y - 5, b.r.w + 10, b.r.h + 10}, 18, AMARILLO);
-    if (b.grande && b.activo && !b.marcado)
-        redondo({b.r.x, b.r.y + 4, b.r.w, b.r.h}, 14, CREMA_OSCURA);
-    redondo(b.r, std::min(14, b.r.h / 3), fondo);
+        redondo({b.r.x - 4, b.r.y - 4, b.r.w + 8, b.r.h + 8}, radio + 4, AZUL);
+    tarjeta(b.r, radio, fondo, borde, b.marcado && !b.principal ? 3 : 2);
     int x0 = b.r.x, w0 = b.r.w;
+    const bool conDibujo = b.color.a > 0 || b.imagen;
     if (b.color.a > 0)
     {
         const int lado = std::min(b.r.h - 12, 40);
-        redondo({b.r.x + 8, b.r.y + (b.r.h - lado) / 2, lado, lado}, 6, b.color);
-        x0 += lado + 12;
-        w0 -= lado + 12;
+        redondo({b.r.x + 10, b.r.y + (b.r.h - lado) / 2, lado, lado}, 6, b.color);
+        x0 += lado + 16;
+        w0 -= lado + 16;
     }
     if (b.imagen)
     {
-        const int lado = std::min(b.r.h - 4, 64);
-        SDL_Rect d = {b.r.x + 8, b.r.y + (b.r.h - lado) / 2, lado, lado};
+        const int lado = b.grande ? std::min(b.r.h - 20, 60) : std::min(b.r.h - 6, 64);
+        SDL_Rect d = {b.r.x + (b.grande ? 16 : 10), b.r.y + (b.r.h - lado) / 2, lado, lado};
         SDL_RenderCopy(g_r, b.imagen, nullptr, &d);
-        x0 += lado + 12;
-        w0 -= lado + 12;
+        x0 = d.x + lado + 14 - (b.grande ? 0 : 0);
+        w0 = b.r.x + b.r.w - x0;
     }
     if (b.grande)
     {
-        redondo({b.r.x, b.r.y, 10, b.r.h}, 5, b.marcado ? AMARILLO : b.activo ? VERDE : GRIS);
-        const int x = b.r.x + 28;
+        // A card of the Mac: title in bold, and what there is now in grey.
+        const int x = conDibujo ? x0 : b.r.x + 24;
+        const int ancho = b.r.x + b.r.w - x - 16;
+        const SDL_Color gris = !b.activo ? APAGADO : b.principal ? BLANCO : MARRON_SUAVE;
         if (b.detalle.empty())
-            texto(encajar(b.texto, b.r.w - 40), x, b.r.y + b.r.h / 2 - 17, letra);
+            texto(encajar(b.texto, ancho, g_negrita), x, b.r.y + b.r.h / 2 - 17, letra, g_negrita);
         else
         {
-            texto(encajar(b.texto, b.r.w - 40), x, b.r.y + b.r.h / 2 - 34, letra);
-            texto(encajar(b.detalle, b.r.w - 40, g_pequena), x, b.r.y + b.r.h / 2 + 4, b.marcado ? CREMA : MARRON_SUAVE, g_pequena);
+            texto(encajar(b.texto, ancho, g_negrita), x, b.r.y + b.r.h / 2 - 31, letra, g_negrita);
+            texto(encajar(b.detalle, ancho, g_pequena), x, b.r.y + b.r.h / 2 + 3, gris, g_pequena);
         }
         return;
     }
     const int margen = std::min(24, w0 / 8);
     // Small letters if the button is low or the text does not fit with the normal ones.
     TTF_Font* f = b.r.h < 40 || anchoTexto(b.texto) > w0 - margen ? g_pequena : g_fuente;
+    if (conDibujo)
+    {
+        // With a picture, the text on the left, as the lists of the Mac.
+        const int ancho = w0 - 12;
+        if (b.detalle.empty())
+            texto(encajar(b.texto, ancho, f), x0, b.r.y + b.r.h / 2 - letras("Ag", f, letra).h / 2, letra, f);
+        else
+        {
+            texto(encajar(b.texto, ancho), x0, b.r.y + b.r.h / 2 - 30, letra);
+            texto(encajar(b.detalle, ancho, g_pequena), x0, b.r.y + b.r.h / 2 + 2, b.activo ? MARRON_SUAVE : APAGADO, g_pequena);
+        }
+        return;
+    }
     if (b.detalle.empty())
         texto(encajar(b.texto, w0 - margen, f), x0 + w0 / 2, b.r.y + b.r.h / 2, letra, f, Centro);
     else
     {
         texto(encajar(b.texto, w0 - margen), x0 + w0 / 2, b.r.y + b.r.h / 2 - 14, letra, nullptr, Centro);
-        texto(encajar(b.detalle, w0 - margen, g_pequena), x0 + w0 / 2, b.r.y + b.r.h / 2 + 18, letra, g_pequena, Centro);
+        texto(encajar(b.detalle, w0 - margen, g_pequena), x0 + w0 / 2, b.r.y + b.r.h / 2 + 18, b.principal ? BLANCO : !b.activo ? APAGADO : MARRON_SUAVE, g_pequena, Centro);
     }
 }
 
@@ -170,7 +266,9 @@ namespace {
 void barra(const std::string& aviso, bool malo, bool suave, const Teclas& teclas)
 {
     const bool fuerte = malo || (!aviso.empty() && !suave);
-    rect({0, ABAJO, W, H - ABAJO}, malo ? ROJO : fuerte ? VERDE_OSCURO : CREMA_OSCURA);
+    rect({0, ABAJO, W, H - ABAJO}, malo ? ROJO : fuerte ? VERDE_OSCURO : BLANCO);
+    if (!fuerte)
+        rect({0, ABAJO, W, 1}, BORDE);
     int x = W - 24;
     const SDL_Color letra = fuerte ? BLANCO : MARRON;
     for (auto it = teclas.rbegin(); it != teclas.rend(); ++it)
@@ -202,6 +300,86 @@ bool g_avisoMalo = false;
 std::string g_avisoFijo; // the one shown when there is none (set by the home screen)
 uint64_t g_fotograma = 1;
 } // namespace
+
+namespace {
+std::function<Lateral()> g_lateral;
+constexpr int LAT = 132;                       // width of the side bar, in real pixels
+constexpr float ESCALA = (float)(W - LAT) / W; // the screens (made for 1280 × 720) are drawn a bit smaller
+constexpr int ARRIBA_REAL = (int)((ABAJO - ABAJO * ESCALA) / 2);
+
+// Real point (of the screen) to the point of the screens, and back.
+int aVirtualX(int x) { return (int)std::floor((x - LAT) / ESCALA); }
+int aVirtualY(int y) { return (int)std::floor((y - ARRIBA_REAL) / ESCALA); }
+
+// The side bar: where each entry is (real pixels).
+struct HuecoLateral {
+    SDL_Rect r;
+    std::function<void()> accion;
+    bool activo;
+};
+std::vector<HuecoLateral> huecosLateral(const Lateral& l)
+{
+    std::vector<HuecoLateral> h;
+    int y = 12;
+    for (const auto& e : l.entradas)
+    {
+        h.push_back({{8, y, LAT - 16, 86}, e.accion, true});
+        y += 92;
+    }
+    h.push_back({{8, ABAJO - 64 - 8 - 56 - 8, LAT - 16, 64}, l.guardar, l.hayCambios});
+    h.push_back({{8, ABAJO - 56 - 8, LAT - 16, 56}, l.salir, true});
+    return h;
+}
+
+void dibujarLateral(const Lateral& l, int focoLateral)
+{
+    rect({0, 0, LAT, ABAJO}, LATERAL_FONDO);
+    rect({LAT - 1, 0, 1, ABAJO}, BORDE);
+    const auto h = huecosLateral(l);
+    for (size_t i = 0; i < h.size(); i++)
+    {
+        const SDL_Rect& r = h[i].r;
+        if ((int)i == focoLateral)
+            redondo({r.x - 3, r.y - 3, r.w + 6, r.h + 6}, 15, AZUL);
+        if (i < l.entradas.size())
+        {
+            const auto& e = l.entradas[i];
+            if (e.elegida)
+                redondo(r, 12, {0xD6, 0xEE, 0xDD, 255});
+            else if ((int)i == focoLateral)
+                redondo(r, 12, LATERAL_FONDO);
+            const int lado = 44;
+            SDL_Rect d = {r.x + (r.w - lado) / 2, r.y + 8, lado, lado};
+            if (e.icono)
+                SDL_RenderCopy(g_r, e.icono, nullptr, &d);
+            else
+            {
+                redondo(d, lado / 2, {0x2C, 0x2C, 0x3A, 255});
+                texto(e.inicial, d.x + lado / 2, d.y + lado / 2, BLANCO, g_negrita, Centro);
+            }
+            texto(encajar(e.texto, r.w - 8, g_pequena), r.x + r.w / 2, r.y + 68, MARRON, g_pequena, Centro);
+        }
+        else if (i == l.entradas.size())
+        {
+            // «Guardar cambios», blue as in the Mac (grey if there is nothing to save).
+            redondo(r, 12, h[i].activo ? AZUL : CREMA_OSCURA);
+            texto("Guardar", r.x + r.w / 2, r.y + r.h / 2, h[i].activo ? BLANCO : APAGADO, h[i].activo ? g_negrita : g_fuente, Centro);
+        }
+        else
+        {
+            tarjeta(r, 12, BLANCO, BORDE, 2);
+            texto("Salir", r.x + r.w / 2, r.y + r.h / 2, MARRON, g_fuente, Centro);
+        }
+    }
+}
+} // namespace
+
+void ponerLateral(std::function<Lateral()> f) { g_lateral = std::move(f); }
+void raiz(Pantalla p)
+{
+    g_pendiente.push_back([p] { g_pila = {{p, 0}}; });
+}
+int profundidad() { return (int)g_pila.size(); }
 
 void abrir(Pantalla p, int foco) { g_pendiente.push_back([p, foco] { g_pila.push_back({p, foco}); }); }
 void volver()
@@ -500,15 +678,48 @@ void bucle(Pantalla inicio)
         Vista v;
         Entrada actual = g_pila.back();
         actual.p(v);
+        // The side bar is part of every screen: its entries go after the buttons of the screen, at their place in
+        // the coordinates of the screens (to the left of 0), so the D-pad reaches them from the left.
+        const int propios = (int)v.b.size();
+        Lateral lat;
+        std::vector<HuecoLateral> hl;
+        if (g_lateral)
+        {
+            lat = g_lateral();
+            hl = huecosLateral(lat);
+            // Screens with their own controls (the map, the rooms) leave the D-pad to them: the bar is only touched.
+            if (!v.entrada)
+                for (const auto& h : hl)
+                {
+                    Boton b{{aVirtualX(h.r.x), aVirtualY(h.r.y), (int)(h.r.w / ESCALA), (int)(h.r.h / ESCALA)}, "", h.accion, h.activo};
+                    v.b.push_back(b);
+                }
+        }
         int& foco = g_pila.back().foco;
         if (foco >= (int)v.b.size() || foco < 0)
             foco = 0;
+
+        // A touch: on the side bar, or (in the coordinates of the screens) on the screen.
+        int vx = -1, vy = -1, pulsadoLateral = -1;
+        if (tx >= 0)
+        {
+            if (tx < LAT)
+            {
+                for (size_t i = 0; i < hl.size(); i++)
+                    if (tx >= hl[i].r.x && tx < hl[i].r.x + hl[i].r.w && ty >= hl[i].r.y && ty < hl[i].r.y + hl[i].r.h)
+                        pulsadoLateral = propios + (int)i;
+            }
+            else if (ty < ABAJO)
+                vx = aVirtualX(tx), vy = aVirtualY(ty);
+        }
 
         auto accion = [&](const std::function<void()>& f) {
             g_aviso.clear();
             f();
         };
-        bool usada = v.entrada && v.entrada(down, held, tx, ty);
+        bool usada = pulsadoLateral < 0 && v.entrada && v.entrada(down, held, vx, vy);
+        if (pulsadoLateral >= 0)
+            usada = false;
         if (!usada)
         {
             auto mover = [&](int dx, int dy) {
@@ -531,6 +742,9 @@ void bucle(Pantalla inicio)
                     const bool solapan = dx ? (r.y < a.y + a.h && a.y < r.y + r.h) : (r.x < a.x + a.w && a.x < r.x + r.w);
                     if (solapan)
                         cruce /= 4;
+                    // Up and down do not jump between the side bar and the screen.
+                    if (dy && ((i >= propios) != (foco >= propios)))
+                        continue;
                     const long peso = lejos + 3 * cruce;
                     if (mejor < 0 || peso < mejorPeso)
                         mejor = i, mejorPeso = peso;
@@ -547,12 +761,17 @@ void bucle(Pantalla inicio)
             else if (down & HidNpadButton_AnyRight)
                 mover(1, 0);
 
-            int pulsado = -1;
+            int pulsado = pulsadoLateral < (int)v.b.size() ? pulsadoLateral : -1;
+            if (pulsadoLateral >= (int)v.b.size() && hl[pulsadoLateral - propios].activo)
+            {
+                accion(hl[pulsadoLateral - propios].accion);
+                pulsadoLateral = -1;
+            }
             if (down & HidNpadButton_A)
                 pulsado = foco;
-            for (size_t i = 0; i < v.b.size(); i++)
-                if (tx >= v.b[i].r.x && tx < v.b[i].r.x + v.b[i].r.w && ty >= v.b[i].r.y && ty < v.b[i].r.y + v.b[i].r.h)
-                    pulsado = foco = (int)i;
+            for (int i = 0; i < propios && vx >= 0; i++)
+                if (vx >= v.b[i].r.x && vx < v.b[i].r.x + v.b[i].r.w && vy >= v.b[i].r.y && vy < v.b[i].r.y + v.b[i].r.h)
+                    pulsado = foco = i;
             if (pulsado >= 0 && pulsado < (int)v.b.size() && v.b[pulsado].activo && v.b[pulsado].accion)
                 accion(v.b[pulsado].accion);
             else if (down & HidNpadButton_B)
@@ -561,12 +780,16 @@ void bucle(Pantalla inicio)
                 accion(v.x);
             else if ((down & HidNpadButton_Y) && v.y)
                 accion(v.y);
+            else if ((down & HidNpadButton_Y) && g_lateral && lat.hayCambios && !v.y)
+                accion(lat.guardar); // Y saves everywhere (if the screen does not use it)
             else if ((down & HidNpadButton_Minus) && v.menos)
                 accion(v.menos);
             else if (v.paginar && (down & (HidNpadButton_L | HidNpadButton_R)))
                 v.paginar(down & HidNpadButton_L ? -1 : 1);
             else if (v.paginar && (down & (HidNpadButton_ZL | HidNpadButton_ZR)))
                 v.paginar(down & HidNpadButton_ZL ? -10 : 10);
+            else if ((down & HidNpadButton_Plus) && g_lateral)
+                accion(lat.salir);
             else if ((down & HidNpadButton_Plus) && g_pila.size() == 1 && v.atras)
                 accion(v.atras);
         }
@@ -582,14 +805,20 @@ void bucle(Pantalla inicio)
         }
 
         rect({0, 0, W, H}, CREMA);
-        rect({0, 0, W, 96}, VERDE);
-        texto("NHSE", 40, 22, BLANCO, g_grande);
-        texto(encajar(v.titulo, 900), 1240, 29, BLANCO, nullptr, Derecha);
-        texto(v.explicacion, 60, 104, MARRON, g_pequena, Izquierda, 1160);
+        // The screen, a bit smaller, to the right of the side bar.
+        SDL_RenderSetScale(g_r, ESCALA, ESCALA);
+        SDL_Rect vista = {(int)std::lround(LAT / ESCALA), (int)std::lround(ARRIBA_REAL / ESCALA), W, ABAJO};
+        SDL_RenderSetViewport(g_r, &vista);
+        texto(encajar(v.titulo, W - 120, g_titulo), 60, 22, MARRON, g_titulo);
+        texto(v.explicacion, 60, 92, MARRON_SUAVE, g_pequena, Izquierda, 1160);
         if (v.dibujo)
             v.dibujo();
-        for (size_t i = 0; i < v.b.size(); i++)
-            dibujar(v.b[i], (int)i == foco);
+        for (int i = 0; i < propios; i++)
+            dibujar(v.b[i], i == foco);
+        SDL_RenderSetViewport(g_r, nullptr);
+        SDL_RenderSetScale(g_r, 1, 1);
+        if (g_lateral)
+            dibujarLateral(lat, foco >= propios && foco < (int)v.b.size() ? foco - propios : -1);
         Teclas teclas = v.teclas;
         if (teclas.empty())
         {

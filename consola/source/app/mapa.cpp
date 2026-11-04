@@ -1099,13 +1099,16 @@ void dibujarPanel(std::shared_ptr<Estado> e)
     texto(detalle, x, 152 + std::min(alto, 100) + 12, MARRON_SUAVE, g_pequena, Izquierda, ancho);
     // Botones para tocar.
     auto boton = [](SDL_Rect r, const std::string& k, const std::string& t, bool activo = true) {
-        redondo(r, 12, activo ? VERDE : GRIS);
+        // As the buttons of NHSE for Mac: white with a grey edge, and the key in a dark circle.
+        redondo(r, 10, {0xD1, 0xD1, 0xD6, 255});
+        redondo({r.x + 2, r.y + 2, r.w - 4, r.h - 4}, 8, activo ? BLANCO : GRIS);
+        const int kw = k.empty() ? 0 : std::max(30, anchoTexto(k, g_pequena) + 16);
         if (!k.empty())
         {
-            redondo({r.x + 8, r.y + (r.h - 30) / 2, std::max(30, anchoTexto(k, g_pequena) + 16), 30}, 15, CREMA);
-            texto(k, r.x + 8 + std::max(30, anchoTexto(k, g_pequena) + 16) / 2, r.y + r.h / 2, VERDE_OSCURO, g_pequena, Centro);
+            redondo({r.x + 8, r.y + (r.h - 30) / 2, kw, 30}, 15, activo ? MARRON : MARRON_SUAVE);
+            texto(k, r.x + 8 + kw / 2, r.y + r.h / 2, BLANCO, g_pequena, Centro);
         }
-        texto(encajar(t, r.w - 70, g_pequena), r.x + (k.empty() ? r.w / 2 : 60), r.y + r.h / 2 - (k.empty() ? 0 : 14), activo ? BLANCO : MARRON_SUAVE, g_pequena, k.empty() ? Centro : Izquierda);
+        texto(encajar(t, r.w - kw - 26, g_pequena), k.empty() ? r.x + r.w / 2 : r.x + kw + 18, r.y + r.h / 2 - (k.empty() ? 0 : 14), activo ? MARRON : MARRON_SUAVE, g_pequena, k.empty() ? Centro : Izquierda);
     };
     boton({PANEL_X + 16, 360, 176, 46}, "L", "Alejar");
     boton({PANEL_X + 208, 360, 176, 46}, "R", "Acercar");
