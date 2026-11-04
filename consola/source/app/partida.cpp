@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <ctime>
 #include <dirent.h>
+#include <map>
 #include <sys/stat.h>
 
 using namespace acnh;
@@ -20,6 +21,11 @@ FsFileSystem g_fs;
 bool g_abierta = false;
 Archivo g_main;
 bool g_mainCambiado = false;
+struct Otro {
+    Archivo a;
+    bool cambiado = false;
+};
+std::map<std::string, Otro> g_otros; // other encrypted files, by path
 
 bool leer(const char* ruta, std::vector<uint8_t>& out)
 {
@@ -117,10 +123,29 @@ bool hayCambios()
     bool c = g_mainCambiado;
     for (const auto& j : jugadores)
         c |= j.cambiado;
+    for (const auto& o : g_otros)
+        c |= o.second.cambiado;
     return c;
 }
 
 bool leerArchivo(const std::string& ruta, std::vector<uint8_t>& datos) { return g_abierta && leer(ruta.c_str(), datos); }
+
+Archivo* otro(const std::string& ruta)
+{
+    auto i = g_otros.find(ruta);
+    if (i != g_otros.end())
+        return &i->second.a;
+    Otro o;
+    const std::string cabecera = ruta.substr(0, ruta.size() - 4) + "Header.dat";
+    if (!g_abierta || !leer(ruta.c_str(), o.a.datos) || !leer(cabecera.c_str(), o.a.cabecera))
+        return nullptr;
+    cifrar(o.a.cabecera, o.a.datos);
+    if (comprobacionesMal(o.a.datos) != 0)
+        return nullptr;
+    return &(g_otros[ruta] = std::move(o)).a;
+}
+
+void cambiaOtro(const std::string& ruta) { g_otros[ruta].cambiado = true; }
 
 std::vector<std::string> archivos(const std::string& carpeta)
 {
@@ -208,6 +233,13 @@ std::string guardar()
             p.plano = preparar(p.cifrado);
             pendientes.push_back(std::move(p));
         }
+    for (auto& o : g_otros)
+        if (o.second.cambiado)
+        {
+            Pendiente p{o.first, o.second.a, {}, -2}; // -2: another file
+            p.plano = preparar(p.cifrado);
+            pendientes.push_back(std::move(p));
+        }
     for (const auto& p : pendientes)
         if (!escribir(p.ruta.c_str(), p.cifrado.datos))
             return "No he podido escribir. La partida no ha cambiado (sales sin guardar).";
@@ -219,15 +251,18 @@ std::string guardar()
 
     // Ya guardado: lo de memoria queda con las comprobaciones al día.
     for (auto& p : pendientes)
-        (p.jugador < 0 ? g_main.datos : jugadores[p.jugador].a.datos) = std::move(p.plano);
+        (p.jugador == -2 ? g_otros[p.ruta].a.datos : p.jugador < 0 ? g_main.datos : jugadores[p.jugador].a.datos) = std::move(p.plano);
     g_mainCambiado = false;
     for (auto& j : jugadores)
         j.cambiado = false;
+    for (auto& o : g_otros)
+        o.second.cambiado = false;
     return "";
 }
 
 void cerrar()
 {
+    g_otros.clear();
     if (g_abierta)
         fsFsClose(&g_fs);
     g_abierta = false;

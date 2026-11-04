@@ -28,6 +28,7 @@ int comprobacionesMal(const std::vector<uint8_t>& datos);
 
 constexpr size_t TAM_MAIN = 0x9B0E90;
 constexpr size_t TAM_PERSONAL = 0x74A40;
+constexpr size_t TAM_BUZON = 0x47430; // postbox.dat
 
 // Números cifrados de la partida (dinero, millas): valor, ajuste, desplazamiento y suma de control.
 uint32_t leerNumero(const uint8_t* p);
