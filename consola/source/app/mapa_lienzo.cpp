@@ -363,6 +363,8 @@ struct Lienzo::Trozo {
     uint32_t usado = 0;
     ~Trozo()
     {
+        if (!ui::g_r) // al salir (el lienzo del mapa se guarda hasta el final), SDL ya se ha cerrado y se llevó las texturas
+            return;
         if (t)
             SDL_DestroyTexture(t);
         if (foto)

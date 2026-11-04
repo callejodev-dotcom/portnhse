@@ -532,10 +532,10 @@ void abrirOrdenar(std::shared_ptr<Estado> e, bool enZona, int nivel)
                 const int lado = std::min(52, t.r.h - 16);
                 foto({t.r.x + 12, t.r.y + (t.r.h - lado) / 2, lado, lado}, dibujos::de(t.icono));
                 const int x = t.r.x + 24 + lado;
-                const int alto = TTF_FontHeight(g_negrita) + TTF_FontHeight(g_pequena) - 8;
+                const int alto = ui::alto(g_negrita) + ui::alto(g_pequena) - 8;
                 const int y = t.r.y + (t.r.h - alto) / 2;
                 texto(encajar(t.nombre, t.libre, g_negrita), x, y, MARRON, g_negrita);
-                texto(t.cuantas, x, y + TTF_FontHeight(g_negrita) - 8, MARRON_SUAVE, g_pequena);
+                texto(t.cuantas, x, y + ui::alto(g_negrita) - 8, MARRON_SUAVE, g_pequena);
             }
         };
         // Abajo: cada cosa por separado, deshacer, olvidar la zona y volver.
@@ -1142,7 +1142,7 @@ void dibujarMapa(std::shared_ptr<Estado> e)
         const std::string t = std::to_string(std::abs(s.ex - s.cx) / 2 + 1) + " × " + std::to_string(std::abs(s.ey - s.cy) / 2 + 1);
         const int tw = anchoTexto(t, g_pequena) + 14;
         redondo({z.x + 4, z.y + 4, tw, 28}, 8, {0, 0, 0, 0x90});
-        texto(t, z.x + 11, z.y + 18 - TTF_FontHeight(g_pequena) / 2, BLANCO, g_pequena);
+        texto(t, z.x + 11, z.y + 18 - ui::alto(g_pequena) / 2, BLANCO, g_pequena);
     }
     // El cursor: lo que hay, el edificio o el cuadro.
     if (s.modo == Llevar)
@@ -1283,7 +1283,7 @@ void tablaOrdenar(std::shared_ptr<Estado> e, bool enZona, int x, int y, int anch
 {
     Chips& ch = e->chips;
     const Cuenta& c = contarTodo(*e, enZona);
-    texto(encajar(titulo, ancho - 140, g_negrita), x, y + 22 - TTF_FontHeight(g_negrita) / 2, MARRON, g_negrita);
+    texto(encajar(titulo, ancho - 140, g_negrita), x, y + 22 - ui::alto(g_negrita) / 2, MARRON, g_negrita);
     const int mw = enZona ? 130 : 100;
     Chip mas{{x + ancho - mw, y, mw, 44}, "Más…", [e, enZona] { abrirOrdenar(e, enZona, 1); }};
     if (enZona)
@@ -1317,10 +1317,10 @@ void tablaOrdenar(std::shared_ptr<Estado> e, bool enZona, int x, int y, int anch
         if (t == Flores)
             boton(76, "Regar", [e, enZona] { regarZona(e, enZona); });
         const std::string num = numero(cuantas);
-        texto(num, bx - 4, fy + 22 - TTF_FontHeight(g_negrita) / 2, MARRON, g_negrita, Derecha);
+        texto(num, bx - 4, fy + 22 - ui::alto(g_negrita) / 2, MARRON, g_negrita, Derecha);
         const int libre = bx - 14 - anchoTexto(num, g_negrita) - (x + 42);
         const std::string n = anchoTexto(tipoNombre(t), g_pequena) <= libre ? tipoNombre(t) : corto(t);
-        texto(encajar(n, libre, g_pequena), x + 42, fy + 22 - TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena);
+        texto(encajar(n, libre, g_pequena), x + 42, fy + 22 - ui::alto(g_pequena) / 2, MARRON, g_pequena);
     }
     const int fy = hasta - 44;
     const std::string porNombres = extra ? "Por nombres" : "Cada cosa por separado (" + numero(c.clases) + ")";
@@ -1399,7 +1399,7 @@ void dibujarPanel(std::shared_ptr<Estado> e)
     if (s.modo == Goma)
     {
         cabecera(dibujos::menu("Duster"), {}, "Goma", s.gomaClave ? "Solo: " + s.gomaNombre : "Borra: " + tipoNombre(s.gomaTipo, true));
-        texto("Tamaño", x, y + 22 - TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena);
+        texto("Tamaño", x, y + 22 - ui::alto(g_pequena) / 2, MARRON, g_pequena);
         std::vector<std::string> tam = {"1", "3", "5"};
         segmentado(ch, {x + 90, y, ancho - 90, 44}, tam, s.goma / 2, [e](int i) { e->goma = i * 2 + 1; });
         y += 60;
@@ -1532,7 +1532,7 @@ void dibujarPanel(std::shared_ptr<Estado> e)
     {
         Sitio st;
         const bool dentro = crearSitio(e, st, false);
-        texto(dentro ? "Sitio vacío" : "Fuera de la isla", x, y + 22 - TTF_FontHeight(g_negrita) / 2, MARRON, g_negrita);
+        texto(dentro ? "Sitio vacío" : "Fuera de la isla", x, y + 22 - ui::alto(g_negrita) / 2, MARRON, g_negrita);
         if (dentro)
         {
             Chip poner{{x + ancho - 170, y, 170, 44}, "Poner algo", [e] { abrirSitio(e); }};

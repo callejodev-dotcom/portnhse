@@ -32,6 +32,11 @@ struct Letras {
     int w, h;
 };
 Letras letras(const std::string& s, TTF_Font* f, SDL_Color c, int ancho = 0);
+// Alto de un renglón de esa letra (el mismo en la consola y en el simulador; ver letras). Siempre este, nunca
+// TTF_FontHeight.
+int alto(TTF_Font* f = nullptr);
+// Al abrir cada letra, su tamaño, para que mida igual en la consola que en el simulador.
+void medirLetra(TTF_Font* f, int pt);
 void rect(const SDL_Rect& r, SDL_Color c);
 void redondo(const SDL_Rect& r, int radio, SDL_Color c);
 // Un borde de «grosor» puntos por fuera del rectángulo, y un polígono convexo relleno. Las pantallas se dibujan un poco

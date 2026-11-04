@@ -88,7 +88,7 @@ Pantalla panelSitio(Sitio s)
             {
                 const int aw = std::min(940, anchoTexto(aviso, g_pequena) + 28);
                 redondo({256, 240, aw, 40}, 10, {0xFB, 0xE4, 0xE0, 255});
-                texto(encajar(aviso, aw - 28, g_pequena), 270, 260 - TTF_FontHeight(g_pequena) / 2, ROJO, g_pequena);
+                texto(encajar(aviso, aw - 28, g_pequena), 270, 260 - ui::alto(g_pequena) / 2, ROJO, g_pequena);
             }
         };
         std::vector<Boton> bs;

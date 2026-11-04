@@ -129,7 +129,7 @@ void catalogoDe(int categoria)
     l.columnas = 2;
     l.pista = "Busca por nombre (manzana, sofá…)";
     auto tiene = [ks](int i) { return recibido(yo(), CATALOGO_NOMBRES[(*ks)[i]].id); };
-    l.casillas = {Casilla{"Recibido", 160, tiene, [ks](int i, bool si) {
+    l.casillas = {Casilla{"Recibido", 176, tiene, [ks](int i, bool si) {
         recibir(yo(), (*ks)[i], si);
         partida::cambiaPersonal();
         cambiado(si ? "En el catálogo" : "Quitado del catálogo");

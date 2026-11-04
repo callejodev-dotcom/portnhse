@@ -143,7 +143,7 @@ void contorno(const std::vector<SDL_FPoint>& p, SDL_Color c)
 void etiqueta(const std::string& s, int x, int y)
 {
     const std::string e = encajar(s, 280, g_pequena);
-    const int w = anchoTexto(e, g_pequena) + 28, h = TTF_FontHeight(g_pequena) + 8;
+    const int w = anchoTexto(e, g_pequena) + 28, h = ui::alto(g_pequena) + 8;
     redondo({x - w / 2, y - h / 2 + 2, w, h}, h / 2, {0, 0, 0, 40});
     redondo({x - w / 2, y - h / 2, w, h}, h / 2, BLANCO);
     texto(e, x, y, MARRON, g_pequena, Centro);

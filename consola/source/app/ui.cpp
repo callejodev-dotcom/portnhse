@@ -46,6 +46,92 @@ namespace {
 std::map<std::tuple<std::string, TTF_Font*, uint32_t, int>, Letras> g_letras;
 }
 
+// Las letras de la consola (la de sistema de la Switch) y las del simulador (Arial Unicode) no miden igual: la de la
+// Switch tiene menos aire arriba y abajo. Las pantallas se hicieron con las del simulador, así que cada letra se pone
+// como lo haría Arial Unicode: cada renglón de 1,34 veces el tamaño, y la línea de las letras a 1,07 veces.
+namespace {
+struct Medida {
+    int pt, desplazar;
+};
+std::map<TTF_Font*, Medida> g_medidas;
+int altoRenglon(int pt) { return (pt * 134 + 50) / 100; }
+
+// Corta el texto en renglones de «ancho» como mucho (por los espacios y los saltos de línea), como TTF_..._Wrapped.
+std::vector<std::string> renglones(const std::string& s, TTF_Font* f, int ancho)
+{
+    std::vector<std::string> r;
+    auto mide = [f](const std::string& t) { int w = 0; TTF_SizeUTF8(f, t.c_str(), &w, nullptr); return w; };
+    size_t i = 0;
+    while (true)
+    {
+        const size_t fin = s.find('\n', i);
+        const std::string parrafo = s.substr(i, fin == std::string::npos ? std::string::npos : fin - i);
+        std::string linea;
+        size_t j = 0;
+        while (j <= parrafo.size())
+        {
+            size_t k = parrafo.find(' ', j);
+            if (k == std::string::npos)
+                k = parrafo.size();
+            std::string palabra = parrafo.substr(j, k - j);
+            const std::string prueba = linea.empty() ? palabra : linea + " " + palabra;
+            if (ancho <= 0 || mide(prueba) <= ancho || linea.empty())
+            {
+                // Una palabra sola más larga que el renglón se corta por las letras.
+                if (ancho > 0 && linea.empty() && mide(palabra) > ancho)
+                {
+                    std::string trozo;
+                    for (size_t c = 0; c < palabra.size();)
+                    {
+                        size_t n = 1;
+                        while (c + n < palabra.size() && ((unsigned char)palabra[c + n] & 0xC0) == 0x80)
+                            n++;
+                        if (!trozo.empty() && mide(trozo + palabra.substr(c, n)) > ancho)
+                        {
+                            r.push_back(trozo);
+                            trozo.clear();
+                        }
+                        trozo += palabra.substr(c, n);
+                        c += n;
+                    }
+                    linea = trozo;
+                }
+                else
+                    linea = prueba;
+            }
+            else
+            {
+                r.push_back(linea);
+                linea = palabra;
+            }
+            j = k + 1;
+        }
+        r.push_back(linea);
+        if (fin == std::string::npos)
+            break;
+        i = fin + 1;
+    }
+    return r;
+}
+} // namespace
+
+void medirLetra(TTF_Font* f, int pt)
+{
+    if (!f)
+        return;
+    // La línea de las letras donde la tendría Arial Unicode (a 1,07 veces el tamaño del borde de arriba).
+    g_medidas[f] = {pt, (pt * 107 + 50) / 100 - TTF_FontAscent(f)};
+    registro::apuntar("letra de %d: alto %d, arriba %d, abajo %d (se baja %d)", pt, TTF_FontHeight(f), TTF_FontAscent(f),
+        TTF_FontDescent(f), g_medidas[f].desplazar);
+}
+
+int alto(TTF_Font* f)
+{
+    f = f ? f : g_fuente;
+    auto it = g_medidas.find(f);
+    return it == g_medidas.end() ? TTF_FontHeight(f) : altoRenglon(it->second.pt);
+}
+
 Letras letras(const std::string& s, TTF_Font* f, SDL_Color c, int ancho)
 {
     const uint32_t color = (c.r << 24) | (c.g << 16) | (c.b << 8) | c.a;
@@ -59,13 +145,57 @@ Letras letras(const std::string& s, TTF_Font* f, SDL_Color c, int ancho)
             SDL_DestroyTexture(l.second.t);
         g_letras.clear();
     }
-    SDL_Surface* sf = ancho > 0 ? TTF_RenderUTF8_Blended_Wrapped(f, s.c_str(), c, ancho) : TTF_RenderUTF8_Blended(f, s.c_str(), c);
     Letras l{nullptr, 0, 0};
-    if (sf)
+    auto m = g_medidas.find(f);
+    if (m == g_medidas.end())
     {
-        l = {SDL_CreateTextureFromSurface(g_r, sf), sf->w, sf->h};
-        SDL_FreeSurface(sf);
+        SDL_Surface* sf = ancho > 0 ? TTF_RenderUTF8_Blended_Wrapped(f, s.c_str(), c, ancho) : TTF_RenderUTF8_Blended(f, s.c_str(), c);
+        if (sf)
+        {
+            l = {SDL_CreateTextureFromSurface(g_r, sf), sf->w, sf->h};
+            SDL_FreeSurface(sf);
+        }
+        g_letras[clave] = l;
+        return l;
     }
+    // Renglón a renglón, cada uno en su sitio (ver arriba).
+    const auto rs = renglones(s, f, ancho);
+    const int paso = altoRenglon(m->second.pt);
+    std::vector<SDL_Surface*> hechos;
+    int w = 0;
+    for (const auto& r : rs)
+    {
+        SDL_Surface* sf = r.empty() ? nullptr : TTF_RenderUTF8_Blended(f, r.c_str(), c);
+        hechos.push_back(sf);
+        if (sf)
+            w = std::max(w, sf->w);
+    }
+    if (w > 0)
+    {
+        const int h = paso * (int)rs.size();
+        SDL_Surface* todo = SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, SDL_PIXELFORMAT_ARGB8888);
+        if (todo)
+        {
+            SDL_FillRect(todo, nullptr, SDL_MapRGBA(todo->format, c.r, c.g, c.b, 0));
+            for (size_t i = 0; i < hechos.size(); i++)
+                if (hechos[i])
+                {
+                    SDL_SetSurfaceBlendMode(hechos[i], SDL_BLENDMODE_NONE);
+                    const int y = (int)i * paso + m->second.desplazar;
+                    // Sin pisar el renglón de al lado.
+                    SDL_Rect desde = {0, std::max(0, -y), hechos[i]->w, 0};
+                    SDL_Rect a = {0, std::max(0, y), hechos[i]->w, 0};
+                    desde.h = a.h = std::min(hechos[i]->h - desde.y, (int)(i + 1) * paso - a.y);
+                    if (desde.h > 0)
+                        SDL_BlitSurface(hechos[i], &desde, todo, &a);
+                }
+            l = {SDL_CreateTextureFromSurface(g_r, todo), w, h};
+            SDL_FreeSurface(todo);
+        }
+    }
+    for (auto* sf : hechos)
+        if (sf)
+            SDL_FreeSurface(sf);
     g_letras[clave] = l;
     return l;
 }
@@ -264,7 +394,7 @@ static void dibujarBoton(const Boton& b, bool foco)
             redondo({b.r.x - 4, b.r.y - 4, b.r.w + 8, b.r.h + 8}, 16, AZUL);
         tarjeta(b.r, 12, !b.activo ? GRIS : BLANCO, b.marcado ? VERDE : BORDE, b.marcado ? 3 : 2);
         // The picture on top and, below, the name and the detail, all inside the card.
-        const int h1 = TTF_FontHeight(g_fuente), h2 = b.detalle.empty() ? 0 : TTF_FontHeight(g_pequena) - 2;
+        const int h1 = ui::alto(g_fuente), h2 = b.detalle.empty() ? 0 : ui::alto(g_pequena) - 2;
         const int textos = h1 + h2;
         const int lado = b.imagen ? std::max(0, std::min(b.r.w - 40, b.r.h - 10 - textos - 10)) : 0;
         if (b.imagen)
@@ -296,7 +426,7 @@ static void dibujarBoton(const Boton& b, bool foco)
         if (!b.detalle.empty())
         {
             // The number with a white edge, so it is read on any colour.
-            const int x = b.r.x + b.r.w - 5, y = b.r.y + b.r.h - TTF_FontHeight(g_pequena) - 2;
+            const int x = b.r.x + b.r.w - 5, y = b.r.y + b.r.h - ui::alto(g_pequena) - 2;
             for (int dx = -1; dx <= 1; dx++)
                 for (int dy = -1; dy <= 1; dy++)
                     if (dx || dy)
@@ -335,7 +465,7 @@ static void dibujarBoton(const Boton& b, bool foco)
         // A number card, as the money of the Mac: what it is, the number big, and a note.
         const int x = conDibujo ? x0 : b.r.x + 24;
         const int ancho = b.r.x + b.r.w - x - 16;
-        const int h1 = TTF_FontHeight(g_pequena), h2 = TTF_FontHeight(g_titulo), h3 = b.detalle.empty() ? 0 : TTF_FontHeight(g_pequena);
+        const int h1 = ui::alto(g_pequena), h2 = ui::alto(g_titulo), h3 = b.detalle.empty() ? 0 : ui::alto(g_pequena);
         const int junto = 8;
         int y = b.r.y + (b.r.h - (h1 + h2 + h3 - 2 * junto)) / 2;
         texto(encajar(b.texto, ancho, g_pequena), x, y, MARRON_SUAVE, g_pequena);
@@ -383,17 +513,17 @@ static void dibujarBoton(const Boton& b, bool foco)
     const Alinear al = conDibujo ? Izquierda : Centro;
     auto linea = [&](const std::string& t, TTF_Font* fu, SDL_Color c, int arriba) {
         const std::string e = encajar(t, ancho, fu);
-        texto(e, cx, conDibujo ? arriba : arriba + TTF_FontHeight(fu) / 2, c, fu, al);
+        texto(e, cx, conDibujo ? arriba : arriba + ui::alto(fu) / 2, c, fu, al);
     };
     if (b.detalle.empty())
     {
-        linea(b.texto, f, letra, b.r.y + (b.r.h - TTF_FontHeight(f)) / 2);
+        linea(b.texto, f, letra, b.r.y + (b.r.h - ui::alto(f)) / 2);
         return;
     }
     // Two lines: the title (smaller if the button is low) and the detail, together in the middle; if they do not fit,
     // in one line.
     TTF_Font* f1 = b.r.h >= 66 && anchoTexto(b.texto) <= ancho ? g_fuente : g_pequena;
-    const int h1 = TTF_FontHeight(f1), h2 = TTF_FontHeight(g_pequena);
+    const int h1 = ui::alto(f1), h2 = ui::alto(g_pequena);
     // The lines of the font have room above and below: they can come a bit closer.
     const int junto = std::max(6, h1 / 4);
     if (h1 + h2 - junto - 4 > b.r.h)
@@ -762,11 +892,11 @@ Pantalla buscador(Buscador bu)
             redondo({60, 108, W - 120, 52}, 12, AZUL);
             redondo({62, 110, W - 124, 48}, 10, BLANCO);
             const int ancho = anchoTexto(escrito);
-            texto(escrito, 80, 134 - TTF_FontHeight(g_fuente) / 2, MARRON);
+            texto(escrito, 80, 134 - ui::alto(g_fuente) / 2, MARRON);
             // The cursor blinks.
             if ((SDL_GetTicks() / 500) % 2 == 0)
                 rect({80 + ancho + 2, 118, 3, 32}, AZUL);
-            texto(cuantos, W - 80, 134 - TTF_FontHeight(g_pequena) / 2, MARRON_SUAVE, g_pequena, Derecha);
+            texto(cuantos, W - 80, 134 - ui::alto(g_pequena) / 2, MARRON_SUAVE, g_pequena, Derecha);
         };
         // The results.
         for (int k = 0; k < POR_PAGINA && e->pagina * POR_PAGINA + k < e->total; k++)

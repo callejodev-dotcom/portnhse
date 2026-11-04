@@ -49,7 +49,7 @@ void dibujarChip(const Chip& c)
     }
     if (tw)
     {
-        texto(t, x, r.y + r.h / 2 - TTF_FontHeight(g_pequena) / 2, letra, g_pequena);
+        texto(t, x, r.y + r.h / 2 - ui::alto(g_pequena) / 2, letra, g_pequena);
         x += tw;
     }
     if (kw)

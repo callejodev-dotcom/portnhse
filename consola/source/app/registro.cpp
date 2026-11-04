@@ -54,10 +54,8 @@ void apuntar(const char* formato, ...)
 
 void terminar()
 {
+    // El archivo se queda abierto: si algo falla después (al cerrar la app), aún se apunta. Se cierra al salir.
     apuntar("termina bien");
-    if (g_f)
-        fclose(g_f);
-    g_f = nullptr;
 }
 
 } // namespace registro

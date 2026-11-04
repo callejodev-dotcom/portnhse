@@ -131,14 +131,14 @@ Pantalla elegirVecino(int hueco)
         v.dibujo = [escrito, cuantos] {
             redondo({60, 112, W - 120, 50}, 12, AZUL);
             redondo({62, 114, W - 124, 46}, 10, BLANCO);
-            const int y = 137 - TTF_FontHeight(g_fuente) / 2;
+            const int y = 137 - ui::alto(g_fuente) / 2;
             if (escrito.empty())
                 texto("Buscar por nombre", 80, y, MARRON_SUAVE);
             else
                 texto(escrito, 80, y, MARRON);
             if ((SDL_GetTicks() / 500) % 2 == 0)
                 rect({80 + (escrito.empty() ? 0 : anchoTexto(escrito)) + 2, 121, 3, 32}, AZUL);
-            texto(cuantos, W - 80, 137 - TTF_FontHeight(g_pequena) / 2, MARRON_SUAVE, g_pequena, Derecha);
+            texto(cuantos, W - 80, 137 - ui::alto(g_pequena) / 2, MARRON_SUAVE, g_pequena, Derecha);
         };
 
         // The faces.
@@ -564,9 +564,9 @@ void pagina(Vista& v)
         // The labels, as the Mac.
         const char* const ETIQUETAS[4] = {"Personalidad", "Amistad", "Paredes y suelo", "Bricolaje"};
         for (int k = 0; k < 4; k++)
-            texto(ETIQUETAS[k], ETIQUETA_X, filaY(k) + FILA_H / 2 - TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena);
-        texto("Muletilla", 598, filaY(0) + FILA_H / 2 - TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena);
-        const int ch = TTF_FontHeight(g_pequena) / 2;
+            texto(ETIQUETAS[k], ETIQUETA_X, filaY(k) + FILA_H / 2 - ui::alto(g_pequena) / 2, MARRON, g_pequena);
+        texto("Muletilla", 598, filaY(0) + FILA_H / 2 - ui::alto(g_pequena) / 2, MARRON, g_pequena);
+        const int ch = ui::alto(g_pequena) / 2;
         // Friendship: the hearts, the level and with whom.
         int y = filaY(1) + FILA_H / 2;
         int x = VALOR_X;
@@ -575,7 +575,7 @@ void pagina(Vista& v)
             filaCorazones(x, y - 13, 26, 29, fi.nivel);
             x += 7 * 29 + 8;
         }
-        texto(fi.amistad, x, y - TTF_FontHeight(g_negrita) / 2, MARRON, g_negrita);
+        texto(fi.amistad, x, y - ui::alto(g_negrita) / 2, MARRON, g_negrita);
         x += anchoTexto(fi.amistad, g_negrita) + 10;
         if (!fi.conQuien.empty())
             if (anchoTexto(fi.conQuien, g_pequena) <= FIN_X - EDITAR_W - 10 - x)

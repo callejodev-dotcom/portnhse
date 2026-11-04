@@ -150,7 +150,7 @@ Pantalla bruto()
         v.atras = [] { volver(); };
         v.dibujo = [e, inicio] {
             auto& d = datos(*e);
-            const int fh = TTF_FontHeight(g_pequena);
+            const int fh = ui::alto(g_pequena);
             const int filaCursor = (int)((e->pos - inicio) / COLUMNAS), colCursor = (int)(e->pos % COLUMNAS);
             panel({X_TABLA, Y_TABLA, W_TABLA, H_TABLA}, "");
             // The header: the column numbers, the one of the cursor in blue.
@@ -211,7 +211,7 @@ Pantalla bruto()
                 const int w = w1 + w2 + 40;
                 redondo({x, Y_INFO, w, 40}, 20, CREMA_OSCURA);
                 texto(dc.first, x + 14, Y_INFO + (40 - fh) / 2, MARRON_SUAVE, g_pequena);
-                texto(dc.second, x + 26 + w1, Y_INFO + (40 - TTF_FontHeight(g_negrita)) / 2, MARRON, g_negrita);
+                texto(dc.second, x + 26 + w1, Y_INFO + (40 - ui::alto(g_negrita)) / 2, MARRON, g_negrita);
                 x += w + 12;
             }
             if (!e->cambiados.empty())

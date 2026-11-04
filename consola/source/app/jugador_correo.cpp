@@ -502,15 +502,15 @@ Pantalla correo()
                 v.b.push_back(q);
             }
             const bool lei = leida(b(), slot), fav = favorita(b(), slot);
-            v.b.push_back(jugador::interruptor({676, 526, 130, 46}, "Leída", lei, [slot, lei] {
+            v.b.push_back(jugador::interruptor({676, 526, 142, 46}, "Leída", lei, [slot, lei] {
                 ponerLeida(b(), slot, !lei);
                 cambia(lei ? "Sin leer" : "Leída");
             }));
-            v.b.push_back(jugador::interruptor({814, 526, 160, 46}, "Favorita", fav, [slot, fav] {
+            v.b.push_back(jugador::interruptor({826, 526, 148, 46}, "Favorita", fav, [slot, fav] {
                 ponerFavorita(b(), slot, !fav);
                 cambia(fav ? "Ya no es favorita" : "Favorita");
             }));
-            Boton m{{982, 526, 222, 46}, "Cambiar el mensaje", [slot] { abrir(mensaje(slot)); }};
+            Boton m{{982, 526, 222, 46}, "Cambiar el texto", [slot] { abrir(mensaje(slot)); }};
             m.pequena = true;
             v.b.push_back(m);
         }
@@ -520,8 +520,8 @@ Pantalla correo()
             {
                 const auto& f = datos[k];
                 const int y = 108 + (int)k * 72;
-                texto(f.fecha, 640, y + 2, MARRON_SUAVE, g_pequena, Derecha);
-                texto(f.anio, 640, y + 22, MARRON_SUAVE, g_pequena, Derecha);
+                texto(f.fecha, 640, y, MARRON_SUAVE, g_pequena, Derecha);
+                texto(f.anio, 640, y + 24, MARRON_SUAVE, g_pequena, Derecha);
                 // Little signs: not read (a blue dot), favourite, with a present.
                 int x = 640;
                 if (f.regalo)

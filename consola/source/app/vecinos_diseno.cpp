@@ -32,7 +32,7 @@ struct Dibujo {
     SDL_Texture* tex = nullptr;
     ~Dibujo()
     {
-        if (tex)
+        if (tex && ui::g_r) // al salir, SDL ya se ha cerrado y se llevó las texturas
             SDL_DestroyTexture(tex);
     }
     // El dibujo de «nuevo», rehecho solo si ha cambiado.

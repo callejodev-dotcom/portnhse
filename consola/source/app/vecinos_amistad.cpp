@@ -176,7 +176,7 @@ void corazones(int hueco, int r)
         v.b.push_back(apodo);
         v.dibujo = [d = v.dibujo, x] {
             d();
-            texto(x.apodo.empty() ? "Si no tiene apodo, usa el nombre." : "Un apodo que le ha puesto.", 660, 452 + 68 + 28 - TTF_FontHeight(g_pequena) / 2,
+            texto(x.apodo.empty() ? "Si no tiene apodo, usa el nombre." : "Un apodo que le ha puesto.", 660, 452 + 68 + 28 - ui::alto(g_pequena) / 2,
                 MARRON_SUAVE, g_pequena);
         };
         v.b.push_back({{960, ABAJO - 60, 260, 52}, "Volver", [] { volver(); }});
@@ -337,7 +337,7 @@ void amistadDeJugador(int jugador)
                     filaCorazones(x, cy - CT / 2, CT, CP, f.nivel);
                     x += 7 * CP + 12;
                 }
-                texto(encajar(f.texto, 990 - x, g_pequena), x, cy - TTF_FontHeight(g_pequena) / 2, f.conoce ? MARRON : MARRON_SUAVE, g_pequena);
+                texto(encajar(f.texto, 990 - x, g_pequena), x, cy - ui::alto(g_pequena) / 2, f.conoce ? MARRON : MARRON_SUAVE, g_pequena);
             }
         };
         v.b.push_back({{1000, ABAJO - 56, 220, 50}, "Volver", [] { volver(); }});

@@ -174,13 +174,33 @@ int main(int, char**)
     g_r = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     PlFontData font;
     plGetSharedFontByType(&font, PlSharedFontType_Standard);
-    g_fuente = TTF_OpenFontRW(SDL_RWFromMem(font.address, font.size), 1, 28);
-    g_pequena = TTF_OpenFontRW(SDL_RWFromMem(font.address, font.size), 1, 22);
-    g_grande = TTF_OpenFontRW(SDL_RWFromMem(font.address, font.size), 1, 40);
-    g_negrita = TTF_OpenFontRW(SDL_RWFromMem(font.address, font.size), 1, 26);
-    TTF_SetFontStyle(g_negrita, TTF_STYLE_BOLD);
-    g_titulo = TTF_OpenFontRW(SDL_RWFromMem(font.address, font.size), 1, 44);
-    TTF_SetFontStyle(g_titulo, TTF_STYLE_BOLD);
+    // Las pantallas se hicieron con Arial Unicode (la del simulador). La letra de la Switch es más ancha: se abre algo
+    // más pequeña, para que un texto ocupe lo mismo que con Arial Unicode y todo quepa igual.
+    auto abrirLetra = [&font](int pt, bool negrita) {
+        constexpr const char* MUESTRA = "Toca una cantidad para cambiarla. Bolsillos, Almacén y Vecinos: 1.234";
+        constexpr int ARIAL_100 = 3158; // lo que mide MUESTRA con Arial Unicode de 100
+        TTF_Font* f = TTF_OpenFontRW(SDL_RWFromMem(font.address, font.size), 1, pt);
+        int w = 0;
+        if (f && TTF_SizeUTF8(f, MUESTRA, &w, nullptr) == 0 && w > 0)
+        {
+            const int justo = (pt * ARIAL_100 * pt / 100 + w / 2) / w; // pt * (lo de Arial / lo de esta)
+            if (justo != pt && justo > 8)
+            {
+                TTF_CloseFont(f);
+                f = TTF_OpenFontRW(SDL_RWFromMem(font.address, font.size), 1, justo);
+            }
+            registro::apuntar("letra de %d: se abre de %d (mide %d, Arial %d)", pt, justo, w, ARIAL_100 * pt / 100);
+        }
+        if (f && negrita)
+            TTF_SetFontStyle(f, TTF_STYLE_BOLD);
+        medirLetra(f, pt);
+        return f;
+    };
+    g_fuente = abrirLetra(28, false);
+    g_pequena = abrirLetra(22, false);
+    g_grande = abrirLetra(40, false);
+    g_negrita = abrirLetra(26, true);
+    g_titulo = abrirLetra(44, true);
 
     // Mientras se hace la copia de seguridad (unos segundos), un aviso.
     rect({0, 0, W, H}, CREMA);
@@ -212,7 +232,7 @@ int main(int, char**)
         });
 
     partida::cerrar();
-    registro::terminar();
+    registro::apuntar("cerrando");
     TTF_CloseFont(g_fuente);
     TTF_CloseFont(g_pequena);
     TTF_CloseFont(g_grande);
@@ -220,9 +240,11 @@ int main(int, char**)
     TTF_CloseFont(g_titulo);
     TTF_Quit();
     SDL_DestroyRenderer(g_r);
+    g_r = nullptr; // las texturas que quedan guardadas (mapa, diseños...) ya no se tocan al salir
     SDL_DestroyWindow(win);
     SDL_Quit();
     plExit();
     romfsExit();
+    registro::terminar();
     return 0;
 }

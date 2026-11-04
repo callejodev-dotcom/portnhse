@@ -325,7 +325,7 @@ void recuerdos(int hueco)
         v.dibujo = [zona, titulo, nivel, nivelTexto] {
             panel(zona, titulo);
             filaCorazones(zona.x + 24, zona.y + 62, 30, 36, nivel);
-            texto(nivelTexto, zona.x + 24 + 7 * 36 + 12, zona.y + 77 - TTF_FontHeight(g_pequena) / 2, MARRON_SUAVE, g_pequena);
+            texto(nivelTexto, zona.x + 24 + 7 * 36 + 12, zona.y + 77 - ui::alto(g_pequena) / 2, MARRON_SUAVE, g_pequena);
         };
         botonesRecuerdo(v, hueco, r, {zona.x + 20, zona.y + 108, zona.w - 40, zona.h - 124});
         v.b.push_back({{960, ABAJO - 60, 260, 52}, "Volver", [] { volver(); }});

@@ -6,7 +6,7 @@
 //                       teclado TEXTO                        lo que se escribirá la próxima vez que salga el teclado
 //                       foto NOMBRE                          guardar la pantalla en NOMBRE.bmp
 //                       esperar N                            N fotogramas sin hacer nada
-//   NHSE_SIM_FUENTE   la letra (por defecto, Arial Unicode del Mac)
+//   NHSE_SIM_FUENTE   la letra (por defecto, Hiragino del Mac: mide casi como la de la Switch; las pantallas se hicieron con Arial Unicode)
 // La copia de seguridad va a «sdmc:/...» y los datos se leen de «romfs:/...», carpetas con esos nombres donde se
 // ejecuta.
 #include <SDL2/SDL.h>
@@ -82,7 +82,7 @@ void plExit() {}
 Result plGetSharedFontByType(PlFontData* d, PlSharedFontType)
 {
     const char* f = getenv("NHSE_SIM_FUENTE");
-    std::ifstream in(f ? f : "/System/Library/Fonts/Supplemental/Arial Unicode.ttf", std::ios::binary);
+    std::ifstream in(f ? f : "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc", std::ios::binary);
     g_fuente.assign(std::istreambuf_iterator<char>(in), {});
     d->address = g_fuente.data();
     d->size = (u32)g_fuente.size();

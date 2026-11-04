@@ -308,7 +308,7 @@ struct Traidos {
     ~Traidos()
     {
         for (auto* t : tex)
-            if (t)
+            if (t && ui::g_r) // al salir, SDL ya se ha cerrado y se llevó las texturas
                 SDL_DestroyTexture(t);
     }
 };
@@ -639,7 +639,7 @@ Pantalla rejilla(Tipo t, int inicial, std::function<void(int)> elegido = nullptr
                 if (i == e->ultimo)
                     redondo(c, 14, VERDE_FONDO);
                 if (!h.vacio)
-                    texto(encajar(nombreVisible(h), c.w - 6, g_pequena), c.x + c.w / 2, c.y + CAJA + 6 + TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena, Centro);
+                    texto(encajar(nombreVisible(h), c.w - 6, g_pequena), c.x + c.w / 2, c.y + CAJA + 6 + ui::alto(g_pequena) / 2, MARRON, g_pequena, Centro);
             }
             dibujarElegido(t, e->ultimo, pie);
             if (copiando)
@@ -721,7 +721,7 @@ Pantalla ficha(Tipo t, int inicial)
         std::string quien = vacio ? "Este hueco está vacío. Trae un diseño de la SD para llenarlo." : quienLoHizo(h.d);
         if (otro)
             quien += " Lo hizo otra persona, así que el juego no te deja retocarlo. Hazlo tuyo para poder hacerlo.";
-        const int altoQuien = TTF_FontHeight(g_pequena) * (otro ? 2 : 1);
+        const int altoQuien = ui::alto(g_pequena) * (otro ? 2 : 1);
         const int yColores = RY + 148 + altoQuien;
         v.dibujo = [t, i, vacio, quien, yColores] {
             panel({IX, IY, IL, IL}, "");

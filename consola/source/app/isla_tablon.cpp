@@ -181,7 +181,7 @@ Pantalla tablon()
                 }
                 if (!n.aMano)
                     texto(encajar(n.firma.empty() ? std::string("Sin firma") : "Firma: " + n.firma, ANCHO - 250, g_pequena), x + 24,
-                        ARRIBA + ALTO - 48 - TTF_FontHeight(g_pequena) / 2, MARRON_SUAVE, g_pequena);
+                        ARRIBA + ALTO - 48 - ui::alto(g_pequena) / 2, MARRON_SUAVE, g_pequena);
             }
         };
         for (size_t k = 0; k < vistas.size(); k++)

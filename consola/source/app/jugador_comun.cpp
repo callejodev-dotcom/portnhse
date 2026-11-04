@@ -343,7 +343,7 @@ Pantalla listaCasillas(ListaCasillas l)
                 if (nota.empty())
                 {
                     TTF_Font* f = l.columnas > 1 ? g_pequena : g_fuente;
-                    texto(encajar(l.nombre(i), ancho, f), xt, y + (ALTO - TTF_FontHeight(f)) / 2, MARRON, f);
+                    texto(encajar(l.nombre(i), ancho, f), xt, y + (ALTO - ui::alto(f)) / 2, MARRON, f);
                 }
                 else
                 {

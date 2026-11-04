@@ -442,7 +442,7 @@ void elegirPico()
 void nabos(Vista& v)
 {
     v.titulo = "Precio de los nabos";
-    v.explicacion = "Lo que cobra Juliana el domingo y lo que te pagan por ellos cada día de esta semana. Toca un precio para cambiarlo.";
+    v.explicacion = "Lo que cobra Juliana el domingo y lo que te pagan cada día. Toca un precio para cambiarlo.";
     const auto& m = partida::principal();
     const Nabos n = leerNabos(m);
     const uint32_t t = tendenciaNabos(m);
@@ -465,11 +465,11 @@ void nabos(Vista& v)
             texto(mejorTexto, 64, 306, VERDE_OSCURO, g_pequena, Izquierda, 312);
         // La semana.
         isla::recuadro({TX, ARRIBA, TW, 304}, "Precios de venta de esta semana", dibujos::menu("Kabu"),
-            "Lo que pagan Tendo y Nendo por cada nabo. Los domingos no compran.");
+            "Lo que pagan Tendo y Nendo por cada nabo.");
         for (int d = 0; d < 6; d++)
             texto(DIA[d + 1], CX + d * CP + CW / 2, 230, MARRON, g_pequena, Centro);
-        texto("Mañana", TX + 22, FILA1 + 22 - TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena);
-        texto("Tarde", TX + 22, FILA2 + 22 - TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena);
+        texto("Mañana", TX + 22, FILA1 + 22 - ui::alto(g_pequena) / 2, MARRON, g_pequena);
+        texto("Tarde", TX + 22, FILA2 + 22 - ui::alto(g_pequena) / 2, MARRON, g_pequena);
         // Las barras: verdes las que ganan (más de lo que se pagó a Juliana), grises las demás.
         uint32_t tope = std::max<uint32_t>(n.compra, 1);
         for (int i = 2; i < 14; i++)
@@ -487,7 +487,7 @@ void nabos(Vista& v)
         {
             const int y = BASE - (int)((uint64_t)n.compra * ALTO_BARRAS / tope);
             rect({CX, y - 1, 5 * CP + CW, 2}, MARRON_SUAVE);
-            texto(numero(n.compra), CX - 10, y - TTF_FontHeight(g_pequena) / 2, MARRON_SUAVE, g_pequena, Derecha);
+            texto(numero(n.compra), CX - 10, y - ui::alto(g_pequena) / 2, MARRON_SUAVE, g_pequena, Derecha);
         }
         texto("Barras verdes: ganas más de lo que pagaste a Juliana.", CX, BASE + 6, MARRON_SUAVE, g_pequena);
         // La tendencia.
@@ -637,7 +637,7 @@ void planSemana(Vista& v)
     }
     v.dibujo = [dias] {
         for (int k = 0; k < 7; k++)
-            texto(dias[k], 60, 150 + k * 62 + 27 - TTF_FontHeight(g_negrita) / 2, MARRON, g_negrita, Izquierda);
+            texto(dias[k], 60, 150 + k * 62 + 27 - ui::alto(g_negrita) / 2, MARRON, g_negrita, Izquierda);
     };
     v.b.push_back({{W - 60 - 240, ABAJO - 66, 240, 56}, "Volver", [] { volver(); }});
 }
@@ -769,7 +769,7 @@ void visitantes(Vista& v)
         static const char* const CORTO[7] = {"Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"};
         for (int k = 0; k < 7; k++)
         {
-            const int y = FILA0 + k * PASO + ALTO / 2 - TTF_FontHeight(g_negrita) / 2;
+            const int y = FILA0 + k * PASO + ALTO / 2 - ui::alto(g_negrita) / 2;
             texto(DIA[SEMANA[k]], 84, y, MARRON, g_negrita);
             texto(CORTO[SEMANA[k]], DERECHA + 24, y, MARRON, g_negrita);
         }
