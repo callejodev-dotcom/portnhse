@@ -249,6 +249,22 @@ public class ConsolaMapaTests
             O("mapa-goma", 0, "todo", tx + 1, ty + 1, 2, 2), O("mapa-goma", 0, "flores", fx - 10, fy - 10, 30, 30),
             O("mapa-goma", 0, "todo", ox - 8, oy - 8, 20, 20, ox, oy));
     }
+    [Fact]
+    public void ThingsOnTopOfNothing()
+    {
+        // What the Mac's map asks about before saving (GetUnsupportedTiles): something on the top layer with nothing under it.
+        var (x, y) = FreeArea(8, 6);
+        ConsolaTests.Skip();
+        TestSave.LoadCopy(out var folder);
+        ConsolaTests.Run(folder, O("mapa-poner", 1, x, y, 2511, 4));
+        var after = HorizonSave.FromFolder(folder);
+        var expected = ((ILayerFieldItemSet)MapTileManagerUtil.FromSaveFile(after.Main).FieldItems).GetUnsupportedTiles();
+        Assert.NotEmpty(expected);
+        var output = ConsolaTests.Run(folder, O("mapa-sin-apoyo"));
+        Assert.Contains($"sin apoyo {expected.Count}\n", output);
+        foreach (var t in expected)
+            Assert.Contains(t + "\n", output);
+    }
     #endregion
 
     #region Houses
@@ -369,5 +385,164 @@ public class ConsolaMapaTests
             O("casa-nivel", 0, 8), O("casa-aspecto", 0, 0, (int)RoofType.HouseRoofPB04SlateA), O("casa-aspecto", 0, 1, 5), O("casa-aspecto", 0, 2, 7),
             O("casa-pared", 0, 3, 0, paper), O("casa-pared", 0, 3, 1, floor));
     }
+    #endregion
+
+    #region House advanced options
+    /// <summary> Like <see cref="Many"/>, for orders that need files: NHSE goes first (it writes the files the orders read). </summary>
+    private static void WithFiles(Action<HorizonSave, string> nhse, Func<string, string[][]> orders)
+    {
+        ConsolaTests.Skip();
+        var sav = TestSave.LoadCopy(out var folder);
+        var files = Path.Combine(Path.GetTempPath(), "nhse-casas-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(files);
+        try
+        {
+            nhse(sav, files);
+            foreach (var o in orders(files))
+                ConsolaTests.Run(folder, o);
+            var after = HorizonSave.FromFolder(folder);
+            Assert.Empty(after.GetInvalidHashes());
+            sav.Main.Hash();
+            ConsolaTests.SameBytes(sav.Main.Data, after.Main.Data);
+        }
+        finally
+        {
+            Directory.Delete(files, true);
+        }
+    }
+
+    [Fact]
+    public void HouseEventsAndLooseValues()
+    {
+        var deco = GameInfo.Strings.ItemDataSource.Select(z => (ushort)z.Value).First(id => id is > 100 and < 60_000 && ItemInfo.GetItemKind(id).IsFurniture);
+        Many(sav =>
+            {
+                // What the Mac's «Advanced options» do: the house's event flags (PlayerHouseFlagEditor) and the
+                // PropertyGrid on the house (each property set as the grid sets it).
+                var houses = sav.Main.GetPlayerHouses();
+                var h = (PlayerHouse2)houses[0];
+                h.EventFlags[1] = 1;
+                h.EventFlags[11] = 25;
+                h.EventFlags[100] = -3;
+                var loan = h.Loan;
+                loan.Value = 98000;
+                h.Loan = loan;
+                var unknown = h.Unknown;
+                unknown.Value = 7;
+                h.Unknown = unknown;
+                h.NPC1 = -1;
+                h.NPC2 = 3;
+                h.PlayerHouseFlag = true;
+                h.OrderWallUniqueID = (WallType)5;
+                h.OrderRoofUniqueID = (RoofType)7;
+                h.OrderDoorUniqueID = (DoorKind)9;
+                h.HouseLevel = 6;
+                var item = h.DoorDecoItemName;
+                item.ItemId = deco;
+                item.Count = 2;
+                h.DoorDecoItemName = item;
+                h.PostItemName = new Item(deco) { SystemParam = 0x20 };
+                h.OrderPostItemName = new Item(Item.NONE);
+                sav.Main.SetPlayerHouses(houses);
+            },
+            O("casa-suceso", 0, 1, 1), O("casa-suceso", 0, 11, 25), O("casa-suceso", 0, 100, -3),
+            O("casa-valor", 0, 7, 98000), O("casa-valor", 0, 8, 7), O("casa-valor", 0, 9, -1), O("casa-valor", 0, 10, 3),
+            O("casa-valor", 0, 11, 1), O("casa-valor", 0, 4, 5), O("casa-valor", 0, 5, 7), O("casa-valor", 0, 6, 9), O("casa-valor", 0, 0, 6),
+            O("casa-objeto", 0, 0, deco, 2), O("casa-objeto", 0, 1, deco, 0, 0x20), O("casa-objeto", 0, 2, Item.NONE));
+    }
+
+    [Fact]
+    public void HouseEventsFromAFile() => WithFiles((sav, dir) =>
+        {
+            // PlayerHouseFlagEditor's «Load»: a .nhfl of 256 bytes over the flags.
+            var data = new byte[256];
+            for (int i = 0; i < data.Length; i++)
+                data[i] = (byte)(i * 7);
+            File.WriteAllBytes(Path.Combine(dir, "EventFlagHouse.nhfl"), data);
+            var houses = sav.Main.GetPlayerHouses();
+            var edit = houses[0].EventFlags.ToArray();
+            Buffer.BlockCopy(data, 0, edit, 0, data.Length);
+            edit.CopyTo(houses[0].EventFlags);
+            sav.Main.SetPlayerHouses(houses);
+        }, dir => [O("casa-sucesos-importar", 0, Path.Combine(dir, "EventFlagHouse.nhfl"))]);
+
+    [Fact]
+    public void HouseAndRoomExportedAsNhse()
+    {
+        ConsolaTests.Skip();
+        var sav = TestSave.LoadCopy(out var folder);
+        var dir = Path.Combine(Path.GetTempPath(), "nhse-casas-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            ConsolaTests.Run(folder, O("casa-jugador-exportar", 0, Path.Combine(dir, "casa.nhph2")));
+            ConsolaTests.Run(folder, O("casa-hab-exportar", 0, 2, Path.Combine(dir, "hab.nhpr2")));
+            ConsolaTests.Run(folder, O("casa-sucesos-exportar", 0, Path.Combine(dir, "sucesos.nhfl")));
+            var house = sav.Main.GetPlayerHouses()[0];
+            ConsolaTests.SameBytes(house.Write(), File.ReadAllBytes(Path.Combine(dir, "casa.nhph2")));
+            ConsolaTests.SameBytes(house.GetRoom(2).Write(), File.ReadAllBytes(Path.Combine(dir, "hab.nhpr2")));
+            var flags = house.EventFlags.ToArray();
+            var bytes = new byte[flags.Length * 2];
+            Buffer.BlockCopy(flags, 0, bytes, 0, bytes.Length); // PlayerHouseFlagEditor's «Dump»
+            ConsolaTests.SameBytes(bytes, File.ReadAllBytes(Path.Combine(dir, "sucesos.nhfl")));
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+
+    /// <summary> MiscDumpHelper.LoadHouse without the file dialog. </summary>
+    private static void LoadHouse(HorizonSave sav, IPlayerHouse[] houses, int index, string path)
+    {
+        var offsets = sav.Main.Offsets;
+        var expectLength = offsets.PlayerHouseSize;
+        var data = File.ReadAllBytes(path);
+        Assert.True(PlayerHouseConverter.IsCompatible(data.Length, expectLength));
+        data = PlayerHouseConverter.GetCompatible(data, expectLength);
+        var h = offsets.ReadPlayerHouse(data);
+        var current = houses[index];
+        h.NPC1 = current.NPC1;
+        houses[index] = h;
+    }
+
+    /// <summary> MiscDumpHelper.LoadRoom without the file dialog. </summary>
+    private static IPlayerRoom LoadRoom(HorizonSave sav, string path)
+    {
+        var offsets = sav.Main.Offsets;
+        var data = File.ReadAllBytes(path);
+        Assert.True(PlayerRoomConverter.IsCompatible(data.Length, offsets.PlayerRoomSize));
+        data = PlayerRoomConverter.GetCompatible(data, offsets.PlayerRoomSize);
+        return offsets.ReadPlayerRoom(data);
+    }
+
+    [Fact]
+    public void HouseImportedAsNhse() => WithFiles((sav, dir) =>
+        {
+            // A changed copy of the first house, in the new and the old format, into the second and third houses.
+            var houses = sav.Main.GetPlayerHouses();
+            var source = (PlayerHouse2)sav.Main.GetPlayerHouses()[0];
+            source.HouseLevel = 5;
+            source.Data[0x263D0] ^= 0x5A;
+            source.NPC1 = 4;
+            File.WriteAllBytes(Path.Combine(dir, "nueva.nhph2"), source.Write());
+            File.WriteAllBytes(Path.Combine(dir, "vieja.nhph"), source.Downgrade().Write());
+            LoadHouse(sav, houses, 1, Path.Combine(dir, "nueva.nhph2"));
+            LoadHouse(sav, houses, 2, Path.Combine(dir, "vieja.nhph"));
+            sav.Main.SetPlayerHouses(houses);
+        }, dir => [O("casa-jugador-importar", 1, Path.Combine(dir, "nueva.nhph2")), O("casa-jugador-importar", 2, Path.Combine(dir, "vieja.nhph"))]);
+
+    [Fact]
+    public void RoomImportedAsNhse() => WithFiles((sav, dir) =>
+        {
+            var houses = sav.Main.GetPlayerHouses();
+            var room = (PlayerRoom2)houses[0].GetRoom(0);
+            room.Data[0x6C10] = 0x33; // past the old format: lost in the old file
+            File.WriteAllBytes(Path.Combine(dir, "hab.nhpr2"), room.Write());
+            File.WriteAllBytes(Path.Combine(dir, "vieja.nhpr"), room.Downgrade().Write());
+            houses[0].SetRoom(3, LoadRoom(sav, Path.Combine(dir, "hab.nhpr2")));
+            houses[0].SetRoom(4, LoadRoom(sav, Path.Combine(dir, "vieja.nhpr")));
+            sav.Main.SetPlayerHouses(houses);
+        }, dir => [O("casa-hab-importar", 0, 3, Path.Combine(dir, "hab.nhpr2")), O("casa-hab-importar", 0, 4, Path.Combine(dir, "vieja.nhpr"))]);
     #endregion
 }

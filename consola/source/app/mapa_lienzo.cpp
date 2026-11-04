@@ -4,8 +4,10 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <map>
 #include "../core/mapa.hpp"
 #include "../core/mapa_objetos.hpp"
+#include "dibujos.hpp"
 #include "mapa_pintor.hpp"
 #include "ui.hpp"
 
@@ -29,9 +31,10 @@ struct Lamina {
     uint32_t* p;
     int w, h;
     double ox, oy;
+    double e = PX; // puntos por casilla
 
-    double px(double x) const { return x * PX - ox; }
-    double py(double y) const { return y * PX - oy; }
+    double px(double x) const { return x * e - ox; }
+    double py(double y) const { return y * e - oy; }
 
     void punto(int x, int y, uint32_t c, int a)
     {
@@ -41,10 +44,18 @@ struct Lamina {
             d = 0xFF000000u | c;
             return;
         }
+        // Sobre lo que aún no tiene nada (alfa 0: una forma suelta), queda con su alfa.
+        const int da = (int)(d >> 24);
+        if (da == 0)
+        {
+            d = ((uint32_t)a << 24) | (c & 0xFFFFFF);
+            return;
+        }
         const int r = (((c >> 16) & 255) * a + ((d >> 16) & 255) * (255 - a)) / 255;
         const int g = (((c >> 8) & 255) * a + ((d >> 8) & 255) * (255 - a)) / 255;
         const int b = ((c & 255) * a + (d & 255) * (255 - a)) / 255;
-        d = 0xFF000000u | (r << 16) | (g << 8) | b;
+        const uint32_t na = (uint32_t)(a + da * (255 - a) / 255);
+        d = (na << 24) | (r << 16) | (g << 8) | b;
     }
 
     // Filas de puntos cuyo centro cae dentro (en puntos del trozo).
@@ -67,7 +78,7 @@ struct Lamina {
 
     void cajaRedonda(double x, double y, double cw, double ch, double radio, uint32_t c, int a = 255)
     {
-        const double x0 = px(x), y0 = py(y), x1 = px(x + cw), y1 = py(y + ch), r = radio * PX;
+        const double x0 = px(x), y0 = py(y), x1 = px(x + cw), y1 = py(y + ch), r = radio * e;
         rellenar(x0, y0, x1, y1, c, a, [&](double X, double Y) {
             if (X < x0 || X >= x1 || Y < y0 || Y >= y1)
                 return false;
@@ -78,7 +89,7 @@ struct Lamina {
 
     void elipse(double cx, double cy, double rx, double ry, uint32_t c, int a = 255)
     {
-        const double X0 = px(cx), Y0 = py(cy), RX = rx * PX, RY = ry * PX;
+        const double X0 = px(cx), Y0 = py(cy), RX = rx * e, RY = ry * e;
         if (RX <= 0 || RY <= 0)
             return;
         rellenar(X0 - RX, Y0 - RY, X0 + RX, Y0 + RY, c, a, [&](double X, double Y) {
@@ -90,7 +101,7 @@ struct Lamina {
     // Un anillo de elipse de grosor «g» (casillas).
     void aro(double cx, double cy, double rx, double ry, double g, uint32_t c, int a = 255)
     {
-        const double X0 = px(cx), Y0 = py(cy), RX = rx * PX, RY = ry * PX, G = g * PX / 2;
+        const double X0 = px(cx), Y0 = py(cy), RX = rx * e, RY = ry * e, G = g * e / 2;
         rellenar(X0 - RX - G, Y0 - RY - G, X0 + RX + G, Y0 + RY + G, c, a, [&](double X, double Y) {
             const double dx = (X - X0) / (RX + G), dy = (Y - Y0) / (RY + G);
             const double ex = (X - X0) / std::max(0.1, RX - G), ey = (Y - Y0) / std::max(0.1, RY - G);
@@ -344,11 +355,16 @@ uint32_t colorCategoria(int c)
 
 // ----------------------------------------------------------------------------------------------------------- lienzo
 struct Lienzo::Trozo {
-    SDL_Texture* t = nullptr;
+    SDL_Texture* t = nullptr;    // con formas y colores (CPU, 8 puntos por casilla)
+    SDL_Texture* foto = nullptr; // con los dibujos de los objetos (GPU, 16 puntos por casilla), solo los vistos hace poco
+    bool fotoSucia = true;
+    uint32_t usado = 0;
     ~Trozo()
     {
         if (t)
             SDL_DestroyTexture(t);
+        if (foto)
+            SDL_DestroyTexture(foto);
     }
 };
 
@@ -357,11 +373,16 @@ Lienzo::~Lienzo() = default;
 
 static std::vector<Edificio> g_edificios;
 static uint32_t g_plaza[2];
+static std::vector<SDL_Texture*> g_texEdificios; // cada edificio dibujado (para los trozos con dibujos)
 
 void ponerEdificios(const std::vector<Edificio>& e, uint32_t plazaX, uint32_t plazaZ)
 {
     g_edificios = e;
     g_plaza[0] = plazaX, g_plaza[1] = plazaZ;
+    for (auto* t : g_texEdificios)
+        if (t)
+            SDL_DestroyTexture(t);
+    g_texEdificios.assign(e.size(), nullptr);
 }
 
 void Lienzo::preparar(std::vector<uint8_t>& main)
@@ -382,6 +403,12 @@ void Lienzo::preparar(std::vector<uint8_t>& main)
     sucio.assign(TROZOS_W * TROZOS_H, true);
 }
 
+void Lienzo::marcar(int t)
+{
+    sucio[t] = true;
+    trozos[t]->fotoSucia = true;
+}
+
 void Lienzo::actualizar(std::vector<uint8_t>& main, int capa)
 {
     const uint8_t* ahora = main.data() + CAMPO;
@@ -389,7 +416,8 @@ void Lienzo::actualizar(std::vector<uint8_t>& main, int capa)
     {
         visto.assign(ahora, ahora + 2 * TAM_CAPA);
         capaVista = capa;
-        sucio.assign(TROZOS_W * TROZOS_H, true);
+        for (int t = 0; t < TROZOS_W * TROZOS_H; t++)
+            marcar(t);
         return;
     }
     if (std::memcmp(visto.data(), ahora, 2 * TAM_CAPA) == 0)
@@ -405,15 +433,17 @@ void Lienzo::actualizar(std::vector<uint8_t>& main, int capa)
         const int ua = std::max(0, (y - 4) / CASILLAS_TROZO), ub = std::min(TROZOS_H - 1, (y + 3) / CASILLAS_TROZO);
         for (int tx = ta; tx <= tb; tx++)
             for (int ty = ua; ty <= ub; ty++)
-                sucio[ty * TROZOS_W + tx] = true;
+                marcar(ty * TROZOS_W + tx);
     }
     std::memcpy(visto.data(), ahora, 2 * TAM_CAPA);
 }
 
-void Lienzo::componer(std::vector<uint8_t>& main, int t)
+// Lo de debajo de todo de un trozo: el suelo pintado, la plaza, y los puentes y cuestas (8 puntos por casilla, con su
+// borde).
+static void componerSuelo(const std::vector<uint32_t>& suelo, std::vector<uint32_t>& buf, int t, Lamina& l)
 {
     const int tx = t % TROZOS_W, ty = t / TROZOS_W;
-    std::vector<uint32_t> buf(TEX * TEX);
+    buf.assign(TEX * TEX, 0);
     const int ox = tx * LADO - BORDE, oy = ty * LADO - BORDE;
     for (int y = 0; y < TEX; y++)
         for (int x = 0; x < TEX; x++)
@@ -421,56 +451,317 @@ void Lienzo::componer(std::vector<uint8_t>& main, int t)
             const int sx = std::clamp(ox + x, 0, SUELO_W - 1), sy = std::clamp(oy + y, 0, SUELO_H - 1);
             buf[y * TEX + x] = suelo[sy * SUELO_W + sx];
         }
-    Lamina l{buf.data(), TEX, TEX, (double)ox, (double)oy};
-
-    // La plaza, y los puentes y cuestas (debajo de todo).
+    l = Lamina{buf.data(), TEX, TEX, (double)ox, (double)oy};
     l.cajaRedonda(g_plaza[0], g_plaza[1], 24, 20, 2.5, 0xF2E6C8, 0x70);
     for (const auto& b : g_edificios)
         if (b.cruce())
             dibujarCruce(l, b);
+}
 
-    // Las cosas que tocan este trozo, de arriba abajo (las de delante tapan a las de detrás).
-    const double x0 = ox / (double)PX, y0 = oy / (double)PX, x1 = (ox + TEX) / (double)PX, y1 = (oy + TEX) / (double)PX;
-    auto cosas = [&](int c) {
-        Rejilla r = mapa::capa(main, c);
-        std::vector<Dibujo> v;
-        const int xa = std::max(0, (int)x0 - ORIGEN_X - 12), xb = std::min(ANCHO - 1, (int)x1 - ORIGEN_X + 2);
-        const int ya = std::max(0, (int)y0 - ORIGEN_Y - 12), yb = std::min(ALTO - 1, (int)y1 - ORIGEN_Y + 4);
-        for (int x = xa; x <= xb; x++)
-            for (int y = ya; y <= yb; y++)
-            {
-                const Objeto o = r.leer(x, y);
-                if (esNada(o) || !esRaiz(o))
-                    continue;
-                int w, h;
-                tamano(o, w, h);
-                const double X = x + ORIGEN_X, Y = y + ORIGEN_Y;
-                if (X + w + 1 < x0 || X - 1 > x1 || Y + h < y0 || Y - 2 > y1)
-                    continue;
-                v.push_back({X, Y, (double)w, (double)h, o});
-            }
-        std::stable_sort(v.begin(), v.end(), [](const Dibujo& a, const Dibujo& b) { return a.y + a.h < b.y + b.h; });
-        return v;
-    };
-    for (const auto& d : cosas(0))
+// Las cosas de una capa que tocan una zona del mapa (casillas del mapa entero), de arriba abajo (las de delante tapan
+// a las de detrás).
+static std::vector<Dibujo> cosasEn(std::vector<uint8_t>& main, int c, double x0, double y0, double x1, double y1)
+{
+    Rejilla r = mapa::capa(main, c);
+    std::vector<Dibujo> v;
+    const int xa = std::max(0, (int)x0 - ORIGEN_X - 12), xb = std::min(ANCHO - 1, (int)x1 - ORIGEN_X + 2);
+    const int ya = std::max(0, (int)y0 - ORIGEN_Y - 12), yb = std::min(ALTO - 1, (int)y1 - ORIGEN_Y + 4);
+    for (int x = xa; x <= xb; x++)
+        for (int y = ya; y <= yb; y++)
+        {
+            const Objeto o = r.leer(x, y);
+            if (esNada(o) || !esRaiz(o))
+                continue;
+            int w, h;
+            tamano(o, w, h);
+            const double X = x + ORIGEN_X, Y = y + ORIGEN_Y;
+            if (X + w + 1 < x0 || X - 1 > x1 || Y + h < y0 || Y - 2 > y1)
+                continue;
+            v.push_back({X, Y, (double)w, (double)h, o});
+        }
+    std::stable_sort(v.begin(), v.end(), [](const Dibujo& a, const Dibujo& b) { return a.y + a.h < b.y + b.h; });
+    return v;
+}
+
+static SDL_Texture* texturaSuave(int w, int h, int acceso)
+{
+    const char* antes = SDL_GetHint(SDL_HINT_RENDER_SCALE_QUALITY);
+    const std::string guardado = antes ? antes : "";
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+    SDL_Texture* t = SDL_CreateTexture(ui::g_r, SDL_PIXELFORMAT_ARGB8888, acceso, w, h);
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, guardado.empty() ? "0" : guardado.c_str());
+    return t;
+}
+
+void Lienzo::componer(std::vector<uint8_t>& main, int t)
+{
+    std::vector<uint32_t> buf;
+    Lamina l{nullptr, 0, 0, 0, 0};
+    componerSuelo(suelo, buf, t, l);
+    const double x0 = l.ox / (double)PX, y0 = l.oy / (double)PX, x1 = (l.ox + TEX) / (double)PX, y1 = (l.oy + TEX) / (double)PX;
+    for (const auto& d : cosasEn(main, 0, x0, y0, x1, y1))
         dibujarObjeto(l, d, false, capaVista == 1 ? 115 : 255);
     for (const auto& b : g_edificios)
         if (!b.cruce() && b.x + b.w / 2 >= x0 && b.x - b.w / 2 <= x1 && b.y + b.h / 2 + 1 >= y0 && b.y - b.h / 2 <= y1)
             dibujarEdificio(l, b);
-    for (const auto& d : cosas(1))
+    for (const auto& d : cosasEn(main, 1, x0, y0, x1, y1))
         dibujarObjeto(l, d, true, 255);
 
     Trozo& tr = *trozos[t];
     if (!tr.t)
-    {
-        const char* antes = SDL_GetHint(SDL_HINT_RENDER_SCALE_QUALITY);
-        const std::string guardado = antes ? antes : "";
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
-        tr.t = SDL_CreateTexture(ui::g_r, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, TEX, TEX);
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, guardado.empty() ? "0" : guardado.c_str());
-    }
+        tr.t = texturaSuave(TEX, TEX, SDL_TEXTUREACCESS_STATIC);
     if (tr.t)
         SDL_UpdateTexture(tr.t, nullptr, buf.data(), TEX * 4);
+}
+
+// ------------------------------------------------------------------------------------------ los trozos con dibujos
+namespace {
+
+constexpr int FP = 16;                      // puntos por casilla en los trozos con dibujos
+constexpr int FBORDE = 2;
+constexpr int FLADO = CASILLAS_TROZO * FP;  // 512
+constexpr int FTEX = FLADO + 2 * FBORDE;
+constexpr int MAX_FOTOS = 24;               // trozos con dibujos guardados (1 MB cada uno)
+constexpr int FOTOS_POR_FOTOGRAMA = 3;      // los demás se ven con formas hasta el siguiente
+
+// Una forma de las de dibujarObjeto en su propia textura (para los trozos con dibujos): las cosas sin dibujo, y las
+// que el Mac también dibuja con formas (tocones, rocas, hoyos, lo enterrado). Cubre de (-1, -2·alto) a (ancho + 1,
+// alto + 1) casillas desde su esquina.
+SDL_Texture* forma(const Objeto& o, int w, int h, bool encima)
+{
+    static std::map<uint64_t, SDL_Texture*> hechas;
+    const uint64_t clave = ((uint64_t)o.id << 32) | ((uint64_t)(o.sistema & 0x04) << 24) | (w << 16) | (h << 8) | (encima ? 1 : 0);
+    auto it = hechas.find(clave);
+    if (it != hechas.end())
+        return it->second;
+    if (hechas.size() > 300)
+    {
+        for (auto& x : hechas)
+            if (x.second)
+                SDL_DestroyTexture(x.second);
+        hechas.clear();
+    }
+    const int tw = (w + 2) * FP, th = (3 * h + 1) * FP;
+    std::vector<uint32_t> buf(tw * th, 0);
+    // Se dibuja sobre un fondo «transparente» marcado (alfa 0), y lo pintado queda opaco.
+    Lamina l{buf.data(), tw, th, -1.0 * FP, -2.0 * h * FP};
+    l.e = FP;
+    dibujarObjeto(l, {0, 0, (double)w, (double)h, o}, encima, 255);
+    // dibujarObjeto mezcla con lo que hay: lo que tocó tiene alfa 255; lo mezclado con el fondo (sombras, brillos a
+    // medias) se queda con su alfa para que se vea el suelo.
+    SDL_Texture* t = texturaSuave(tw, th, SDL_TEXTUREACCESS_STATIC);
+    if (t)
+    {
+        SDL_UpdateTexture(t, nullptr, buf.data(), tw * 4);
+        SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
+    }
+    return hechas[clave] = t;
+}
+
+// La sombra al pie de árboles y arbustos.
+SDL_Texture* sombra()
+{
+    static SDL_Texture* t = [] {
+        constexpr int W = 64, H = 32;
+        std::vector<uint32_t> buf(W * H, 0);
+        for (int y = 0; y < H; y++)
+            for (int x = 0; x < W; x++)
+            {
+                const double dx = (x + 0.5 - W / 2.0) / (W / 2.0), dy = (y + 0.5 - H / 2.0) / (H / 2.0);
+                if (dx * dx + dy * dy <= 1)
+                    buf[y * W + x] = ((uint32_t)SOMBRA_A << 24) | SOMBRA;
+            }
+        SDL_Texture* s = texturaSuave(W, H, SDL_TEXTUREACCESS_STATIC);
+        if (s)
+        {
+            SDL_UpdateTexture(s, nullptr, buf.data(), W * 4);
+            SDL_SetTextureBlendMode(s, SDL_BLENDMODE_BLEND);
+        }
+        return s;
+    }();
+    return t;
+}
+
+// Un edificio dibujado en su propia textura (con un poco de margen para la sombra).
+SDL_Texture* edificio(size_t i)
+{
+    if (i >= g_texEdificios.size())
+        return nullptr;
+    if (g_texEdificios[i])
+        return g_texEdificios[i];
+    const Edificio& b = g_edificios[i];
+    const double x0 = b.x - b.w / 2 - 1, y0 = b.y - b.h / 2 - 1;
+    const int tw = (int)std::ceil((b.w + 2) * FP), th = (int)std::ceil((b.h + 2) * FP);
+    std::vector<uint32_t> buf(tw * th, 0);
+    Lamina l{buf.data(), tw, th, x0 * FP, y0 * FP};
+    l.e = FP;
+    dibujarEdificio(l, b);
+    SDL_Texture* t = texturaSuave(tw, th, SDL_TEXTUREACCESS_STATIC);
+    if (t)
+    {
+        SDL_UpdateTexture(t, nullptr, buf.data(), tw * 4);
+        SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
+    }
+    return g_texEdificios[i] = t;
+}
+
+// El dibujo que lleva cada edificio en el círculo (como el Mac: el buzón en las casas, la hoja en los servicios...).
+uint16_t iconoEdificio(int tipo)
+{
+    if (tipo >= 1 && tipo <= 8)
+        return 2571; // buzón
+    switch (tipo)
+    {
+        case 19: return 3076;  // bolsa de papel
+        case 20: case 23: return 2; // hoja
+        case 21: return 2579;  // fósil
+        case 22: case 42: return 5851; // billete de avión
+        case 24: return 127;   // vestido
+        case 28: return 14046; // figurilla
+        case 29: return 14695; // cámara
+        default: return 0;
+    }
+}
+
+// Dentro de «d», con su forma, centrado.
+SDL_FRect encajado(SDL_Texture* t, SDL_FRect d)
+{
+    int w = 1, h = 1;
+    SDL_QueryTexture(t, nullptr, nullptr, &w, &h);
+    const float s = std::min(d.w / w, d.h / h);
+    return {d.x + (d.w - w * s) / 2, d.y + (d.h - h * s) / 2, w * s, h * s};
+}
+
+} // namespace
+
+// Los dibujos se ven ampliados y reducidos: suaves, como el Mac (se queda así para todos).
+static SDL_Texture* suave(SDL_Texture* t)
+{
+    if (t)
+        SDL_SetTextureScaleMode(t, SDL_ScaleModeLinear);
+    return t;
+}
+
+void Lienzo::componerFoto(std::vector<uint8_t>& main, int t)
+{
+    SDL_Renderer* g = ui::g_r;
+    Trozo& tr = *trozos[t];
+    if (!tr.foto)
+    {
+        // Si ya hay muchos, se reutiliza el que lleva más tiempo sin verse.
+        int fotos = 0, viejo = -1;
+        for (int i = 0; i < (int)trozos.size(); i++)
+            if (trozos[i]->foto)
+            {
+                fotos++;
+                if (viejo < 0 || trozos[i]->usado < trozos[viejo]->usado)
+                    viejo = i;
+            }
+        if (fotos >= MAX_FOTOS && viejo >= 0)
+        {
+            tr.foto = trozos[viejo]->foto;
+            trozos[viejo]->foto = nullptr;
+            trozos[viejo]->fotoSucia = true;
+        }
+        else
+            tr.foto = texturaSuave(FTEX, FTEX, SDL_TEXTUREACCESS_TARGET);
+        if (!tr.foto)
+            return;
+    }
+    // El suelo, la plaza y los cruces, ampliados (se pintan en la CPU a 8 puntos por casilla).
+    static SDL_Texture* bajo = nullptr;
+    if (!bajo)
+        bajo = texturaSuave(TEX, TEX, SDL_TEXTUREACCESS_STREAMING);
+    std::vector<uint32_t> buf;
+    Lamina l{nullptr, 0, 0, 0, 0};
+    componerSuelo(suelo, buf, t, l);
+    if (bajo)
+        SDL_UpdateTexture(bajo, nullptr, buf.data(), TEX * 4);
+
+    SDL_Texture* antes = SDL_GetRenderTarget(g);
+    SDL_SetRenderTarget(g, tr.foto);
+    SDL_SetRenderDrawBlendMode(g, SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawColor(g, 0, 0, 0, 255);
+    SDL_RenderClear(g);
+    const int tx = t % TROZOS_W, ty = t / TROZOS_W;
+    const double ox = tx * FLADO - FBORDE, oy = ty * FLADO - FBORDE; // punto del mapa (a 16 por casilla) de la esquina
+    if (bajo)
+    {
+        // El trozo de abajo empieza 1 punto (de 8) antes; aquí, 2 (de 16): la misma casilla.
+        SDL_FRect d = {(float)(-BORDE * 2 - ox + tx * LADO * 2), (float)(-BORDE * 2 - oy + ty * LADO * 2), (float)(TEX * 2), (float)(TEX * 2)};
+        SDL_RenderCopyF(g, bajo, nullptr, &d);
+    }
+    auto pantalla = [&](double x, double y, double w, double h) {
+        return SDL_FRect{(float)(x * FP - ox), (float)(y * FP - oy), (float)(w * FP), (float)(h * FP)};
+    };
+    const double x0 = ox / FP, y0 = oy / FP, x1 = (ox + FTEX) / FP, y1 = (oy + FTEX) / FP;
+    auto cosas = [&](int c, bool encima, uint8_t alfa) {
+        for (const auto& d : cosasEn(main, c, x0, y0, x1, y1))
+        {
+            const Objeto& o = d.o;
+            const int p = plantaDe(o.id);
+            const int aspecto = enterrado(o) ? -1 : p >= 0 ? PLANTAS[p].aspecto : 0;
+            SDL_Texture* foto = aspecto == -1 || aspecto == 4 || aspecto == 5 || aspecto == 6 ? nullptr : dibujoDe(o);
+            const double cx = d.x + d.w / 2, abajo = d.y + d.h;
+            if (!foto)
+            {
+                if (SDL_Texture* f = forma(o, (int)d.w, (int)d.h, encima))
+                {
+                    SDL_SetTextureAlphaMod(f, alfa);
+                    SDL_FRect r = pantalla(d.x - 1, d.y - 2 * d.h, d.w + 2, 3 * d.h + 1);
+                    SDL_RenderCopyF(g, f, nullptr, &r);
+                    SDL_SetTextureAlphaMod(f, 255);
+                }
+                continue;
+            }
+            SDL_FRect r;
+            if (aspecto == 1 || aspecto == 2)
+            {
+                // Los árboles y arbustos, más altos que su cuadro y con sombra al pie (IslandMapView.DrawItems).
+                const bool arbol = aspecto == 1;
+                const double sx = d.w * (arbol ? 0.42 : 0.4), sy = d.h * (arbol ? 0.2 : 0.18);
+                if (SDL_Texture* s = sombra())
+                {
+                    SDL_SetTextureAlphaMod(s, alfa);
+                    SDL_FRect sr = pantalla(cx + (arbol ? 0.15 : 0.1) - sx, abajo - (arbol ? 0.35 : 0.3) - sy, 2 * sx, 2 * sy);
+                    SDL_RenderCopyF(g, s, nullptr, &sr);
+                    SDL_SetTextureAlphaMod(s, 255);
+                }
+                const double lado = d.w * (arbol ? 1.6 : 1.2);
+                r = encajado(foto, pantalla(cx - lado / 2, abajo - lado + 0.1, lado, lado));
+            }
+            else
+            {
+                const double pad = std::min(d.w, d.h) * (encima ? 0.12 : 0.04);
+                r = encajado(foto, pantalla(d.x + pad, d.y + pad, d.w - 2 * pad, d.h - 2 * pad));
+            }
+            SDL_SetTextureAlphaMod(foto, alfa);
+            SDL_RenderCopyF(g, foto, nullptr, &r);
+            SDL_SetTextureAlphaMod(foto, 255);
+        }
+    };
+    cosas(0, false, capaVista == 1 ? 115 : 255);
+    for (size_t i = 0; i < g_edificios.size(); i++)
+    {
+        const Edificio& b = g_edificios[i];
+        if (b.cruce() || b.x + b.w / 2 + 1 < x0 || b.x - b.w / 2 - 1 > x1 || b.y + b.h / 2 + 1 < y0 || b.y - b.h / 2 - 1 > y1)
+            continue;
+        if (SDL_Texture* e = edificio(i))
+        {
+            SDL_FRect r = pantalla(b.x - b.w / 2 - 1, b.y - b.h / 2 - 1, std::ceil((b.w + 2) * FP) / FP, std::ceil((b.h + 2) * FP) / FP);
+            SDL_RenderCopyF(g, e, nullptr, &r);
+        }
+        if (const uint16_t icono = iconoEdificio(b.tipo))
+            if (SDL_Texture* f = suave(dibujos::de(icono)))
+            {
+                const double lado = std::min(b.w, b.h) * 0.5 * 0.7;
+                SDL_FRect r = encajado(f, pantalla(b.x - lado / 2, b.y - b.h / 2 + b.h * 0.36 - lado / 2, lado, lado));
+                SDL_RenderCopyF(g, f, nullptr, &r);
+            }
+    }
+    cosas(1, true, 255);
+    SDL_SetRenderTarget(g, antes);
+    tr.fotoSucia = false;
 }
 
 void Lienzo::dibujar(std::vector<uint8_t>& main, const SDL_Rect& d, double x0, double y0, double zoom)
@@ -482,7 +773,11 @@ void Lienzo::dibujar(std::vector<uint8_t>& main, const SDL_Rect& d, double x0, d
     // A puntos de pantalla, redondeando los bordes igual en los trozos vecinos (sin huecos entre ellos).
     auto sx = [&](double casilla) { return (int)std::lround(d.x + (casilla - x0) * zoom); };
     auto sy = [&](double casilla) { return (int)std::lround(d.y + (casilla - y0) * zoom); };
-    SDL_RenderSetClipRect(ui::g_r, &d);
+    const bool fotos = zoom >= ZOOM_DIBUJOS;
+    reloj++;
+    // Primero se hace lo que haga falta (cambiar de destino de dibujo con un recorte puesto no siempre lo respeta).
+    std::vector<int> vistos;
+    int hechas = 0;
     for (int ty = 0; ty < TROZOS_H; ty++)
         for (int tx = 0; tx < TROZOS_W; tx++)
         {
@@ -491,17 +786,39 @@ void Lienzo::dibujar(std::vector<uint8_t>& main, const SDL_Rect& d, double x0, d
             if (b <= d.x || a >= d.x + d.w || e <= d.y || c >= d.y + d.h)
                 continue;
             const int t = ty * TROZOS_W + tx;
-            if (sucio[t])
+            vistos.push_back(t);
+            Trozo& tr = *trozos[t];
+            tr.usado = reloj;
+            if (fotos && (tr.fotoSucia || !tr.foto) && hechas < FOTOS_POR_FOTOGRAMA)
+            {
+                componerFoto(main, t);
+                hechas++;
+            }
+            if (sucio[t] && (!fotos || tr.fotoSucia || !tr.foto))
             {
                 componer(main, t);
                 sucio[t] = false;
             }
-            if (!trozos[t]->t)
-                continue;
-            const SDL_Rect src = {BORDE, BORDE, LADO, LADO};
-            const SDL_Rect dst = {a, c, b - a, e - c};
-            SDL_RenderCopy(ui::g_r, trozos[t]->t, &src, &dst);
         }
+    SDL_RenderSetClipRect(ui::g_r, &d);
+    for (int t : vistos)
+    {
+        const int tx = t % TROZOS_W, ty = t / TROZOS_W;
+        const int a = sx(tx * CASILLAS_TROZO), b = sx((tx + 1) * CASILLAS_TROZO);
+        const int c = sy(ty * CASILLAS_TROZO), e = sy((ty + 1) * CASILLAS_TROZO);
+        const SDL_Rect dst = {a, c, b - a, e - c};
+        Trozo& tr = *trozos[t];
+        if (fotos && tr.foto && !tr.fotoSucia)
+        {
+            const SDL_Rect src = {FBORDE, FBORDE, FLADO, FLADO};
+            SDL_RenderCopy(ui::g_r, tr.foto, &src, &dst);
+        }
+        else if (tr.t)
+        {
+            const SDL_Rect src = {BORDE, BORDE, LADO, LADO};
+            SDL_RenderCopy(ui::g_r, tr.t, &src, &dst);
+        }
+    }
     SDL_RenderSetClipRect(ui::g_r, nullptr);
 }
 
@@ -509,6 +826,28 @@ Lienzo& lienzo()
 {
     static Lienzo l;
     return l;
+}
+
+// ----------------------------------------------------------------------------------------------- dibujos de objetos
+uint16_t iconoDeEdificio(int tipo) { return iconoEdificio(tipo); }
+
+SDL_Texture* dibujoDe(const Objeto& o)
+{
+    if (esNada(o))
+        return nullptr;
+    const uint16_t id = idVisible(o);
+    const int p = plantaDe(id);
+    if (p >= 0)
+    {
+        // Como GridItems.GetPicture: las rocas, los hoyos y los tocones con un dibujo de lo que son.
+        if (PLANTAS[p].clase == 7)
+            return suave(dibujos::de(2502)); // piedra
+        if (PLANTAS[p].clase == 6)
+            return suave(dibujos::de(773)); // pala
+        if (PLANTAS[p].aspecto == 4)
+            return suave(dibujos::de(2768)); // madera
+    }
+    return suave(dibujos::de(id, esExtension(o) ? 0 : o.cuenta));
 }
 
 } // namespace mapa

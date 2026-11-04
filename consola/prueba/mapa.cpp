@@ -250,4 +250,97 @@ OrdenPrueba casaPared("casa-pared", [](Contexto& c) {
     return 0;
 });
 
+// ------------------------------------------------------------------------------------------- opciones avanzadas
+void escribirEn(const std::string& ruta, const std::vector<uint8_t>& d)
+{
+    FILE* f = fopen(ruta.c_str(), "wb");
+    if (f)
+    {
+        fwrite(d.data(), 1, d.size(), f);
+        fclose(f);
+    }
+}
+
+int decirMal(const std::string& mal)
+{
+    printf("%s\n", mal.empty() ? "bien" : mal.c_str());
+    return mal.empty() ? 0 : 1;
+}
+
+// mapa-sin-apoyo: las casillas con algo encima de nada.
+OrdenPrueba mapaSinApoyo("mapa-sin-apoyo", [](Contexto& c) {
+    const auto v = sinApoyo(c.main.datos);
+    printf("sin apoyo %zu\n", v.size());
+    for (const auto& p : v)
+        printf("%03d,%03d\n", p.x, p.y);
+    c.guardar = false;
+    return 0;
+});
+
+// casa-suceso <casa> <i> <valor>
+OrdenPrueba casaSuceso("casa-suceso", [](Contexto& c) {
+    casas::ponerSuceso(c.main.datos, num(c.arg(0)), num(c.arg(1)), (int16_t)num(c.arg(2)));
+    return 0;
+});
+
+// casa-sucesos-exportar <casa> <archivo> / casa-sucesos-importar <casa> <archivo> (un .nhfl)
+OrdenPrueba casaSucesosExportar("casa-sucesos-exportar", [](Contexto& c) {
+    escribirEn(c.arg(1), casas::sucesos(c.main.datos, num(c.arg(0))));
+    c.guardar = false;
+    return 0;
+});
+
+OrdenPrueba casaSucesosImportar("casa-sucesos-importar", [](Contexto& c) {
+    return decirMal(casas::ponerSucesos(c.main.datos, num(c.arg(0)), leerArchivo(c.arg(1))) ? "" : "no mide 256 bytes");
+});
+
+// casa-jugador-exportar <casa> <archivo> / casa-jugador-importar <casa> <archivo>
+OrdenPrueba casaExportar("casa-jugador-exportar", [](Contexto& c) {
+    escribirEn(c.arg(1), casas::exportar(c.main.datos, num(c.arg(0))));
+    c.guardar = false;
+    return 0;
+});
+
+OrdenPrueba casaImportar("casa-jugador-importar", [](Contexto& c) {
+    return decirMal(casas::importar(c.main.datos, num(c.arg(0)), leerArchivo(c.arg(1))));
+});
+
+// casa-hab-exportar <casa> <hab> <archivo> / casa-hab-importar <casa> <hab> <archivo>
+OrdenPrueba casaHabExportar("casa-hab-exportar", [](Contexto& c) {
+    escribirEn(c.arg(2), casas::exportarHabitacion(c.main.datos, num(c.arg(0)), num(c.arg(1))));
+    c.guardar = false;
+    return 0;
+});
+
+OrdenPrueba casaHabImportar("casa-hab-importar", [](Contexto& c) {
+    return decirMal(casas::importarHabitacion(c.main.datos, num(c.arg(0)), num(c.arg(1)), leerArchivo(c.arg(2))));
+});
+
+// casa-valor <casa> <número de casas::Valor> <valor>
+OrdenPrueba casaValor("casa-valor", [](Contexto& c) {
+    casas::ponerValor(c.main.datos, num(c.arg(0)), (casas::Valor)num(c.arg(1)), strtoll(c.arg(2).c_str(), nullptr, 0));
+    return 0;
+});
+
+// casa-valor-ver <casa>: todos los valores sueltos.
+OrdenPrueba casaValorVer("casa-valor-ver", [](Contexto& c) {
+    for (int v = 0; v < casas::NUM_VALORES; v++)
+        printf("%lld ", (long long)casas::valor(c.main.datos, num(c.arg(0)), (casas::Valor)v));
+    printf("\n");
+    c.guardar = false;
+    return 0;
+});
+
+// casa-objeto <casa> <0 puerta, 1 buzón, 2 buzón pedido> <id> [cuenta] [sistema]
+OrdenPrueba casaObjeto("casa-objeto", [](Contexto& c) {
+    Objeto o = nada();
+    o.id = (uint16_t)num(c.arg(2));
+    if (c.args.size() > 3)
+        o.cuenta = (uint16_t)num(c.arg(3));
+    if (c.args.size() > 4)
+        o.sistema = (uint8_t)num(c.arg(4));
+    casas::ponerObjetoCasa(c.main.datos, num(c.arg(0)), num(c.arg(1)), o);
+    return 0;
+});
+
 } // namespace

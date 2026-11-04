@@ -144,6 +144,19 @@ public sealed class MapaCasas : ITabla
         Nombres<RoofType>("NOMBRES_TEJADO");
         Nombres<WallType>("NOMBRES_FACHADA");
         Nombres<DoorKind>("NOMBRES_PUERTA");
+        // El nombre interno de cada valor («HouseRoofPA04SlateA»): el de su dibujo y su material, para dibujar la casa
+        // por fuera como HousePreview del Mac.
+        void Internos<TE>(string n) where TE : struct, Enum
+        {
+            sb.AppendLine($"constexpr Aspecto {n}[] = {{");
+            foreach (var v in Enum.GetValues<TE>().Distinct())
+                sb.AppendLine($"    {{{Convert.ToInt32(v)}, {Comun.C(v.ToString())}}},");
+            sb.AppendLine("};");
+        }
+        sb.AppendLine("// El nombre interno de cada valor.");
+        Internos<RoofType>("INTERNO_TEJADO");
+        Internos<WallType>("INTERNO_FACHADA");
+        Internos<DoorKind>("INTERNO_PUERTA");
         // Color del tejado en el mapa: la letra del final (A-H), como el Mac.
         var colores = new List<int>();
         int maxRoof = Enum.GetValues<RoofType>().Max(z => (int)z);

@@ -556,6 +556,17 @@ Rejilla capa(std::vector<uint8_t>& main, int c)
     return r;
 }
 
+std::vector<Punto> sinApoyo(std::vector<uint8_t>& main)
+{
+    const Rejilla abajo = capa(main, 0), arriba = capa(main, 1);
+    std::vector<Punto> v;
+    for (int x = 0; x < ANCHO; x++)
+        for (int y = 0; y < ALTO; y++)
+            if (!esNada(arriba.leer(x, y)) && esNada(abajo.leer(x, y)))
+                v.push_back({x, y});
+    return v;
+}
+
 std::vector<Edificio> edificios(const std::vector<uint8_t>& main, const std::vector<std::string>& jugadores)
 {
     // Como IslandMapWindow.GetBuildings del Mac: nombre, color y tamaño en el mapa.

@@ -23,10 +23,17 @@ struct Sitio {
     bool plantas = false;                           // ofrecer también plantas, vallas y rocas
     int soloCategoria = -1;                         // solo objetos de esa categoría (paredes y suelos)
     std::vector<std::pair<std::string, std::function<void()>>> mas; // más botones (quitar todas iguales...)
+    std::function<std::pair<int, int>()> posicion;  // la casilla, para «Opciones avanzadas» (null: no se dice)
 };
 
 // La pantalla de un sitio: su nombre y lo que se puede hacer con lo que hay.
 ui::Pantalla panelSitio(Sitio s);
+
+// «Opciones avanzadas» de un sitio (como el editor clásico de objetos del Mac): cada valor del objeto por separado (el
+// número del objeto, la cantidad, los usos, el giro, enterrado, tirado, los bits del sistema y el extra). Cada cambio se
+// pone con «poner» (que dice si se pudo). «donde»: la línea de debajo del nombre (la casilla...).
+ui::Pantalla editorBruto(const std::string& titulo, std::function<Objeto()> leer, std::function<bool(const Objeto&)> poner,
+    std::function<std::string()> donde);
 
 // Busca un objeto por su nombre (con el teclado) y lo da como lo da el Mac (sin cantidad: uno). Con «categoria», solo
 // los de esa categoría (2: paredes, suelos y alfombras).

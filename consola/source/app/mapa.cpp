@@ -8,6 +8,7 @@
 #include <ctime>
 #include <memory>
 #include "../core/mapa.hpp"
+#include "dibujos.hpp"
 #include "mapa_panel.hpp"
 #include "mapa_pintor.hpp"
 #include "partida.hpp"
@@ -29,10 +30,20 @@ struct TipoConNombre {
     Tipo tipo;
     const char* nombre;
     const char* minusculas;
+    uint16_t icono; // el objeto de su dibujo (los del Mac: Weed, Turip0, Branch...)
 };
-const TipoConNombre TIPOS[] = {{Hierbas, "Malas hierbas", "malas hierbas"}, {Flores, "Flores", "flores"}, {Ramas, "Ramas", "ramas"},
-    {Conchas, "Conchas", "conchas"}, {Hoyos, "Agujeros", "agujeros"}, {Vallas, "Vallas", "vallas"}, {Arbustos, "Arbustos", "arbustos"},
-    {Arboles, "Árboles", "árboles"}, {Cosas, "Muebles y objetos", "muebles y objetos"}, {Todo, "Todo", "cosas"}};
+const TipoConNombre TIPOS[] = {{Hierbas, "Malas hierbas", "malas hierbas", 758}, {Flores, "Flores", "flores", 2883}, {Ramas, "Ramas", "ramas", 14644},
+    {Conchas, "Conchas", "conchas", 1376}, {Hoyos, "Agujeros", "agujeros", 773}, {Vallas, "Vallas", "vallas", 3080},
+    {Arbustos, "Arbustos", "arbustos", 2820}, {Arboles, "Árboles", "árboles", 2796}, {Cosas, "Muebles y objetos", "muebles y objetos", 14414},
+    {Todo, "Todo", "cosas", 4645}};
+
+uint16_t iconoTipo(Tipo t)
+{
+    for (const auto& k : TIPOS)
+        if (k.tipo == t)
+            return k.icono;
+    return 0;
+}
 
 enum Modo { Mirar, Llevar, Marcar, Goma };
 
@@ -70,6 +81,18 @@ std::shared_ptr<Estado> g_estado;
 std::vector<std::vector<uint8_t>> g_deshacer; // las dos capas antes de cada cambio
 constexpr size_t MAX_DESHACER = 12;
 int g_version = 0; // sube con cada cambio: lo que se cuenta en las pantallas se vuelve a contar
+bool g_tocado = false; // se ha cambiado algo desde que se abrió el mapa
+
+// Lo que está encima de otras cosas sin nada debajo (se cuenta una vez por cambio).
+const std::vector<Punto>& sinApoyoAhora()
+{
+    static int version = -1;
+    static const uint8_t* de = nullptr;
+    static std::vector<Punto> v;
+    if (version != g_version || de != partida::principal().data())
+        v = sinApoyo(partida::principal()), version = g_version, de = partida::principal().data();
+    return v;
+}
 
 std::vector<uint8_t>& principal() { return partida::principal(); }
 Rejilla capaActiva(Estado& e) { return mapa::capa(principal(), e.capa); }
@@ -77,6 +100,7 @@ Rejilla capaActiva(Estado& e) { return mapa::capa(principal(), e.capa); }
 void recordar()
 {
     g_version++;
+    g_tocado = true;
     const uint8_t* p = principal().data() + CAMPO;
     g_deshacer.emplace_back(p, p + 2 * TAM_CAPA);
     if (g_deshacer.size() > MAX_DESHACER)
@@ -262,12 +286,23 @@ void abrirClases(std::shared_ptr<Estado> e, bool enZona, int nivel)
 {
     struct Cache {
         int version = -1;
+        std::string busqueda;
         std::vector<Clase> v;
     };
     auto c = std::make_shared<Cache>();
-    auto lista_ = [e, c, enZona]() -> const std::vector<Clase>& {
-        if (c->version != g_version)
-            c->v = clases(capaActiva(*e), enZona ? e->zona : Zona{}), c->version = g_version;
+    auto busca = std::make_shared<std::string>();
+    auto lista_ = [e, c, enZona, busca]() -> const std::vector<Clase>& {
+        if (c->version != g_version || c->busqueda != *busca)
+        {
+            // Las de esa capa y zona; con algo buscado, solo las que lo dicen en su nombre.
+            std::vector<Clase> todas = clases(capaActiva(*e), enZona ? e->zona : Zona{});
+            c->v.clear();
+            const std::string q = acnh::normalizar(*busca);
+            for (const auto& k : todas)
+                if (q.empty() || acnh::normalizar(nombre(k.ejemplo)).find(q) != std::string::npos)
+                    c->v.push_back(k);
+            c->version = g_version, c->busqueda = *busca;
+        }
         return c->v;
     };
     if (lista_().empty())
@@ -277,14 +312,29 @@ void abrirClases(std::shared_ptr<Estado> e, bool enZona, int nivel)
     }
     Lista l;
     l.titulo = enZona ? "Lo que hay en la zona" : "Lo que hay en la isla";
-    l.explicacion = [lista_] { return "Cada cosa por su nombre (" + numero((uint32_t)lista_().size()) + "). Elige una para quitarlas todas o borrarlas con la goma."; };
+    l.explicacion = [lista_, busca] {
+        return (busca->empty() ? "Cada cosa por su nombre (" : "Las que se llaman «" + *busca + "» (") + numero((uint32_t)lista_().size()) +
+               "). Elige una para quitarlas todas o borrarlas con la goma. X para buscar.";
+    };
     l.cuantas = [lista_] { return (int)lista_().size(); };
     l.porColumna = 7;
     l.fila = [e, lista_, enZona, nivel](int i) {
         const Clase k = lista_()[i];
         Fila f{nombre(k.ejemplo) + " ×" + numero(k.cuantas), [e, k, enZona, nivel] { abrirClase(e, k, enZona, nivel + 1); }};
-        f.color = colorDe(k.ejemplo);
+        f.imagen = dibujoDe(k.ejemplo);
+        if (!f.imagen)
+            f.color = colorDe(k.ejemplo);
         return f;
+    };
+    auto buscar = [busca] {
+        std::string q = *busca;
+        if (pedirTexto("Buscar", "Escribe parte del nombre (vacío: todas)", q))
+            *busca = q;
+    };
+    l.abajo.push_back([buscar] { return Fila{"Buscar…", buscar}; });
+    l.extra = [buscar](Vista& v) {
+        v.x = buscar;
+        v.teclas = {{"A", "Elegir"}, {"X", "Buscar"}, {"L R", "Página"}, {"B", "Volver"}};
     };
     abrir(lista(l));
 }
@@ -330,6 +380,7 @@ void abrirOrdenar(std::shared_ptr<Estado> e, bool enZona, int nivel)
         struct Etiqueta {
             SDL_Rect r;
             std::string nombre, cuantas;
+            uint16_t icono;
         };
         auto etiquetas = std::make_shared<std::vector<Etiqueta>>();
         int k = 0;
@@ -342,7 +393,7 @@ void abrirOrdenar(std::shared_ptr<Estado> e, bool enZona, int nivel)
             if (!flores)
                 k++;
             const int x = 60 + col * 590, y = 140 + fila * 72;
-            etiquetas->push_back({{x, y, 270, 60}, tipoNombre(t), numero(n)});
+            etiquetas->push_back({{x, y, 270, 60}, tipoNombre(t), numero(n), iconoTipo(t)});
             const std::string accion = t == Hoyos ? "Tapar" : "Quitar";
             if (flores)
             {
@@ -382,7 +433,15 @@ void abrirOrdenar(std::shared_ptr<Estado> e, bool enZona, int nivel)
             for (const auto& t : *etiquetas)
             {
                 redondo(t.r, 12, BLANCO);
-                texto(encajar(t.nombre, 180, g_pequena), t.r.x + 18, t.r.y + 17, MARRON, g_pequena);
+                int x = t.r.x + 18;
+                if (SDL_Texture* d = dibujos::de(t.icono))
+                {
+                    SDL_Rect r = {t.r.x + 10, t.r.y + 12, 36, 36};
+                    SDL_RenderCopy(g_r, d, nullptr, &r);
+                    x = t.r.x + 54;
+                }
+                const int libre = t.r.x + t.r.w - 24 - anchoTexto(t.cuantas) - x;
+                texto(encajar(t.nombre, libre, g_pequena), x, t.r.y + 17, MARRON, g_pequena);
                 texto(t.cuantas, t.r.x + t.r.w - 16, t.r.y + 12, VERDE_OSCURO, nullptr, Derecha);
             }
         };
@@ -471,6 +530,18 @@ void abrirHerramientas(std::shared_ptr<Estado> e)
             volver();
         }});
         bs.push_back({{}, "Deshacer" + (g_deshacer.empty() ? std::string() : " (" + std::to_string(g_deshacer.size()) + ")"), [] { deshacer(); }, !g_deshacer.empty()});
+        const auto& solas = sinApoyoAhora();
+        if (!solas.empty())
+            bs.push_back({{}, "Encima de nada: " + numero((uint32_t)solas.size()), [e] {
+                // Al primero, en la capa de encima (lo que no tiene nada debajo).
+                const Punto p = sinApoyoAhora()[0];
+                e->capa = 1;
+                e->cx = (p.x + ORIGEN_X) & ~1, e->cy = (p.y + ORIGEN_Y) & ~1;
+                e->zoom = std::max(e->zoom, 8.0);
+                seguir(*e);
+                volver();
+                avisar("Esto está encima de otra cosa, pero debajo no hay nada: en el juego puede quedar flotando.");
+            }});
         for (size_t i = 0; i < bs.size(); i++)
         {
             bs[i].r = {60 + (int)(i % 2) * 590, 150 + (int)(i / 2) * 84, 570, 70};
@@ -491,9 +562,20 @@ void abrirSitio(std::shared_ptr<Estado> e)
         if (const Edificio* b = edificioEn(e->cx + 1, e->cy + 1))
         {
             const std::string n = b->casa() && b->nombre != "Parcela libre" ? "Casa de " + b->nombre : b->nombre;
-            abrir([n](Vista& v) {
+            const uint16_t icono = iconoDeEdificio(b->tipo);
+            abrir([n, icono](Vista& v) {
                 v.titulo = n;
                 v.explicacion = "Este sitio es de un edificio. Los edificios se cambian de sitio en el propio juego, en los Servicios a residentes.";
+                v.dibujo = [n, icono] {
+                    redondo({60, 170, 1160, 140}, 16, BLANCO);
+                    redondo({84, 186, 108, 108}, 54, CREMA);
+                    if (SDL_Texture* d = icono ? dibujos::de(icono) : nullptr)
+                    {
+                        SDL_Rect r = {104, 206, 68, 68};
+                        SDL_RenderCopy(g_r, d, nullptr, &r);
+                    }
+                    texto(encajar(n, 980, g_grande), 216, 214, MARRON, g_grande);
+                };
                 v.b.push_back({{440, ABAJO - 70, 400, 56}, "Volver", [] { volver(); }});
             });
             return;
@@ -509,6 +591,7 @@ void abrirSitio(std::shared_ptr<Estado> e)
     auto pos = std::make_shared<std::pair<int, int>>(rx, ry);
     Sitio s;
     s.donde = CAPAS[e->capa];
+    s.posicion = [pos] { return std::make_pair(pos->first + ORIGEN_X, pos->second + ORIGEN_Y); };
     s.plantas = e->capa == 0;
     s.objeto = [e, pos] {
         Rejilla r = capaActiva(*e);
@@ -903,10 +986,23 @@ void dibujarMapa(std::shared_ptr<Estado> e)
         const bool cabe = cabeLlevado(s, x - ORIGEN_X, y - ORIGEN_Y);
         const SDL_Rect r = pantalla(s, x, y, w, h);
         const SDL_Color c = cabe ? SDL_Color{0x2F, 0x9E, 0x62, 255} : SDL_Color{0xD0, 0x40, 0x40, 255};
-        SDL_Color f = colorDe(s.llevado);
-        f.a = 200;
-        SDL_SetRenderDrawColor(g_r, f.r, f.g, f.b, f.a);
-        SDL_RenderFillRect(g_r, &r);
+        if (SDL_Texture* d = dibujoDe(s.llevado))
+        {
+            SDL_SetRenderDrawColor(g_r, c.r, c.g, c.b, 0x50);
+            SDL_RenderFillRect(g_r, &r);
+            SDL_SetTextureAlphaMod(d, 0xD8);
+            const int l = std::min(r.w, r.h);
+            SDL_Rect q = {r.x + (r.w - l) / 2, r.y + (r.h - l) / 2, l, l};
+            SDL_RenderCopy(g_r, d, nullptr, &q);
+            SDL_SetTextureAlphaMod(d, 255);
+        }
+        else
+        {
+            SDL_Color f = colorDe(s.llevado);
+            f.a = 200;
+            SDL_SetRenderDrawColor(g_r, f.r, f.g, f.b, f.a);
+            SDL_RenderFillRect(g_r, &r);
+        }
         marco(r, c, 3);
     }
     else if (s.modo == Goma)
@@ -953,6 +1049,7 @@ void dibujarPanel(std::shared_ptr<Estado> e)
     texto(CAPAS[s.capa], x, 120, VERDE_OSCURO, g_pequena);
     std::string titulo, detalle;
     SDL_Color color = CREMA_OSCURA;
+    SDL_Texture* foto = nullptr;
     Objeto o;
     int rx, ry;
     if (s.modo == Llevar)
@@ -960,6 +1057,7 @@ void dibujarPanel(std::shared_ptr<Estado> e)
         titulo = "Moviendo: " + nombre(s.llevado);
         detalle = "Lleva el cursor a su nuevo sitio y pulsa A. B para dejarlo donde estaba.";
         color = colorDe(s.llevado);
+        foto = dibujoDe(s.llevado);
     }
     else if (s.modo == Marcar)
     {
@@ -977,18 +1075,26 @@ void dibujarPanel(std::shared_ptr<Estado> e)
         titulo = nombre(o);
         detalle = enterrado(o) ? "Enterrado. A para cambiarlo, girarlo, moverlo o quitarlo." : "A para cambiarlo, girarlo, moverlo o quitarlo.";
         color = colorDe(o);
+        foto = dibujoDe(o);
     }
     else if (const Edificio* b = edificioEn(s.cx + 1, s.cy + 1))
     {
         titulo = b->casa() && b->nombre != "Parcela libre" ? "Casa de " + b->nombre : b->nombre;
         detalle = "Los edificios se cambian de sitio en el juego.";
+        if (const uint16_t i = iconoDeEdificio(b->tipo))
+            foto = dibujos::de(i);
     }
     else
     {
         titulo = "Sitio vacío";
         detalle = "A para poner algo aquí.";
     }
-    redondo({x, 152, 44, 44}, 8, color);
+    redondo({x, 152, 44, 44}, 8, foto ? CREMA : color);
+    if (foto)
+    {
+        SDL_Rect r = {x + 2, 154, 40, 40};
+        SDL_RenderCopy(g_r, foto, nullptr, &r);
+    }
     const int alto = std::max(44, texto(titulo, x + 56, 156, MARRON, nullptr, Izquierda, ancho - 56));
     texto(detalle, x, 152 + std::min(alto, 100) + 12, MARRON_SUAVE, g_pequena, Izquierda, ancho);
     // Botones para tocar.
@@ -1014,6 +1120,7 @@ Pantalla pantallaMapa()
     auto e = std::make_shared<Estado>();
     g_estado = e;
     g_deshacer.clear();
+    g_tocado = false;
     // Empieza en la casa del jugador, si la hay.
     e->cx = MAPA_ANCHO / 2, e->cy = MAPA_ALTO / 2;
     return [e](Vista& v) {
@@ -1048,6 +1155,10 @@ Pantalla pantallaMapa()
             }
             else if (e->hayZona)
                 e->hayZona = false;
+            else if (g_tocado && !sinApoyoAhora().empty())
+                // Como el Mac antes de guardar el mapa.
+                confirmar("Cosas encima de nada", "Hay algo puesto encima de otra cosa, pero debajo no hay nada (" + numero((uint32_t)sinApoyoAhora().size()) +
+                    " casillas): en el juego puede quedar flotando. Se ve en Herramientas. ¿Salir del mapa igualmente?", "Sí, salir", [] { volver(); });
             else
                 volver();
         };

@@ -123,6 +123,10 @@ std::vector<Clase> clases(const Rejilla& r, Zona z = {});
 // Las dos capas de objetos de la isla en main.dat (0 en el suelo, 1 encima de otras cosas).
 Rejilla capa(std::vector<uint8_t>& main, int c);
 
+// Las casillas (de la capa) con algo encima de otras cosas pero nada debajo (GetUnsupportedTiles de NHSE: el Mac
+// pregunta antes de guardar si hay alguna).
+std::vector<Punto> sinApoyo(std::vector<uint8_t>& main);
+
 // Un edificio del mapa, con lo que necesita el dibujo (en casillas de objeto del mapa entero).
 struct Edificio {
     int tipo;            // BuildingType de NHSE

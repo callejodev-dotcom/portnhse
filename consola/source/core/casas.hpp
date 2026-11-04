@@ -58,4 +58,43 @@ mapa::Resultado girar(mapa::Rejilla& r, const mapa::Zona& l, int x, int y, Objet
 mapa::Resultado mover(mapa::Rejilla& r, const mapa::Zona& l, int x, int y, int aX, int aY, Objeto* estorbo);
 mapa::Resultado ponerNuevo(mapa::Rejilla& r, const mapa::Zona& l, const Objeto& o, int x, int y, Objeto* estorbo);
 
+// ------------------------------------------------------------------------------------------- opciones avanzadas
+// Las de «Opciones avanzadas» de HouseWindow: los sucesos de la casa, los valores sueltos y pasar una casa o una
+// habitación a un archivo (el mismo formato que NHSE: .nhph2 / .nhpr2, y los de antes de la 2.0, .nhph / .nhpr).
+constexpr uint32_t TAM_CASA1 = 0x26400;         // PlayerHouse1 (antes de la 2.0)
+constexpr uint32_t TAM_HABITACION1 = 0x65C8;    // PlayerRoom1
+constexpr uint32_t SUCESOS = 0x20;              // EventFlags: 128 números de 16 bits
+constexpr int NUM_SUCESOS = 128;
+
+int16_t suceso(const std::vector<uint8_t>& main, int c, int i);
+void ponerSuceso(std::vector<uint8_t>& main, int c, int i, int16_t valor);
+// Los 256 bytes de los sucesos (un .nhfl de NHSE) y ponerlos de un archivo; false si no mide eso.
+std::vector<uint8_t> sucesos(const std::vector<uint8_t>& main, int c);
+bool ponerSucesos(std::vector<uint8_t>& main, int c, const std::vector<uint8_t>& datos);
+
+// La casa entera y una habitación, tal cual (lo que NHSE guarda en el archivo).
+std::vector<uint8_t> exportar(const std::vector<uint8_t>& main, int c);
+std::vector<uint8_t> exportarHabitacion(const std::vector<uint8_t>& main, int c, int h);
+// Ponerlas de un archivo (como MiscDumpHelper.LoadHouse / LoadRoom): convierte las de antes de la 2.0; vacío si fue
+// bien, o por qué no.
+std::string importar(std::vector<uint8_t>& main, int c, const std::vector<uint8_t>& datos);
+std::string importarHabitacion(std::vector<uint8_t>& main, int c, int h, const std::vector<uint8_t>& datos);
+
+// Los valores sueltos de la casa (los que enseña el PropertyGrid de NHSE para Mac).
+enum Valor {
+    ValorNivel,          // HouseLevel
+    ValorFachada, ValorTejado, ValorPuerta,             // los que tiene
+    ValorPedidoFachada, ValorPedidoTejado, ValorPedidoPuerta, // los pedidos (lo que será al día siguiente)
+    ValorPrestamo,       // Loan (número cifrado)
+    ValorOtro,           // Unknown (número cifrado)
+    ValorNpc1, ValorNpc2, // NPC1 y NPC2 (con signo)
+    ValorBandera,        // PlayerHouseFlag (0 o 1)
+    NUM_VALORES
+};
+int64_t valor(const std::vector<uint8_t>& main, int c, Valor v);
+void ponerValor(std::vector<uint8_t>& main, int c, Valor v, int64_t n);
+// Los objetos sueltos: la decoración de la puerta, el buzón y el buzón pedido (0, 1, 2).
+Objeto objetoCasa(const std::vector<uint8_t>& main, int c, int cual);
+void ponerObjetoCasa(std::vector<uint8_t>& main, int c, int cual, const Objeto& o);
+
 } // namespace casas
