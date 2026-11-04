@@ -1,4 +1,5 @@
-// Generado desde NHSE (kwsch/NHSE): los vecinos con su nombre en español, por orden alfabético.
+// Generado desde NHSE (kwsch/NHSE) con consola/herramientas/Generar: no editar a mano.
+// Los vecinos con su nombre en español, por orden alfabético.
 #pragma once
 namespace acnh {
 // Las especies por su número (el primer byte de cada vecino), para su nombre interno («kal09»).

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Genera las tablas de NHSE para Switch desde NHSE (consola/source/core/*.hpp y consola/romfs/vecinos.bin).
+       Uso: dotnet run, con la ruta del proyecto (consola/herramientas/Generar). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../NHSE/NHSE.Core/NHSE.Core.csproj" />
+    <ProjectReference Include="../../../NHSE/NHSE.Villagers/NHSE.Villagers.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,5 +1,5 @@
-// Generado desde NHSE.Core (kwsch/NHSE): flores y malas hierbas de Animal Crossing: New Horizons, con sus nombres en español.
-// No editar a mano: se rehace con la herramienta de consola/herramientas.
+// Generado desde NHSE (kwsch/NHSE) con consola/herramientas/Generar: no editar a mano.
+// Flores y malas hierbas del suelo de la isla.
 #pragma once
 #include <cstdint>
 namespace acnh {

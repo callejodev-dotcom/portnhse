@@ -5,7 +5,12 @@
 //   prueba <carpeta> hierbas
 //   prueba <carpeta> dinero <monedero> <banco> <millas>
 //   prueba <carpeta> vecino <hueco> <interno> <vecinos.bin>
+//   prueba <carpeta> bolsillo <hueco> <id> <cuenta>
+//   prueba <carpeta> recetas|catalogo|reacciones|amigos
+//   prueba <carpeta> nabos <compra> <venta>
+//   prueba <carpeta> buscar <texto>
 #include "../source/core/acnh.hpp"
+#include "../source/core/objetos.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -53,8 +58,27 @@ int main(int argc, char** argv)
     auto r = contar(main.datos);
     printf("flores %d, malas hierbas %d, monedero %u, banco %u, millas %u\n", r.flores, r.malasHierbas,
         leerNumero(pers.datos.data() + MONEDERO), leerNumero(pers.datos.data() + BANCO), leerNumero(pers.datos.data() + MILLAS));
+    auto pr = recetas(pers.datos), pc = catalogo(pers.datos), pa = reacciones(pers.datos);
+    printf("jugador %s de %s, bolsillos abiertos %d+%d, recetas %d/%d, catalogo %d/%d, reacciones %d/%d\n",
+        nombreJugador(pers.datos).c_str(), nombreIsla(pers.datos).c_str(), bolsillosAbiertos(pers.datos, 0),
+        bolsillosAbiertos(pers.datos, 1), pr.tiene, pr.total, pc.tiene, pc.total, pa.tiene, pa.total);
+    for (int i = 0; i < NUM_BOLSILLOS; i++)
+    {
+        Objeto o = leerBolsillo(pers.datos, i);
+        int k = objetoDe(o);
+        if (!o.vacio())
+            printf("bolsillo %d: %s x%d\n", i, k >= 0 ? OBJETOS[k].nombre : "?", o.cuenta + 1);
+    }
     if (orden == "estado")
         return 0;
+    if (orden == "buscar")
+    {
+        auto r = buscarObjetos(argv[3]);
+        printf("encontrados %zu\n", r.size());
+        for (size_t i = 0; i < r.size() && i < 10; i++)
+            printf("  %s\n", OBJETOS[r[i]].nombre);
+        return 0;
+    }
     if (orden == "flores")
     {
         std::vector<uint16_t> ids;
@@ -75,6 +99,29 @@ int main(int argc, char** argv)
             return 1;
         }
         printf("ahora: %s\n", vecinoEn(main.datos, atoi(argv[3])).c_str());
+    }
+    else if (orden == "bolsillo")
+    {
+        Objeto o;
+        o.id = (uint16_t)strtoul(argv[4], nullptr, 0);
+        o.cuenta = (uint16_t)strtoul(argv[5], nullptr, 0);
+        escribirBolsillo(pers.datos, atoi(argv[3]), o);
+    }
+    else if (orden == "recetas")
+        printf("nuevas %d\n", aprenderRecetas(pers.datos));
+    else if (orden == "catalogo")
+        printf("nuevos %d\n", completarCatalogo(pers.datos));
+    else if (orden == "reacciones")
+        printf("nuevas %d\n", aprenderReacciones(pers.datos));
+    else if (orden == "amigos")
+        printf("amistades %d\n", mejoresAmigos(main.datos));
+    else if (orden == "nabos")
+    {
+        Nabos n = leerNabos(main.datos);
+        n.compra = strtoul(argv[3], nullptr, 10);
+        for (int i = 2; i < 14; i++)
+            n.venta[i] = strtoul(argv[4], nullptr, 10);
+        escribirNabos(main.datos, n);
     }
     else if (orden == "dinero")
     {

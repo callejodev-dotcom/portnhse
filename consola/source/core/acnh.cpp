@@ -1,6 +1,8 @@
 #include "acnh.hpp"
 #include "tablas.hpp"
 #include "vecinos.hpp"
+#include "objetos.hpp"
+#include "listas.hpp"
 #include <zlib.h>
 #include <algorithm>
 #include <cstring>
@@ -391,6 +393,240 @@ std::string cambiarVecino(std::vector<uint8_t>& main, int hueco, const std::stri
     memcpy(v, nuevo.data(), TAM_VECINO);
     memcpy(c, nc, TAM_CASA);
     return "";
+}
+
+int mejoresAmigos(std::vector<uint8_t>& main)
+{
+    int n = 0;
+    for (int i = 0; i < NUM_VECINOS; i++)
+    {
+        if (vecinoEn(main, i).empty())
+            continue;
+        for (int j = 0; j < 8; j++)
+        {
+            uint8_t* m = main.data() + POS_VECINOS + i * TAM_VECINO + 4 + j * 0x5F0;
+            // Como NHSE: los recuerdos con nombre de jugador (los demás están vacíos).
+            bool conNombre = false;
+            for (int k = 0; k < 10; k++)
+            {
+                const uint16_t c = le16(m + 0x20 + 2 * k);
+                if (c == 0)
+                    break;
+                if (c != ' ' && c != '\t' && c != 0x3000)
+                    conNombre = true;
+            }
+            if (conNombre && m[0x38 + 10] != 255)
+                m[0x38 + 10] = 255, n++;
+        }
+    }
+    return n;
+}
+
+// ---------------------------------------------------------------------------------------------------------- jugador
+namespace {
+std::string utf16(const uint8_t* p, int max)
+{
+    std::string s;
+    for (int i = 0; i < max; i++)
+    {
+        uint16_t c = le16(p + 2 * i);
+        if (c == 0)
+            break;
+        if (c < 0x80)
+            s += (char)c;
+        else if (c < 0x800)
+            s += (char)(0xC0 | (c >> 6)), s += (char)(0x80 | (c & 0x3F));
+        else
+            s += (char)(0xE0 | (c >> 12)), s += (char)(0x80 | ((c >> 6) & 0x3F)), s += (char)(0x80 | (c & 0x3F));
+    }
+    return s;
+}
+
+uint32_t posBolsillo(int hueco) { return hueco < 20 ? BOLSILLOS2 + 8 * hueco : BOLSILLOS1 + 8 * (hueco - 20); }
+
+bool bit(const std::vector<uint8_t>& d, uint32_t pos, int n) { return (d[pos + (n >> 3)] >> (n & 7)) & 1; }
+void ponerBit(std::vector<uint8_t>& d, uint32_t pos, int n) { d[pos + (n >> 3)] |= (uint8_t)(1 << (n & 7)); }
+} // namespace
+
+std::string nombreIsla(const std::vector<uint8_t>& p) { return utf16(p.data() + ID_JUGADOR + 4, 10); }
+std::string nombreJugador(const std::vector<uint8_t>& p) { return utf16(p.data() + ID_JUGADOR + 0x20, 10); }
+
+int bolsillosAbiertos(const std::vector<uint8_t>& p, int parte)
+{
+    const uint32_t n = le32(p.data() + (parte == 0 ? BOLSILLOS2 : BOLSILLOS1) + 20 * 8);
+    return (int)std::min<uint32_t>(n, 20);
+}
+
+bool bolsilloAbierto(const std::vector<uint8_t>& p, int hueco)
+{
+    return hueco >= 0 && hueco < NUM_BOLSILLOS && hueco % 20 < bolsillosAbiertos(p, hueco / 20);
+}
+
+Objeto leerBolsillo(const std::vector<uint8_t>& p, int hueco)
+{
+    const uint8_t* d = p.data() + posBolsillo(hueco);
+    Objeto o;
+    o.id = le16(d);
+    o.sistema = d[2];
+    o.extra = d[3];
+    o.cuenta = le16(d + 4);
+    o.usos = le16(d + 6);
+    return o;
+}
+
+void escribirBolsillo(std::vector<uint8_t>& p, int hueco, const Objeto& o)
+{
+    uint8_t* d = p.data() + posBolsillo(hueco);
+    put16(d, o.id);
+    d[2] = o.sistema;
+    d[3] = o.extra;
+    put16(d + 4, o.cuenta);
+    put16(d + 6, o.usos);
+}
+
+std::string normalizar(const std::string& t)
+{
+    std::string s;
+    for (size_t i = 0; i < t.size(); i++)
+    {
+        const unsigned char c = t[i];
+        if (c == 0xC3 && i + 1 < t.size() && ((unsigned char)t[i + 1] & 0xC0) == 0x80)
+        {
+            // Las letras de Latin-1 (U+00C0 a U+00FF) sin tilde, diéresis ni virgulilla, y en minúscula, como NHSE.
+            static const char base[] = "aaaaaa?ceeeeiiii?nooooo??uuuuy??aaaaaa?ceeeeiiii?nooooo??uuuuy?y";
+            const unsigned char d = (unsigned char)t[++i] - 0x80;
+            if (base[d] != '?')
+                s += base[d];
+            else
+                s += (char)0xC3, s += (char)(d < 32 ? t[i] + 0x20 : t[i]);
+            continue;
+        }
+        s += (char)tolower(c);
+    }
+    return s;
+}
+
+std::vector<int> buscarObjetos(const std::string& texto)
+{
+    std::vector<std::string> palabras;
+    std::string q = normalizar(texto), w;
+    for (char c : q + " ")
+    {
+        if (c == ' ')
+        {
+            if (!w.empty())
+                palabras.push_back(w);
+            w.clear();
+        }
+        else
+            w += c;
+    }
+    std::vector<int> empiezan, contienen;
+    if (palabras.empty())
+        return empiezan;
+    const int total = sizeof(OBJETOS) / sizeof(OBJETOS[0]);
+    for (int i = 0; i < total; i++)
+    {
+        const char* clave = OBJETOS[i].clave;
+        bool todas = true;
+        for (const auto& p : palabras)
+            todas = todas && strstr(clave, p.c_str()) != nullptr;
+        if (!todas)
+            continue;
+        (strncmp(clave, palabras[0].c_str(), palabras[0].size()) == 0 ? empiezan : contienen).push_back(i);
+    }
+    empiezan.insert(empiezan.end(), contienen.begin(), contienen.end());
+    return empiezan;
+}
+
+int objetoDe(const Objeto& o)
+{
+    const int total = sizeof(OBJETOS) / sizeof(OBJETOS[0]);
+    for (int i = 0; i < total; i++)
+        if (OBJETOS[i].id == o.id && (o.id != 0x16A2 || OBJETOS[i].cuenta == o.cuenta))
+            return i;
+    return -1;
+}
+
+int aprenderRecetas(std::vector<uint8_t>& p)
+{
+    // Como RecipeBook.GiveAll de NHSE: sabida y «nueva» si no se sabía.
+    int n = 0;
+    for (uint16_t r : RECETAS)
+        if (!bit(p, RECETAS_POS, r))
+            ponerBit(p, RECETAS_POS, r), ponerBit(p, RECETAS_POS + 0x200, r), n++;
+    return n;
+}
+
+int completarCatalogo(std::vector<uint8_t>& p)
+{
+    int n = 0;
+    for (uint16_t id : CATALOGO)
+        if (!bit(p, CATALOGO_POS, id))
+            ponerBit(p, CATALOGO_POS, id), n++;
+    for (uint16_t c : CATALOGO_COLORES)
+        ponerBit(p, CATALOGO_FIN, c);
+    return n;
+}
+
+int aprenderReacciones(std::vector<uint8_t>& p)
+{
+    // Como AddMissingReactions de NHSE: cada una que falte, en el primer hueco libre.
+    uint8_t* lista = p.data() + REACCIONES_POS;
+    int n = 0;
+    for (uint8_t r : REACCIONES)
+    {
+        if (std::find(lista, lista + 256, r) != lista + 256)
+            continue;
+        uint8_t* libre = std::find(lista, lista + 256, 0);
+        if (libre == lista + 256)
+            break;
+        *libre = r;
+        n++;
+    }
+    return n;
+}
+
+Progreso recetas(const std::vector<uint8_t>& p)
+{
+    Progreso r;
+    for (uint16_t i : RECETAS)
+        r.tiene += bit(p, RECETAS_POS, i), r.total++;
+    return r;
+}
+
+Progreso catalogo(const std::vector<uint8_t>& p)
+{
+    Progreso r;
+    for (uint16_t i : CATALOGO)
+        r.tiene += bit(p, CATALOGO_POS, i), r.total++;
+    return r;
+}
+
+Progreso reacciones(const std::vector<uint8_t>& p)
+{
+    Progreso r;
+    const uint8_t* lista = p.data() + REACCIONES_POS;
+    for (uint8_t i : REACCIONES)
+        r.tiene += std::find(lista, lista + 256, i) != lista + 256, r.total++;
+    return r;
+}
+
+// ------------------------------------------------------------------------------------------------------------ nabos
+Nabos leerNabos(const std::vector<uint8_t>& main)
+{
+    Nabos n;
+    n.compra = le32(main.data() + NABOS);
+    for (int i = 0; i < 14; i++)
+        n.venta[i] = le32(main.data() + NABOS + 4 + 4 * i);
+    return n;
+}
+
+void escribirNabos(std::vector<uint8_t>& main, const Nabos& n)
+{
+    put32(main.data() + NABOS, n.compra);
+    for (int i = 0; i < 14; i++)
+        put32(main.data() + NABOS + 4 + 4 * i, n.venta[i]);
 }
 
 } // namespace acnh

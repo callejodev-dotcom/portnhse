@@ -20,7 +20,7 @@ ROMFS		:=	romfs
 
 APP_TITLE	:=	NHSE
 APP_AUTHOR	:=	NHSE para Mac
-APP_VERSION	:=	0.1.0
+APP_VERSION	:=	0.2.0
 
 ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 
@@ -46,7 +46,7 @@ export OFILES	:=	$(CPPFILES:.cpp=.o)
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) $(foreach dir,$(LIBDIRS),-I$(dir)/include) -I$(CURDIR)/$(BUILD)
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
-export APP_ICON := $(LIBNX)/default_icon.jpg
+export APP_ICON := $(CURDIR)/icon.jpg
 export NROFLAGS += --icon=$(APP_ICON) --nacp=$(CURDIR)/$(TARGET).nacp
 ifneq ($(ROMFS),)
 	export NROFLAGS += --romfsdir=$(CURDIR)/$(ROMFS)

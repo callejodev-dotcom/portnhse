@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Avalonia.Headless.XUnit;
 using NHSE.Core;
 using Xunit;
 
@@ -156,5 +157,134 @@ public class ConsolaTests
             }
         });
         Assert.Equal(expected, after.Main.Data.Slice(after.Main.Offsets.FieldItem, expected.Length).ToArray());
+    }
+    /// <summary> The whole file the Switch wrote is the one NHSE writes with the same change. </summary>
+    private static void SameBytes(ReadOnlySpan<byte> expected, ReadOnlySpan<byte> actual)
+    {
+        Assert.Equal(expected.Length, actual.Length);
+        var first = -1;
+        for (int i = 0; i < expected.Length && first < 0; i++)
+        {
+            if (expected[i] != actual[i])
+                first = i;
+        }
+        Assert.True(first < 0, $"first difference at 0x{first:X}");
+    }
+
+    /// <summary> Runs a change on the Switch core and the same change in NHSE, and compares both saves. </summary>
+    private static (HorizonSave Nhse, HorizonSave Switch) Both(Action<HorizonSave> nhse, params string[] args)
+    {
+        Skip();
+        var sav = TestSave.LoadCopy(out var folder);
+        Run(folder, args);
+        var after = HorizonSave.FromFolder(folder);
+        Assert.Empty(after.GetInvalidHashes());
+        nhse(sav);
+        sav.Main.Hash();
+        sav.Players[0].Personal.Hash();
+        SameBytes(sav.Main.Data, after.Main.Data);
+        SameBytes(sav.Players[0].Personal.Data, after.Players[0].Personal.Data);
+        return (sav, after);
+    }
+
+    [Fact]
+    public void PocketItemLikeNhse()
+    {
+        // Slot 4 (first part of the pockets) gets 30 iron nuggets.
+        var (_, after) = Both(sav =>
+        {
+            var pers = sav.Players[0].Personal;
+            var pocket = pers.Pocket.ToArray();
+            pocket[3] = new Item(2511) { Count = 29 };
+            pers.Pocket = pocket;
+        }, "bolsillo", "3", "2511", "29");
+        Assert.Equal(2511, after.Players[0].Personal.Pocket[3].ItemId);
+    }
+
+    [Fact]
+    public void PocketRecipeLikeNhse()
+    {
+        // Slot 26 (second part) gets the DIY recipe card of the ladder (recipe 107).
+        Both(sav =>
+        {
+            var pers = sav.Players[0].Personal;
+            var bag = pers.Bag.ToArray();
+            bag[5] = new Item(Item.DIYRecipe) { Count = 107 };
+            pers.Bag = bag;
+        }, "bolsillo", "25", "0x16A2", "107");
+    }
+
+    [AvaloniaFact]
+    public void RecipesLearnedLikeNhse()
+    {
+        Both(sav =>
+        {
+            var w = new RecipesWindow(sav.Players[0].Personal);
+            w.LearnAll();
+            w.SaveAndClose();
+        }, "recetas");
+    }
+
+    [AvaloniaFact]
+    public void CatalogCompletedLikeNhse()
+    {
+        Both(sav =>
+        {
+            var w = new CatalogWindow(sav.Players[0]);
+            w.ShowCategory(ItemCategory.All);
+            w.MarkShown(true);
+            w.SaveAndClose();
+        }, "catalogo");
+    }
+
+    [AvaloniaFact]
+    public void ReactionsLearnedLikeNhse()
+    {
+        Both(sav =>
+        {
+            var w = new ReactionsWindow(sav.Players[0].Personal);
+            w.LearnAll();
+            w.SaveAndClose();
+        }, "reacciones");
+    }
+
+    [Fact]
+    public void BestFriendsLikeNhse()
+    {
+        // As «Best friends with everyone» of the friendship window: every player the villager remembers.
+        Both(sav =>
+        {
+            var villagers = sav.Main.GetVillagers();
+            foreach (var v in villagers.OfType<Villager2>())
+            {
+                foreach (var m in v.GetMemories().Where(m => !string.IsNullOrWhiteSpace(m.PlayerName)))
+                    m.Friendship = byte.MaxValue;
+            }
+            sav.Main.SetVillagers(villagers);
+        }, "amigos");
+    }
+
+    [Fact]
+    public void TurnipsLikeNhse()
+    {
+        Both(sav =>
+        {
+            var t = sav.Main.Turnips;
+            t.BuyPrice = 95;
+            for (int half = 2; half < 14; half++)
+                TurnipsWindow.SetPrice(t, half, 600);
+            sav.Main.Turnips = t;
+        }, "nabos", "95", "600");
+    }
+
+    [Fact]
+    public void ItemSearchLikeNhse()
+    {
+        Skip();
+        TestSave.LoadCopy(out var folder);
+        // Without case or accents, every word: «ARBOL» finds «árbol», «pepita oro» finds «pepita de oro».
+        Assert.Contains("  pepita de oro\n", Run(folder, "buscar", "PEPITA oro"));
+        var output = Run(folder, "buscar", "arbol");
+        Assert.Contains("árbol", output);
     }
 }
