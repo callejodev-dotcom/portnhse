@@ -1,6 +1,7 @@
 // Generado desde NHSE (kwsch/NHSE) con consola/herramientas/Generar: no editar a mano.
 // Los vecinos con su nombre en español, por orden alfabético.
 #pragma once
+#include <cstdint>
 namespace acnh {
 // Las especies por su número (el primer byte de cada vecino), para su nombre interno («kal09»).
 constexpr const char* ESPECIES[] = {"ant", "bea", "brd", "bul", "cat", "cbr", "chn", "cow", "crd", "der", "dog", "duk", "elp", "flg", "goa", "gor", "ham", "hip", "hrs", "kal", "kgr", "lon", "mnk", "mus", "ocp", "ost", "pbr", "pgn", "pig", "rbt", "rhn", "shp", "squ", "tig", "wol", "non"};

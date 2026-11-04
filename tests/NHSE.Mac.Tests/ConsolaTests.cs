@@ -9,7 +9,7 @@ namespace NHSE.Mac.Tests;
 /// The core of NHSE for Switch (consola/source/core, C++), built here with clang: the save it writes must be sound for
 /// NHSE and have exactly the changes NHSE makes.
 /// </summary>
-public class ConsolaTests
+public partial class ConsolaTests
 {
     private static readonly Lazy<string?> Tool = new(Build);
 
@@ -19,8 +19,10 @@ public class ConsolaTests
         var src = Path.Combine(root, "consola");
         if (!Directory.Exists(src))
             return null;
-        var exe = Path.Combine(Path.GetTempPath(), "nhse-consola-prueba");
-        var p = Process.Start(new ProcessStartInfo("clang++", ["-std=c++17", "-O2", "-Wall", "-o", exe, Path.Combine(src, "prueba/prueba.cpp"), Path.Combine(src, "source/core/acnh.cpp"), "-lz"]) { RedirectStandardError = true });
+        // One per copy of the repo (worktrees build at the same time).
+        var exe = Path.Combine(Path.GetTempPath(), $"nhse-consola-prueba-{(uint)root.GetHashCode():X8}");
+        string[] sources = [.. Directory.GetFiles(Path.Combine(src, "prueba"), "*.cpp"), .. Directory.GetFiles(Path.Combine(src, "source/core"), "*.cpp")];
+        var p = Process.Start(new ProcessStartInfo("clang++", ["-std=c++17", "-O2", "-Wall", "-o", exe, .. sources, "-lz"]) { RedirectStandardError = true });
         if (p is null)
             return null;
         var err = p.StandardError.ReadToEnd();
@@ -29,7 +31,7 @@ public class ConsolaTests
         return exe;
     }
 
-    private static string Run(string folder, params string[] args)
+    internal static string Run(string folder, params string[] args)
     {
         var p = Process.Start(new ProcessStartInfo(Tool.Value!, [folder, .. args]) { RedirectStandardOutput = true })!;
         var output = p.StandardOutput.ReadToEnd();
@@ -38,7 +40,7 @@ public class ConsolaTests
         return output;
     }
 
-    private static void Skip()
+    internal static void Skip()
     {
         Assert.SkipUnless(TestSave.Available, "NHSE_TEST_SAVE is not set");
         Assert.SkipWhen(Tool.Value is null, "no clang");
@@ -159,7 +161,7 @@ public class ConsolaTests
         Assert.Equal(expected, after.Main.Data.Slice(after.Main.Offsets.FieldItem, expected.Length).ToArray());
     }
     /// <summary> The whole file the Switch wrote is the one NHSE writes with the same change. </summary>
-    private static void SameBytes(ReadOnlySpan<byte> expected, ReadOnlySpan<byte> actual)
+    internal static void SameBytes(ReadOnlySpan<byte> expected, ReadOnlySpan<byte> actual)
     {
         Assert.Equal(expected.Length, actual.Length);
         var first = -1;
@@ -172,7 +174,7 @@ public class ConsolaTests
     }
 
     /// <summary> Runs a change on the Switch core and the same change in NHSE, and compares both saves. </summary>
-    private static (HorizonSave Nhse, HorizonSave Switch) Both(Action<HorizonSave> nhse, params string[] args)
+    internal static (HorizonSave Nhse, HorizonSave Switch) Both(Action<HorizonSave> nhse, params string[] args)
     {
         Skip();
         var sav = TestSave.LoadCopy(out var folder);
@@ -200,6 +202,23 @@ public class ConsolaTests
         }, "bolsillo", "3", "2511", "29");
         Assert.Equal(2511, after.Players[0].Personal.Pocket[3].ItemId);
     }
+
+    [Fact]
+    public void PocketColorAndWrapLikeNhse()
+    {
+        // Slot 2 (the net): colour 3 and wrapped in blue paper (9), as the item editor of the Mac does it.
+        Both(sav =>
+        {
+            var pers = sav.Players[0].Personal;
+            var pocket = pers.Pocket.ToArray();
+            var item = new Item(pocket[2].ItemId) { BodyType = 3 };
+            item.SetWrapping(ItemWrapping.WrappingPaper, ItemWrappingPaper.Blue, true);
+            pocket[2] = item;
+            pers.Pocket = pocket;
+        }, "bolsillo", "2", Pocket2Id().ToString(), "3", "0x65");
+    }
+
+    private static ushort Pocket2Id() => TestSave.LoadCopy(out _).Players[0].Personal.Pocket[2].ItemId;
 
     [Fact]
     public void PocketRecipeLikeNhse()

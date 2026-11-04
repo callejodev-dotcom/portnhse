@@ -104,6 +104,19 @@ bool bolsilloAbierto(const std::vector<uint8_t>& personal, int hueco);
 Objeto leerBolsillo(const std::vector<uint8_t>& personal, int hueco);
 void escribirBolsillo(std::vector<uint8_t>& personal, int hueco, const Objeto& o);
 
+// Variantes y envoltorio de un objeto, como el editor de objetos de NHSE para Mac. El color («cuerpo») va en los bits
+// 0-2 de la cantidad y la tela en los bits 5 y siguientes; el envoltorio en «extra».
+inline int cuerpo(const Objeto& o) { return o.cuenta & 7; }
+inline void ponerCuerpo(Objeto& o, int c) { o.cuenta = (uint16_t)((o.cuenta & ~7) | (c & 7)); }
+inline int tela(const Objeto& o) { return o.cuenta >> 5; }
+inline void ponerTela(Objeto& o, int t) { o.cuenta = (uint16_t)((o.cuenta & 0x1F) | ((t & 0x7FF) << 5)); }
+inline bool envuelto(const Objeto& o) { return (o.extra & 3) != 0; }
+inline int papel(const Objeto& o) { return (o.extra >> 2) & 0xF; }
+// Envuelto en papel de regalo de ese color (0-15), mostrando el objeto; o sin envolver.
+inline void envolver(Objeto& o, int color) { o.extra = (uint8_t)(1 | ((color & 0xF) << 2) | 0x40); }
+inline void desenvolver(Objeto& o) { o.extra = 0; }
+extern const char* const PAPELES[16];
+
 // Buscar objetos por nombre (sin mayúsculas ni tildes; todas las palabras): los índices en OBJETOS (objetos.hpp), primero
 // los que empiezan por lo buscado.
 std::vector<int> buscarObjetos(const std::string& texto);

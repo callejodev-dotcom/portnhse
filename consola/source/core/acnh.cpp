@@ -484,6 +484,9 @@ void escribirBolsillo(std::vector<uint8_t>& p, int hueco, const Objeto& o)
     put16(d + 6, o.usos);
 }
 
+const char* const PAPELES[16] = {"Amarillo", "Rosa", "Naranja", "Verde claro", "Verde", "Menta", "Azul claro", "Morado",
+    "Azul marino", "Azul", "Blanco", "Rojo", "Dorado", "Marrón", "Gris", "Negro"};
+
 std::string normalizar(const std::string& t)
 {
     std::string s;

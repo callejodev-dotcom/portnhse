@@ -1,0 +1,277 @@
+#include "partida.hpp"
+#include <algorithm>
+#include <cstdio>
+#include <ctime>
+#include <dirent.h>
+#include <sys/stat.h>
+
+using namespace acnh;
+
+namespace partida {
+
+std::vector<Jugador> jugadores;
+int yo = 0;
+std::string isla;
+std::string copia;
+
+namespace {
+constexpr u64 ACNH = 0x01006F8002326000ULL;
+FsFileSystem g_fs;
+bool g_abierta = false;
+Archivo g_main;
+bool g_mainCambiado = false;
+
+bool leer(const char* ruta, std::vector<uint8_t>& out)
+{
+    FsFile f;
+    if (R_FAILED(fsFsOpenFile(&g_fs, ruta, FsOpenMode_Read, &f)))
+        return false;
+    s64 tam = 0;
+    fsFileGetSize(&f, &tam);
+    out.resize(tam);
+    u64 leidos = 0;
+    Result rc = fsFileRead(&f, 0, out.data(), tam, FsReadOption_None, &leidos);
+    fsFileClose(&f);
+    return R_SUCCEEDED(rc) && (s64)leidos == tam;
+}
+
+bool escribir(const char* ruta, const std::vector<uint8_t>& datos)
+{
+    FsFile f;
+    if (R_FAILED(fsFsOpenFile(&g_fs, ruta, FsOpenMode_Write, &f)))
+        return false;
+    Result rc = fsFileWrite(&f, 0, datos.data(), datos.size(), FsWriteOption_Flush);
+    fsFileClose(&f);
+    return R_SUCCEEDED(rc);
+}
+
+void mkdirs(const std::string& ruta)
+{
+    for (size_t i = ruta.find('/', 6); i != std::string::npos; i = ruta.find('/', i + 1))
+        mkdir(ruta.substr(0, i).c_str(), 0777);
+}
+
+// Copia todo lo que hay en una carpeta de la partida a la SD.
+bool copiarCarpeta(const std::string& dentro, const std::string& sd)
+{
+    FsDir dir;
+    if (R_FAILED(fsFsOpenDirectory(&g_fs, dentro.c_str(), FsDirOpenMode_ReadDirs | FsDirOpenMode_ReadFiles, &dir)))
+        return false;
+    std::vector<FsDirectoryEntry> entradas(64);
+    bool ok = true;
+    while (ok)
+    {
+        s64 n = 0;
+        if (R_FAILED(fsDirRead(&dir, &n, entradas.size(), entradas.data())) || n == 0)
+            break;
+        for (s64 i = 0; i < n && ok; i++)
+        {
+            std::string nombre = entradas[i].name;
+            std::string ruta = dentro + (dentro == "/" ? "" : "/") + nombre;
+            if (entradas[i].type == FsDirEntryType_Dir)
+                ok = copiarCarpeta(ruta, sd + nombre + "/");
+            else
+            {
+                std::vector<uint8_t> datos;
+                std::string destino = sd + nombre;
+                mkdirs(destino);
+                FILE* f = leer(ruta.c_str(), datos) ? fopen(destino.c_str(), "wb") : nullptr;
+                ok = f && fwrite(datos.data(), 1, datos.size(), f) == datos.size();
+                if (f)
+                    fclose(f);
+            }
+        }
+    }
+    fsDirClose(&dir);
+    return ok;
+}
+
+// Prepara un archivo para escribirlo: comprobaciones al día y cifrado. Devuelve los datos sin cifrar que se guardan.
+std::vector<uint8_t> preparar(Archivo& a)
+{
+    arreglarComprobaciones(a.datos);
+    std::vector<uint8_t> plano = a.datos;
+    cifrar(a.cabecera, a.datos);
+    return plano;
+}
+
+// Lee un archivo guardado y dice si es exactamente lo que se quería guardar y está sano.
+bool comprobar(const std::string& ruta, const std::vector<uint8_t>& cabecera, const std::vector<uint8_t>& plano)
+{
+    Archivo v;
+    v.cabecera = cabecera;
+    if (!leer(ruta.c_str(), v.datos))
+        return false;
+    cifrar(v.cabecera, v.datos);
+    return v.datos == plano && comprobacionesMal(v.datos) == 0;
+}
+} // namespace
+
+std::vector<uint8_t>& principal() { return g_main.datos; }
+std::vector<uint8_t>& personal(int j) { return jugador(j).a.datos; }
+Jugador& jugador(int j) { return jugadores[j < 0 ? yo : j]; }
+void cambiaPrincipal() { g_mainCambiado = true; }
+void cambiaPersonal(int j) { jugador(j).cambiado = true; }
+bool hayCambios()
+{
+    bool c = g_mainCambiado;
+    for (const auto& j : jugadores)
+        c |= j.cambiado;
+    return c;
+}
+
+bool leerArchivo(const std::string& ruta, std::vector<uint8_t>& datos) { return g_abierta && leer(ruta.c_str(), datos); }
+
+std::vector<std::string> archivos(const std::string& carpeta)
+{
+    std::vector<std::string> r;
+    FsDir dir;
+    if (!g_abierta || R_FAILED(fsFsOpenDirectory(&g_fs, carpeta.c_str(), FsDirOpenMode_ReadFiles, &dir)))
+        return r;
+    std::vector<FsDirectoryEntry> e(64);
+    for (;;)
+    {
+        s64 n = 0;
+        if (R_FAILED(fsDirRead(&dir, &n, e.size(), e.data())) || n == 0)
+            break;
+        for (s64 i = 0; i < n; i++)
+            r.push_back(e[i].name);
+    }
+    fsDirClose(&dir);
+    std::sort(r.begin(), r.end());
+    return r;
+}
+
+std::string abrir()
+{
+    FsSaveDataAttribute attr = {};
+    attr.application_id = ACNH;
+    attr.save_data_type = FsSaveDataType_Device;
+    if (R_FAILED(fsOpenSaveDataFileSystem(&g_fs, FsSaveDataSpaceId_User, &attr)))
+        return "No encuentro la partida de Animal Crossing. ¿Está el juego cerrado?";
+    g_abierta = true;
+    if (!leer("/main.dat", g_main.datos) || !leer("/mainHeader.dat", g_main.cabecera))
+        return "No he podido leer la partida.";
+    if (g_main.datos.size() != TAM_MAIN)
+        return "Esta partida no es de la versión 3.0 del juego: no la toco.";
+    cifrar(g_main.cabecera, g_main.datos);
+    if (comprobacionesMal(g_main.datos) != 0)
+        return "La partida no está sana (sus comprobaciones no cuadran): no la toco.";
+
+    // Los jugadores: Villager0 (el que llegó primero) a Villager7.
+    for (int i = 0; i < 8; i++)
+    {
+        Jugador j;
+        j.carpeta = "/Villager" + std::to_string(i);
+        if (!leer((j.carpeta + "/personal.dat").c_str(), j.a.datos) || !leer((j.carpeta + "/personalHeader.dat").c_str(), j.a.cabecera))
+            continue;
+        if (j.a.datos.size() != TAM_PERSONAL)
+            return "Esta partida no es de la versión 3.0 del juego: no la toco.";
+        cifrar(j.a.cabecera, j.a.datos);
+        if (comprobacionesMal(j.a.datos) != 0)
+            return "La partida no está sana (sus comprobaciones no cuadran): no la toco.";
+        j.nombre = nombreJugador(j.a.datos);
+        jugadores.push_back(std::move(j));
+    }
+    if (jugadores.empty())
+        return "No he podido leer la partida.";
+    isla = nombreIsla(jugadores[0].a.datos);
+
+    time_t t = time(nullptr);
+    char fecha[32];
+    strftime(fecha, sizeof(fecha), "%Y-%m-%d %H.%M.%S", localtime(&t));
+    copia = std::string(CARPETA) + "copias/" + fecha + "/";
+    if (!copiarCarpeta("/", copia))
+        return "No he podido hacer la copia de seguridad en la SD: no toco nada.";
+    return "";
+}
+
+std::string guardar()
+{
+    struct Pendiente {
+        std::string ruta;
+        Archivo cifrado;
+        std::vector<uint8_t> plano;
+        int jugador; // -1 = main
+    };
+    std::vector<Pendiente> pendientes;
+    if (g_mainCambiado)
+    {
+        Pendiente p{"/main.dat", g_main, {}, -1};
+        p.plano = preparar(p.cifrado);
+        pendientes.push_back(std::move(p));
+    }
+    for (int i = 0; i < (int)jugadores.size(); i++)
+        if (jugadores[i].cambiado)
+        {
+            Pendiente p{jugadores[i].carpeta + "/personal.dat", jugadores[i].a, {}, i};
+            p.plano = preparar(p.cifrado);
+            pendientes.push_back(std::move(p));
+        }
+    for (const auto& p : pendientes)
+        if (!escribir(p.ruta.c_str(), p.cifrado.datos))
+            return "No he podido escribir. La partida no ha cambiado (sales sin guardar).";
+    if (R_FAILED(fsFsCommit(&g_fs)))
+        return "No he podido guardar. La partida no ha cambiado.";
+    for (const auto& p : pendientes)
+        if (!comprobar(p.ruta, p.cifrado.cabecera, p.plano))
+            return "¡Ojo! Lo guardado no coincide. Restaura la copia de la SD.";
+
+    // Ya guardado: lo de memoria queda con las comprobaciones al día.
+    for (auto& p : pendientes)
+        (p.jugador < 0 ? g_main.datos : jugadores[p.jugador].a.datos) = std::move(p.plano);
+    g_mainCambiado = false;
+    for (auto& j : jugadores)
+        j.cambiado = false;
+    return "";
+}
+
+void cerrar()
+{
+    if (g_abierta)
+        fsFsClose(&g_fs);
+    g_abierta = false;
+}
+
+bool escribirSd(const std::string& ruta, const std::vector<uint8_t>& datos)
+{
+    mkdirs(ruta);
+    FILE* f = fopen(ruta.c_str(), "wb");
+    if (!f)
+        return false;
+    const bool ok = fwrite(datos.data(), 1, datos.size(), f) == datos.size();
+    fclose(f);
+    return ok;
+}
+
+bool leerSd(const std::string& ruta, std::vector<uint8_t>& datos)
+{
+    FILE* f = fopen(ruta.c_str(), "rb");
+    if (!f)
+        return false;
+    fseek(f, 0, SEEK_END);
+    datos.resize(ftell(f));
+    fseek(f, 0, SEEK_SET);
+    const bool ok = fread(datos.data(), 1, datos.size(), f) == datos.size();
+    fclose(f);
+    return ok;
+}
+
+std::vector<std::string> listarSd(const std::string& carpeta, const std::string& extension)
+{
+    std::vector<std::string> r;
+    DIR* d = opendir(carpeta.c_str());
+    if (!d)
+        return r;
+    while (dirent* e = readdir(d))
+    {
+        const std::string n = e->d_name;
+        if (n.size() > extension.size() && n.compare(n.size() - extension.size(), extension.size(), extension) == 0)
+            r.push_back(n);
+    }
+    closedir(d);
+    std::sort(r.begin(), r.end());
+    return r;
+}
+
+} // namespace partida
