@@ -1,6 +1,7 @@
 // Órdenes de prueba de la ficha de los vecinos: personalidad, muletilla, mudanza, amistad, ropa y muebles, paredes y
-// suelo, casa, bricolaje, y exportar e importar vecinos y casas.
+// suelo, casa, bricolaje, exportar e importar vecinos y casas, recuerdos, marcas sueltas, su diseño y valores en bruto.
 #include "prueba.hpp"
+#include "../source/core/disenos.hpp"
 #include "../source/core/vecino.hpp"
 #include <cstdio>
 #include <cstdlib>
@@ -145,6 +146,137 @@ OrdenPrueba importarCasaO("casa-importar", [](Contexto& c) {
     {
         printf("%s\n", mal.c_str());
         return 1;
+    }
+    return 0;
+});
+
+// ------------------------------------------------------------------------------------------------ recuerdos
+// vecino-saludo <hueco> <recuerdo> <i> <texto>
+OrdenPrueba saludoO("vecino-saludo", [](Contexto& c) {
+    const int h = num(c.arg(0)), r = num(c.arg(1)), i = num(c.arg(2));
+    ponerSaludo(c.main.datos, h, r, i, c.arg(3));
+    printf("saludo «%s»\n", saludo(c.main.datos, h, r, i).c_str());
+    return 0;
+});
+
+// vecino-recuerdo-nombres <hueco> <recuerdo> <jugador> <isla>
+OrdenPrueba nombresO("vecino-recuerdo-nombres", [](Contexto& c) {
+    const int h = num(c.arg(0)), r = num(c.arg(1));
+    ponerJugadorRecuerdo(c.main.datos, h, r, c.arg(2));
+    ponerIslaRecuerdo(c.main.datos, h, r, c.arg(3));
+    return 0;
+});
+
+// vecino-fecha <hueco> <recuerdo> <año> <mes> <día> (0 0 0: sin fecha)
+OrdenPrueba fechaO("vecino-fecha", [](Contexto& c) {
+    FechaVecino f;
+    f.anio = (uint16_t)num(c.arg(2)), f.mes = (uint8_t)num(c.arg(3)), f.dia = (uint8_t)num(c.arg(4));
+    ponerFechaSaludo(c.main.datos, num(c.arg(0)), num(c.arg(1)), f);
+    return 0;
+});
+
+// vecino-marca-recuerdo <hueco> <recuerdo> <i> <valor>
+OrdenPrueba marcaRecuerdoO("vecino-marca-recuerdo", [](Contexto& c) {
+    ponerMarcaRecuerdo(c.main.datos, num(c.arg(0)), num(c.arg(1)), num(c.arg(2)), (uint8_t)num(c.arg(3)));
+    return 0;
+});
+
+// vecino-recuerdos <hueco>: lo que enseña la pantalla de recuerdos
+OrdenPrueba recuerdosO("vecino-recuerdos", [](Contexto& c) {
+    const int h = num(c.arg(0));
+    const auto& m = c.main.datos;
+    for (int r = 0; r < NUM_RECUERDOS; r++)
+    {
+        const Recuerdo x = recuerdo(m, h, r);
+        const FechaVecino f = fechaSaludo(m, h, r);
+        printf("recuerdo %d: «%s» de «%s», apodo «%s», saludo «%s», fecha %d-%d-%d, amistad %d, visitas %d %d\n", r, x.jugador.c_str(),
+            x.isla.c_str(), x.apodo.c_str(), saludo(m, h, r, 0).c_str(), f.anio, f.mes, f.dia, marcaRecuerdo(m, h, r, 10),
+            marcaRecuerdo(m, h, r, 8), marcaRecuerdo(m, h, r, 9));
+    }
+    c.guardar = false;
+    return 0;
+});
+
+// vecino-recuerdo-exportar <hueco> <recuerdo> <archivo.nhvpm>
+OrdenPrueba recuerdoExportar("vecino-recuerdo-exportar", [](Contexto& c) {
+    c.guardar = false;
+    return escribir(c.arg(2), exportarRecuerdo(c.main.datos, num(c.arg(0)), num(c.arg(1)))) ? 0 : 1;
+});
+
+// vecino-recuerdo-importar <hueco> <recuerdo> <archivo> <hacerSuyo 0|1>
+OrdenPrueba recuerdoImportar("vecino-recuerdo-importar", [](Contexto& c) {
+    const int h = num(c.arg(0)), r = num(c.arg(1));
+    const auto a = leerArchivo(c.arg(2));
+    printf("de otro %d\n", recuerdoDeOtro(c.main.datos, h, r, a));
+    const std::string mal = importarRecuerdo(c.main.datos, h, r, a, num(c.arg(3)) != 0);
+    if (!mal.empty())
+    {
+        printf("%s\n", mal.c_str());
+        return 1;
+    }
+    return 0;
+});
+
+// ------------------------------------------------------------------------------------------------ marcas sueltas
+// vecino-marca <hueco> <i> <valor>
+OrdenPrueba marcaO("vecino-marca", [](Contexto& c) {
+    ponerMarcaVecino(c.main.datos, num(c.arg(0)), num(c.arg(1)), (uint16_t)num(c.arg(2)));
+    return 0;
+});
+
+// vecino-marcas-exportar <hueco> <archivo.nhfl>
+OrdenPrueba marcasExportar("vecino-marcas-exportar", [](Contexto& c) {
+    c.guardar = false;
+    return escribir(c.arg(1), marcasVecinoEnBruto(c.main.datos, num(c.arg(0)))) ? 0 : 1;
+});
+
+// vecino-marcas-cargar <hueco> <archivo.nhfl>
+OrdenPrueba marcasCargar("vecino-marcas-cargar", [](Contexto& c) {
+    return cargarMarcasVecino(c.main.datos, num(c.arg(0)), leerArchivo(c.arg(1))) ? 0 : 1;
+});
+
+// ------------------------------------------------------------------------------------------------ su diseño
+// vecino-diseno <hueco> <archivo.nhpd> <hacerSuyo 0|1> [jugador]: como «Importar» del editor de diseños PRO
+OrdenPrueba disenoO("vecino-diseno", [](Contexto& c) {
+    std::vector<uint8_t> d = leerArchivo(c.arg(1));
+    if (d.size() != TAM_DISENO_VECINO)
+        return 1;
+    const auto& yo = c.pers(c.args.size() > 3 ? num(c.arg(3)) : 0);
+    printf("de otro %d\n", !disenos::esDe(d, yo));
+    if (num(c.arg(2)) && !disenos::esDe(d, yo))
+        disenos::hacerMio(d, yo);
+    disenos::arreglarUso(d, disenos::Pro);
+    ponerDisenoVecino(c.main.datos, num(c.arg(0)), d);
+    return 0;
+});
+
+// vecino-diseno-de <hueco> <diseño PRO de la partida>
+OrdenPrueba disenoDe("vecino-diseno-de", [](Contexto& c) {
+    ponerDisenoVecino(c.main.datos, num(c.arg(0)), disenos::leer(c.main.datos, disenos::Pro, num(c.arg(1))));
+    return 0;
+});
+
+// vecino-diseno-exportar <hueco> <archivo.nhpd>
+OrdenPrueba disenoExportar("vecino-diseno-exportar", [](Contexto& c) {
+    c.guardar = false;
+    const auto d = disenoVecino(c.main.datos, num(c.arg(0)));
+    printf("diseño «%s»\n", disenos::nombre(d).c_str());
+    return escribir(c.arg(1), d) ? 0 : 1;
+});
+
+// ------------------------------------------------------------------------------------------------ valores en bruto
+// vecino-bruto <cuarto|casa> <hueco> <campo> <valor>
+OrdenPrueba bruto("vecino-bruto", [](Contexto& c) {
+    const int h = num(c.arg(1)), k = num(c.arg(2));
+    const long long valor = strtoll(c.arg(3).c_str(), nullptr, 0);
+    if (c.arg(0) == "cuarto")
+        ponerCampo(datosVecino(c.main.datos, h) + V_HABITACION, CAMPOS_CUARTO[k], valor);
+    else
+    {
+        const int casa = casaDe(c.main.datos, h);
+        if (casa < 0)
+            return 1;
+        ponerCampo(datosCasa(c.main.datos, casa), CAMPOS_CASA[k], valor);
     }
     return 0;
 });

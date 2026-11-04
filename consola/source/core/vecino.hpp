@@ -122,4 +122,66 @@ std::string importarVecino(std::vector<uint8_t>& main, int hueco, const std::vec
 std::vector<uint8_t> exportarCasa(const std::vector<uint8_t>& main, int casa);
 std::string importarCasa(std::vector<uint8_t>& main, int casa, const std::vector<uint8_t>& archivo);
 
+// ---------------------------------------------------------------------------------------------- recuerdos
+// Todo lo que un vecino recuerda de un jugador, como VillagerMemoryEditor (GSaveMemory): nombre e isla del jugador,
+// apodo, saludos y su fecha, y 256 marcas (de 0 a 255; la 10 es la amistad).
+constexpr int NUM_SALUDOS = 11;
+constexpr int NUM_MARCAS_RECUERDO = 0x100;
+std::string saludo(const std::vector<uint8_t>& main, int hueco, int r, int i);           // hasta 22 letras, como lo lee NHSE
+void ponerSaludo(std::vector<uint8_t>& main, int hueco, int r, int i, const std::string& texto); // hasta 47
+void ponerJugadorRecuerdo(std::vector<uint8_t>& main, int hueco, int r, const std::string& nombre); // hasta 10
+void ponerIslaRecuerdo(std::vector<uint8_t>& main, int hueco, int r, const std::string& nombre);    // hasta 10
+struct FechaVecino {
+    uint16_t anio = 0;
+    uint8_t mes = 0, dia = 0;
+    bool vacia() const { return anio == 0 && mes == 0 && dia == 0; }
+};
+FechaVecino fechaSaludo(const std::vector<uint8_t>& main, int hueco, int r);
+void ponerFechaSaludo(std::vector<uint8_t>& main, int hueco, int r, const FechaVecino& f);
+// ¿Es una fecha que NHSE enseña? (las de antes de 1753 o que no existen las deja vacías al guardar)
+bool fechaValida(const FechaVecino& f);
+uint8_t marcaRecuerdo(const std::vector<uint8_t>& main, int hueco, int r, int i);
+void ponerMarcaRecuerdo(std::vector<uint8_t>& main, int hueco, int r, int i, uint8_t valor);
+// El recuerdo tal cual (.nhvpm) y traerlo de un archivo. Si es de otro jugador u otra isla que el recuerdo de ahora y
+// «hacerSuyo», pasa a ser de los de ahora (ChangeOrigins, como MiscDumpHelper.LoadVillagerMemoryPlayer).
+std::vector<uint8_t> exportarRecuerdo(const std::vector<uint8_t>& main, int hueco, int r);
+bool recuerdoDeOtro(const std::vector<uint8_t>& main, int hueco, int r, const std::vector<uint8_t>& archivo);
+std::string importarRecuerdo(std::vector<uint8_t>& main, int hueco, int r, const std::vector<uint8_t>& archivo, bool hacerSuyo);
+
+// ---------------------------------------------------------------------------------------------- marcas sueltas
+// Las 256 marcas del vecino (números de 16 bits), como VillagerFlagEditor; en un archivo .nhfl, tal cual.
+constexpr int NUM_MARCAS_VECINO = 0x100;
+uint16_t marcaVecino(const std::vector<uint8_t>& main, int hueco, int i);
+void ponerMarcaVecino(std::vector<uint8_t>& main, int hueco, int i, uint16_t valor);
+std::vector<uint8_t> marcasVecinoEnBruto(const std::vector<uint8_t>& main, int hueco);
+bool cargarMarcasVecino(std::vector<uint8_t>& main, int hueco, const std::vector<uint8_t>& archivo); // false si no es
+
+// ---------------------------------------------------------------------------------------------- su diseño
+// El diseño profesional que lleva el vecino (Villager2.Design), como un .nhpd.
+constexpr uint32_t V_DISENO = 0x128A8;
+constexpr uint32_t TAM_DISENO_VECINO = 0x8A8;
+std::vector<uint8_t> disenoVecino(const std::vector<uint8_t>& main, int hueco);
+void ponerDisenoVecino(std::vector<uint8_t>& main, int hueco, const std::vector<uint8_t>& d);
+
+// ---------------------------------------------------------------------------------------------- valores en bruto
+// Los valores sueltos de la habitación (GSaveRoomFloorWall) y de la casa (VillagerHouse2), como la tabla de «Opciones
+// avanzadas» de RoomWindow y VillagerHouseWindow. «tipo» dice qué es el número, para enseñar su nombre.
+enum TipoCampo { CampoNumero, CampoObjeto, CampoFachada, CampoTejado, CampoPuerta, CampoVecino };
+struct CampoBruto {
+    const char* nombre; // en castellano
+    const char* interno; // el de NHSE
+    uint16_t pos;
+    uint8_t tam;        // 1, 2 o 4 bytes
+    bool signo;
+    TipoCampo tipo;
+};
+extern const CampoBruto CAMPOS_CUARTO[];
+extern const int NUM_CAMPOS_CUARTO;
+extern const CampoBruto CAMPOS_CASA[];
+extern const int NUM_CAMPOS_CASA;
+int64_t leerCampo(const uint8_t* base, const CampoBruto& c);
+void ponerCampo(uint8_t* base, const CampoBruto& c, int64_t valor);
+int64_t minimoCampo(const CampoBruto& c);
+int64_t maximoCampo(const CampoBruto& c);
+
 } // namespace acnh

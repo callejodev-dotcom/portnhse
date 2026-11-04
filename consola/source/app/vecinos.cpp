@@ -1,7 +1,7 @@
 // Sección «Vecinos»: los vecinos de la isla y la ficha de cada uno (cambiarlo por otro, personalidad, muletilla,
 // amistad, paredes y suelo, ropa, muebles, casa, mudanza, bricolaje, y pasarlo a la tarjeta SD o traerlo de ella), como
-// la página de vecinos de NHSE para Mac. También: amistad de cada jugador, mejores amigos de todos, que se muden todos y
-// guardar todos en la tarjeta SD.
+// la página de vecinos de NHSE para Mac, con la cara de cada uno; y lo del editor clásico: recuerdos, marcas sueltas y su
+// diseño. También: amistad de cada jugador, mejores amigos de todos, que se muden todos y guardar todos en la tarjeta SD.
 #include <cctype>
 #include <cstring>
 #include <map>
@@ -11,6 +11,7 @@
 #include "../core/vecinos.hpp"
 #include "objetos_ui.hpp"
 #include "partida.hpp"
+#include "retratos.hpp"
 #include "vecinos_ui.hpp"
 
 using namespace acnh;
@@ -100,14 +101,16 @@ Pantalla elegirVecino(int hueco)
             bool yaEsta = false;
             for (int j = 0; j < NUM_VECINOS; j++)
                 yaEsta |= vecinoEn(partida::principal(), j) == vv.interno;
-            v.b.push_back({{60 + (k / 6) * 390, 140 + (k % 6) * 62, 370, 54}, vv.nombre, [hueco, interno = std::string(vv.interno), nombre = std::string(vv.nombre)] {
+            Boton b{{60 + (k / 6) * 390, 140 + (k % 6) * 62, 370, 54}, vv.nombre, [hueco, interno = std::string(vv.interno), nombre = std::string(vv.nombre)] {
                 const std::string antes = vecinos::nombre(hueco);
                 const std::string mal = cambiarVecino(partida::principal(), hueco, interno, datosVecinos());
                 if (mal.empty())
                     partida::cambiaPrincipal();
                 volver();
                 avisar(mal.empty() ? antes + " se va y llega " + nombre + ". Falta guardar." : mal, !mal.empty());
-            }, !yaEsta});
+            }, !yaEsta};
+            b.imagen = retratos::de(vv.interno);
+            v.b.push_back(b);
         }
         const int primeraLetra = (int)v.b.size();
         for (int l = 0; l < 26; l++)
@@ -333,7 +336,7 @@ void ficha(Vista& v, int hueco)
         x.detalle = d;
         b.push_back(x);
     };
-    boton("Cambiar por otro vecino", "Se queda con la misma casa", [hueco] { abrir(elegirVecino(hueco)); }, !datosVecinos().empty());
+    boton("Cambiar por otro", "Otro vecino en su casa", [hueco] { abrir(elegirVecino(hueco)); }, !datosVecinos().empty());
     boton("Personalidad", p < 8 ? PERSONALIDADES[p] : "?", [hueco, p] {
         elegir("Personalidad de " + nombre(hueco), "Cambia cómo habla y cómo se porta.", std::vector<std::string>(PERSONALIDADES, PERSONALIDADES + 8), p, [hueco](int k) {
             ponerPersonalidad(partida::principal(), hueco, k);
@@ -363,12 +366,32 @@ void ficha(Vista& v, int hueco)
         cambio(!muda ? nombre(hueco) + " se va a mudar" : nombre(hueco) + " se queda");
     }, true, muda);
     boton("Bricolaje", resumenBricolaje(hueco), [hueco] { abrir([hueco](Vista& vi) { pantallaBricolaje(vi, hueco); }); });
-    boton("Exportar a la tarjeta SD", "Para llevarlo a otra isla", [hueco] { exportar(hueco); });
+    boton("Recuerdos", resumenRecuerdos(hueco), [hueco] { recuerdos(hueco); });
+    boton("Marcas", resumenMarcas(hueco), [hueco] { marcas(hueco); });
+    boton("Su diseño", resumenDiseno(hueco), [hueco] { diseno(hueco); });
+    boton("Exportar a la SD", "Para llevarlo a otra isla", [hueco] { exportar(hueco); });
     for (int i = 0; i < (int)b.size(); i++)
     {
-        b[i].r = {50 + (i % 3) * 400, 140 + (i / 3) * 108, 380, 96};
+        b[i].r = {290 + (i % 3) * 315, 140 + (i / 3) * 88, 300, 80};
         v.b.push_back(b[i]);
     }
+    // A la izquierda, su cara, su nombre y su personalidad.
+    SDL_Texture* cara = retratos::de(interno);
+    const std::string especie = p < 8 ? PERSONALIDADES[p] : "";
+    v.dibujo = [cara, n, especie, muda] {
+        const SDL_Rect tarjeta = {50, 140, 220, 432};
+        redondo({tarjeta.x, tarjeta.y + 4, tarjeta.w, tarjeta.h}, 14, CREMA_OSCURA);
+        redondo(tarjeta, 14, BLANCO);
+        if (cara)
+        {
+            const SDL_Rect r = {60, 160, 200, 200};
+            SDL_RenderCopy(g_r, cara, nullptr, &r);
+        }
+        texto(encajar(n, 200, g_grande), 160, 400, MARRON, g_grande, Centro);
+        texto(especie, 160, 448, MARRON_SUAVE, nullptr, Centro);
+        if (muda)
+            texto("Se va a mudar", 160, 490, ROJO, g_pequena, Centro);
+    };
     v.b.push_back({{50, ABAJO - 76, 380, 64}, "Importar de la SD…", [hueco] { importar(hueco); }});
     v.b.push_back({{850, ABAJO - 76, 380, 64}, "Volver", [] { volver(); }});
     v.paginar = [hueco](int d) {
@@ -396,6 +419,7 @@ void lista(Vista& v)
         Boton b{{60 + (i / 5) * 590, 140 + (i % 5) * 86, 570, 76}, nombre(i), [i] { abrir([i](Vista& vi) { ficha(vi, i); }); }, !vacio};
         if (!vacio)
         {
+            b.imagen = retratos::deHueco(i);
             const int p = personalidad(partida::principal(), i);
             b.detalle = std::string(p < 8 ? PERSONALIDADES[p] : "?") + (seMuda(partida::principal(), i) ? " · Se va a mudar" : "");
         }

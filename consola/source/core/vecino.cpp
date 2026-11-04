@@ -353,4 +353,174 @@ std::string importarCasa(std::vector<uint8_t>& main, int casa, const std::vector
     return "";
 }
 
+// ---------------------------------------------------------------------------------------------- recuerdos
+namespace {
+uint32_t posSaludo(int i) { return 0x14C + 0x60 * i; }
+constexpr uint32_t FECHA_SALUDO = 0x56C;
+constexpr uint32_t MARCAS_RECUERDO_EN = 0x38;
+} // namespace
+
+std::string saludo(const std::vector<uint8_t>& main, int hueco, int r, int i) { return leerTextoVecino(recuerdoPtr(main, hueco, r) + posSaludo(i), 22); }
+void ponerSaludo(std::vector<uint8_t>& main, int hueco, int r, int i, const std::string& texto) { escribirTextoVecino(recuerdoPtr(main, hueco, r) + posSaludo(i), texto, 47); }
+void ponerJugadorRecuerdo(std::vector<uint8_t>& main, int hueco, int r, const std::string& nombre) { escribirTextoVecino(recuerdoPtr(main, hueco, r) + 0x20, nombre, 10); }
+void ponerIslaRecuerdo(std::vector<uint8_t>& main, int hueco, int r, const std::string& nombre) { escribirTextoVecino(recuerdoPtr(main, hueco, r) + 4, nombre, 10); }
+
+FechaVecino fechaSaludo(const std::vector<uint8_t>& main, int hueco, int r)
+{
+    const uint8_t* p = recuerdoPtr(main, hueco, r) + FECHA_SALUDO;
+    FechaVecino f;
+    f.anio = le16(p), f.mes = p[2], f.dia = p[3];
+    return f;
+}
+
+void ponerFechaSaludo(std::vector<uint8_t>& main, int hueco, int r, const FechaVecino& f)
+{
+    uint8_t* p = recuerdoPtr(main, hueco, r) + FECHA_SALUDO;
+    put16(p, f.anio);
+    p[2] = f.mes, p[3] = f.dia;
+}
+
+bool fechaValida(const FechaVecino& f)
+{
+    if (f.anio < 1753 || f.anio > 9999 || f.mes < 1 || f.mes > 12 || f.dia < 1)
+        return false;
+    static const int DIAS[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    const bool bisiesto = (f.anio % 4 == 0 && f.anio % 100 != 0) || f.anio % 400 == 0;
+    return f.dia <= DIAS[f.mes - 1] + (f.mes == 2 && bisiesto);
+}
+
+uint8_t marcaRecuerdo(const std::vector<uint8_t>& main, int hueco, int r, int i) { return recuerdoPtr(main, hueco, r)[MARCAS_RECUERDO_EN + i]; }
+void ponerMarcaRecuerdo(std::vector<uint8_t>& main, int hueco, int r, int i, uint8_t valor) { recuerdoPtr(main, hueco, r)[MARCAS_RECUERDO_EN + i] = valor; }
+
+std::vector<uint8_t> exportarRecuerdo(const std::vector<uint8_t>& main, int hueco, int r)
+{
+    const uint8_t* m = recuerdoPtr(main, hueco, r);
+    return std::vector<uint8_t>(m, m + TAM_RECUERDO);
+}
+
+bool recuerdoDeOtro(const std::vector<uint8_t>& main, int hueco, int r, const std::vector<uint8_t>& a)
+{
+    const uint8_t* m = recuerdoPtr(main, hueco, r);
+    return a.size() == TAM_RECUERDO && (memcmp(a.data(), m, TAM_IDENTIDAD) != 0 || memcmp(a.data() + ID_JUGADOR_EN, m + ID_JUGADOR_EN, TAM_IDENTIDAD) != 0);
+}
+
+std::string importarRecuerdo(std::vector<uint8_t>& main, int hueco, int r, const std::vector<uint8_t>& archivo, bool hacerSuyo)
+{
+    if (archivo.size() != TAM_RECUERDO)
+        return "Ese archivo no es un recuerdo de un vecino (tiene otro tamaño).";
+    std::vector<uint8_t> a = archivo;
+    uint8_t* m = recuerdoPtr(main, hueco, r);
+    if (hacerSuyo && recuerdoDeOtro(main, hueco, r, a))
+    {
+        // ChangeOrigins sobre los mismos datos: la isla y luego el jugador (leído ya con la isla cambiada).
+        const std::vector<uint8_t> isla(a.begin(), a.begin() + TAM_IDENTIDAD);
+        reemplazar(a, isla, m);
+        const std::vector<uint8_t> jugador(a.begin() + ID_JUGADOR_EN, a.begin() + ID_JUGADOR_EN + TAM_IDENTIDAD);
+        reemplazar(a, jugador, m + ID_JUGADOR_EN);
+    }
+    memcpy(m, a.data(), TAM_RECUERDO);
+    return "";
+}
+
+// ---------------------------------------------------------------------------------------------- marcas sueltas
+uint16_t marcaVecino(const std::vector<uint8_t>& main, int hueco, int i) { return le16(datosVecino(main, hueco) + V_BANDERAS + 2 * i); }
+void ponerMarcaVecino(std::vector<uint8_t>& main, int hueco, int i, uint16_t valor) { put16(datosVecino(main, hueco) + V_BANDERAS + 2 * i, valor); }
+
+std::vector<uint8_t> marcasVecinoEnBruto(const std::vector<uint8_t>& main, int hueco)
+{
+    const uint8_t* p = datosVecino(main, hueco) + V_BANDERAS;
+    return std::vector<uint8_t>(p, p + 2 * NUM_MARCAS_VECINO);
+}
+
+bool cargarMarcasVecino(std::vector<uint8_t>& main, int hueco, const std::vector<uint8_t>& a)
+{
+    if (a.size() != 2 * NUM_MARCAS_VECINO)
+        return false;
+    memcpy(datosVecino(main, hueco) + V_BANDERAS, a.data(), a.size());
+    return true;
+}
+
+// ---------------------------------------------------------------------------------------------- su diseño
+std::vector<uint8_t> disenoVecino(const std::vector<uint8_t>& main, int hueco)
+{
+    const uint8_t* p = datosVecino(main, hueco) + V_DISENO;
+    return std::vector<uint8_t>(p, p + TAM_DISENO_VECINO);
+}
+
+void ponerDisenoVecino(std::vector<uint8_t>& main, int hueco, const std::vector<uint8_t>& d)
+{
+    if (d.size() == TAM_DISENO_VECINO)
+        memcpy(datosVecino(main, hueco) + V_DISENO, d.data(), TAM_DISENO_VECINO);
+}
+
+// ---------------------------------------------------------------------------------------------- valores en bruto
+const CampoBruto CAMPOS_CUARTO[] = {
+    {"Pared de acento: objeto", "AccentWallItem.UniqueID", 0x00, 2, false, CampoObjeto},
+    {"Pared de acento: parámetro del sistema", "AccentWallItem.SystemParam", 0x02, 1, false, CampoNumero},
+    {"Pared de acento: parámetro extra", "AccentWallItem.AdditionalParam", 0x03, 1, false, CampoNumero},
+    {"Pared de acento: parámetro libre", "AccentWallItem.FreeParam", 0x04, 4, true, CampoNumero},
+    {"Pared: objeto", "WallItem.UniqueID", 0x08, 2, false, CampoObjeto},
+    {"Pared: parámetro del sistema", "WallItem.SystemParam", 0x0A, 1, false, CampoNumero},
+    {"Pared: parámetro extra", "WallItem.AdditionalParam", 0x0B, 1, false, CampoNumero},
+    {"Pared: parámetro libre", "WallItem.FreeParam", 0x0C, 4, true, CampoNumero},
+    {"Suelo: objeto", "FloorItem.UniqueID", 0x10, 2, false, CampoObjeto},
+    {"Suelo: parámetro del sistema", "FloorItem.SystemParam", 0x12, 1, false, CampoNumero},
+    {"Suelo: parámetro extra", "FloorItem.AdditionalParam", 0x13, 1, false, CampoNumero},
+    {"Suelo: parámetro libre", "FloorItem.FreeParam", 0x14, 4, true, CampoNumero},
+    {"Diseño de la pared de acento", "AccentWallMyDesignID", 0x18, 2, false, CampoNumero},
+    {"Diseño de la pared", "WallMyDesignID", 0x1A, 2, false, CampoNumero},
+    {"Diseño del suelo", "FloorMyDesignID", 0x1C, 2, false, CampoNumero},
+    {"Hacia dónde mira la pared de acento", "AccentWallDirection", 0x1E, 1, false, CampoNumero},
+    {"Marcas de información", "InfoBit", 0x1F, 1, false, CampoNumero},
+    {"Hacia dónde mira el suelo", "FloorDirection", 0x20, 1, false, CampoNumero},
+};
+const int NUM_CAMPOS_CUARTO = sizeof(CAMPOS_CUARTO) / sizeof(CAMPOS_CUARTO[0]);
+
+const CampoBruto CAMPOS_CASA[] = {
+    {"Nivel de la casa", "HouseLevel", 0x00, 4, false, CampoNumero},
+    {"Estado de la casa", "HouseStatus", 0x04, 4, false, CampoNumero},
+    {"Fachada", "WallUniqueID", 0x08, 2, false, CampoFachada},
+    {"Tejado", "RoofUniqueID", 0x0A, 2, false, CampoTejado},
+    {"Puerta", "DoorUniqueID", 0x0C, 2, false, CampoPuerta},
+    {"Fachada pedida para mañana", "OrderWallUniqueID", 0x0E, 2, false, CampoFachada},
+    {"Tejado pedido para mañana", "OrderRoofUniqueID", 0x10, 2, false, CampoTejado},
+    {"Puerta pedida para mañana", "OrderDoorUniqueID", 0x12, 2, false, CampoPuerta},
+    {"En la puerta: objeto", "DoorDecoItemName.ItemId", 0x1C8, 2, false, CampoObjeto},
+    {"En la puerta: parámetro del sistema", "DoorDecoItemName.SystemParam", 0x1CA, 1, false, CampoNumero},
+    {"En la puerta: parámetro extra", "DoorDecoItemName.AdditionalParam", 0x1CB, 1, false, CampoNumero},
+    {"En la puerta: cantidad", "DoorDecoItemName.Count", 0x1CC, 2, false, CampoNumero},
+    {"En la puerta: usos", "DoorDecoItemName.UseCount", 0x1CE, 2, false, CampoNumero},
+    {"Quién vive en ella (vecino)", "NPC1", 0x1C4, 1, true, CampoVecino},
+    {"Segundo vecino", "NPC2", 0x1C5, 1, true, CampoVecino},
+    {"Jugador que la construyó", "BuildPlayer", 0x1D0, 1, true, CampoNumero},
+    {"Objeto extra", "ExtraItem.ItemId", 0x12DC, 2, false, CampoObjeto},
+    {"Objeto extra: parámetro del sistema", "ExtraItem.SystemParam", 0x12DE, 1, false, CampoNumero},
+    {"Objeto extra: parámetro extra", "ExtraItem.AdditionalParam", 0x12DF, 1, false, CampoNumero},
+    {"Objeto extra: cantidad", "ExtraItem.Count", 0x12E0, 2, false, CampoNumero},
+    {"Objeto extra: usos", "ExtraItem.UseCount", 0x12E2, 2, false, CampoNumero},
+    {"Marca", "Flag", 0x12E4, 1, false, CampoNumero},
+};
+const int NUM_CAMPOS_CASA = sizeof(CAMPOS_CASA) / sizeof(CAMPOS_CASA[0]);
+
+int64_t leerCampo(const uint8_t* base, const CampoBruto& c)
+{
+    const uint8_t* p = base + c.pos;
+    uint32_t u = 0;
+    for (int i = 0; i < c.tam; i++)
+        u |= (uint32_t)p[i] << (8 * i);
+    if (!c.signo)
+        return u;
+    return c.tam == 1 ? (int64_t)(int8_t)u : c.tam == 2 ? (int64_t)(int16_t)u : (int64_t)(int32_t)u;
+}
+
+void ponerCampo(uint8_t* base, const CampoBruto& c, int64_t valor)
+{
+    const uint32_t u = (uint32_t)valor;
+    for (int i = 0; i < c.tam; i++)
+        base[c.pos + i] = (uint8_t)(u >> (8 * i));
+}
+
+int64_t minimoCampo(const CampoBruto& c) { return c.signo ? -(int64_t(1) << (8 * c.tam - 1)) : 0; }
+int64_t maximoCampo(const CampoBruto& c) { return c.signo ? (int64_t(1) << (8 * c.tam - 1)) - 1 : (int64_t(1) << (8 * c.tam)) - 1; }
+
 } // namespace acnh

@@ -302,6 +302,7 @@ void cuarto(int hueco)
             b.detalle = p == CuartoAcento && !hayAcento(hueco) ? "No tiene (una de las paredes, con otro papel)" : nombreParte(parteCuarto(partida::principal(), hueco, p));
             v.b.push_back(b);
         }
+        v.b.push_back({{660, 520, 560, 60}, "Valores en bruto (expertos)", [hueco] { brutoCuarto(hueco); }});
         v.b.push_back({{660, ABAJO - 76, 560, 64}, "Volver", [] { volver(); }});
     });
 }
@@ -387,7 +388,8 @@ void casa(int hueco)
             b[i].r = {60 + (i % 2) * 590, 140 + (i / 2) * 106, 570, 94};
             v.b.push_back(b[i]);
         }
-        v.b.push_back({{W / 2 - 200, ABAJO - 76, 400, 64}, "Volver", [] { volver(); }});
+        v.b.push_back({{60, ABAJO - 76, 500, 64}, "Valores en bruto (expertos)", [hueco] { brutoCasa(hueco); }});
+        v.b.push_back({{850, ABAJO - 76, 370, 64}, "Volver", [] { volver(); }});
     });
 }
 

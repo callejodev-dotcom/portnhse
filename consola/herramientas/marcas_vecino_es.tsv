@@ -1,0 +1,235 @@
+# Lo que significa cada marca de un vecino (vecino) y de lo que un vecino recuerda de cada jugador (recuerdo): tipo,
+# número, texto. Traducido de los comentarios en japonés de los desarrolladores que guarda NHSE.Core
+# (EventFlagVillager.cs y EventFlagVillagerMemoryPlayer.cs). Lo usa herramientas/Generar (VecinoMarcas.cs).
+vecino	0	Pagos que ha hecho de su casa.
+vecino	1	Puede cambiar su tienda de campaña por una casa.
+vecino	2	Ya ha cambiado su tienda por una casa.
+vecino	3	Ya ha puesto al día dónde van sus muebles.
+vecino	4	Es el tercer vecino que llegó a la isla.
+vecino	5	Ya ha terminado de mudarse.
+vecino	6	Cuántos muebles colocó la última vez.
+vecino	7	Qué habitación de cajas de mudanza se usó (plantilla).
+vecino	8	Su muletilla se la puso un jugador.
+vecino	9	Su casa se queda vacía (1 o 2).
+vecino	10	Alguna vez le han cambiado la muletilla.
+vecino	12	Ya ha tenido la charla de bienvenida al primer jugador.
+vecino	14	Vino por la misión de traer vecinos nuevos.
+vecino	15	Ha cambiado el papel de pared del principio.
+vecino	16	Ha cambiado el suelo del principio.
+vecino	18	Ya tiene el primer mueble de pared de los vecinos del principio.
+vecino	19	Ya tiene el segundo mueble de pared de los vecinos del principio.
+vecino	20	Qué aparato de música usa hoy.
+vecino	21	Veces que ha tenido la charla de paso del principio al día a día.
+vecino	22	Ya ha terminado la charla de paso del principio al día a día.
+vecino	23	Cómo va lo de echarse una cabezada fuera de noche.
+vecino	24	Se lo lleva el juego de verdad cuando se muda.
+vecino	25	Madrugador o trasnochador.
+vecino	26	Días seguidos de vida normal.
+vecino	27	Ya ha comentado el regalo que lleva puesto el primer jugador.
+vecino	28	Usa la tela de siempre para la funda del teléfono.
+vecino	29	Ya ha animado a reunir materiales para la tienda.
+vecino	32	Hoy ha cambiado su tienda por una casa.
+vecino	35	Ya ha tenido la charla para ayudar a la fama de la isla.
+vecino	36	Ya ha dado el regalo para ayudar a la fama de la isla.
+vecino	37	Hoy ha tenido la charla para ayudar a la fama de la isla.
+vecino	38	Ya ha dado la bienvenida a los recién llegados.
+vecino	40	Hoy es el día de dar la bienvenida a los recién llegados.
+vecino	41	Su turno para mudarse a una parcela ya vendida.
+vecino	42	Se viste para Pascua.
+vecino	43	Qué vecino se lleva el juego a la fuerza (su número).
+vecino	44	Boda en junio: pone el plato de recuerdo.
+vecino	45	Boda en junio: días desde que fue a la fiesta.
+vecino	49	Días hasta que se anima a darte conversación.
+vecino	50	Día de la Cosecha: el ingrediente que pide.
+vecino	51	Día de la Cosecha: el último ingrediente que te dio.
+vecino	52	Día de la Cosecha: el último ingrediente que pidió.
+vecino	54	Navidad: a qué hora se despierta.
+vecino	55	Se viste para Navidad.
+vecino	56	Día de la Cosecha: pista del primer ingrediente secreto (1 o 2).
+vecino	57	Día de la Cosecha: pista del segundo ingrediente secreto (1 o 2).
+vecino	58	Día de la Cosecha: pista del tercer ingrediente secreto (1 o 2).
+vecino	59	Día de la Cosecha: pista del cuarto ingrediente secreto (1 o 2).
+vecino	61	Carnaval: el color de pluma que quiere.
+vecino	62	San Valentín: qué ramo tiene puesto.
+vecino	64	Día de la Cosecha: esperando a que acabe la escena.
+vecino	65	Cuenta atrás de Año Nuevo: se ha puesto el gorro.
+vecino	66	Día de la Cosecha: está en la escena.
+vecino	69	Decorar su casa: cómo está la mesa de trabajo.
+vecino	70	Cuántas cosas de ropa se pueden colocar encima al cambiar los muebles.
+vecino	71	Cocina a la hora en que suele hacer bricolaje.
+vecino	72	Café El Palomar: a qué hora se va cuando va por sorpresa.
+vecino	73	Le han dejado la casa como al principio en el centro de servicios.
+vecino	74	Decorar su casa: el estado reservado de la mesa de trabajo.
+vecino	75	Si su música va al azar en la habitación decorada.
+vecino	76	Se pone delante de la isla de cocina al cocinar.
+vecino	77	Ha puesto el plato de la boda como parte del evento.
+vecino	78	Ha puesto el ramo de rosas de corazón como parte del evento.
+vecino	79	Hoy ya ha animado a reunir materiales para la tienda.
+vecino	80	Ya ha dado pistas de los viajes en avión.
+recuerdo	0	Ya ha oído hoy una charla de un evento de varios días (no se usa).
+recuerdo	1	Días seguidos que el jugador le ha hablado.
+recuerdo	2	Han vivido en la misma isla.
+recuerdo	3	El jugador le ha puesto alguna vez un saludo.
+recuerdo	4	Pascua: hoy le ha dado algo al jugador.
+recuerdo	5	Ya le ha contado lo de la ampliación del museo.
+recuerdo	6	Ya le ha dicho al jugador que quiere mudarse.
+recuerdo	7	Ya ha hablado con el jugador mientras se mudaba.
+recuerdo	8	Veces que ha ido a casa del jugador.
+recuerdo	9	Veces que el jugador ha ido a su casa.
+recuerdo	10	Amistad con el jugador (puntos).
+recuerdo	11	Veces que ha hablado hoy con el jugador.
+recuerdo	12	Veces que ha hablado hoy con el jugador en su casa.
+recuerdo	13	Ya se conocen.
+recuerdo	14	Se sienta en el banco.
+recuerdo	15	Ha hablado con el jugador en esta visita al sueño.
+recuerdo	16	Halloween: caramelos que le ha dado hoy el jugador.
+recuerdo	17	Días desde la última vez que fue a casa del jugador.
+recuerdo	18	Ha hablado con el jugador como vecinos de la misma isla.
+recuerdo	19	El jugador le ha puesto un saludo.
+recuerdo	20	El jugador le ha puesto una muletilla.
+recuerdo	21	El jugador le ha puesto un apodo.
+recuerdo	22	Ha hablado con el jugador antes de un evento.
+recuerdo	23	Ha hablado con el jugador durante un evento.
+recuerdo	24	Ha hablado con el jugador después de un evento.
+recuerdo	25	No vino cuando el jugador le invitó a la isla.
+recuerdo	26	No vino porque ya había otro vecino invitado.
+recuerdo	27	No vino porque ya vive uno igual en la isla.
+recuerdo	28	No vino porque ya viene uno igual a vivir.
+recuerdo	29	El jugador le ha dado algo que se puede regalar.
+recuerdo	30	Su cumpleaños: el jugador le ha hecho un regalo.
+recuerdo	31	El apodo se lo puso este mismo jugador.
+recuerdo	32	Su cumpleaños: ha hablado con el jugador al entrar en casa.
+recuerdo	33	Su cumpleaños: ha hablado con el jugador en la fiesta.
+recuerdo	34	Su cumpleaños: ha hablado con el jugador al salir de casa.
+recuerdo	35	Cumpleaños del jugador: le ha felicitado.
+recuerdo	36	Cumpleaños del jugador: le ha dado la magdalena.
+recuerdo	37	El jugador vino como amigo de quien abrió la isla.
+recuerdo	38	Hoy ya ha comentado la ropa del jugador.
+recuerdo	39	Ha hablado con el jugador estando enfermo.
+recuerdo	40	No vino porque la isla ya está llena.
+recuerdo	41	Se ha presentado al jugador en esta isla.
+recuerdo	42	Le ha contado al jugador que ya no se muda.
+recuerdo	43	Cumpleaños del jugador: estuvo en la fiesta.
+recuerdo	44	Veces que ha hablado con el jugador dentro de casa (en una visita).
+recuerdo	45	Hoy ya ha comentado su propia ropa.
+recuerdo	46	Hoy ya le ha dicho al jugador algo que quiere.
+recuerdo	47	No vino porque no había parcelas a la venta.
+recuerdo	48	Ya ha hecho alguna vez la visita a casa del jugador.
+recuerdo	49	No cuenta como que se conocen.
+recuerdo	50	El jugador le invitó el día que se mudaba.
+recuerdo	51	El jugador le convenció para que no se mudara.
+recuerdo	52	Vino porque el jugador le invitó.
+recuerdo	53	El encargo se lo pidió al acercarse.
+recuerdo	55	Veces seguidas que han hablado.
+recuerdo	56	Veces que ha oído «otra vez» (2).
+recuerdo	57	Ha hablado de bricolaje con el jugador.
+recuerdo	58	Halloween: qué le da cuando está haciendo bricolaje.
+recuerdo	59	Le ha felicitado el Año Nuevo (1 de enero).
+recuerdo	60	Le ha dado una receta o materiales.
+recuerdo	61	Al darle materiales, el jugador tenía los bolsillos llenos.
+recuerdo	62	Ha echado una carta en la visita a casa del jugador.
+recuerdo	63	Hoy se ha presentado al jugador en esta isla.
+recuerdo	64	El jugador ya ha recibido su primer regalo de él.
+recuerdo	65	Hoy no comenta la ropa (1).
+recuerdo	66	Ahora no comenta la ropa (2).
+recuerdo	67	Ahora no comenta la ropa (1).
+recuerdo	68	Ahora ya ha hablado de la semana.
+recuerdo	69	Ahora ya ha hecho una pregunta.
+recuerdo	70	Ahora ya ha tenido una charla de siempre.
+recuerdo	71	Ahora ya ha tenido una charla de siempre (otra).
+recuerdo	72	Ahora ya ha hablado del tiempo especial.
+recuerdo	73	Ahora ya ha hablado del tiempo.
+recuerdo	74	Ahora ya ha hablado de la estación.
+recuerdo	75	Ahora ya ha hablado de un sitio especial.
+recuerdo	76	Ahora ya ha hablado de un sitio.
+recuerdo	78	Ahora ya ha hablado de un objeto suyo.
+recuerdo	79	Ahora ya ha hablado de un objeto del jugador.
+recuerdo	80	Hoy ya ha oído un rumor de un vecino de la isla (no se usa).
+recuerdo	81	Hoy ya ha oído un rumor de un visitante.
+recuerdo	82	Hoy ya ha oído un rumor sobre lo que le gusta a alguien.
+recuerdo	83	Hoy ya le ha contado un rumor.
+recuerdo	84	Ahora ya ha hablado de una mudanza.
+recuerdo	85	Hoy ya ha hablado de un evento.
+recuerdo	86	Hoy ya ha hablado de un personaje especial.
+recuerdo	87	Ahora ya ha tenido una charla de eventos.
+recuerdo	88	Ahora ya ha tenido una charla suelta.
+recuerdo	89	Fuegos artificiales: el jugador se quedó sin recoger algo de él.
+recuerdo	90	Hoy ya ha hablado de la Academia de Paisajismo.
+recuerdo	91	La última charla que oyó antes de volver a sortear (número).
+recuerdo	92	Le ha mandado una carta por la ampliación de su casa.
+recuerdo	93	Le ha felicitado el Año Nuevo lunar.
+recuerdo	94	Ahora ya ha hablado del animal del año.
+recuerdo	95	Ya le ha contado lo de las casas de los primeros vecinos.
+recuerdo	96	Ya le ha contado lo de la casa del jugador.
+recuerdo	97	Ya le ha contado lo del sótano de la casa del jugador.
+recuerdo	98	Ya le ha contado lo de la misión de traer vecinos nuevos.
+recuerdo	99	Ya le ha contado lo de reunir madera para la tienda.
+recuerdo	100	Ya le ha contado lo del centro de servicios terminado.
+recuerdo	101	Ya le ha contado lo de la tienda terminada.
+recuerdo	102	Ya le ha contado lo de la ampliación de la tienda.
+recuerdo	103	Ya le ha contado lo de la tienda de campaña de Sócrates.
+recuerdo	104	Ya le ha contado lo del museo terminado.
+recuerdo	105	Ya le ha contado lo de la sastrería terminada.
+recuerdo	106	Ya le ha contado lo del primer puente.
+recuerdo	107	Ya le ha contado lo de la primera cuesta.
+recuerdo	108	Ya le ha contado lo de otro jugador que se ha mudado.
+recuerdo	109	Hoy ya ha oído un rumor del jugador (no se usa).
+recuerdo	110	Se conocen desde que su casa era una tienda de campaña.
+recuerdo	111	Ya le ha dicho que se ha curado.
+recuerdo	112	Que se levante.
+recuerdo	113	Ya se ha levantado.
+recuerdo	114	Hoy ya ha hablado de la cara picada por avispas.
+recuerdo	115	Hoy ya ha hablado de los picores.
+recuerdo	116	Hoy ya ha hablado de madrugar o trasnochar.
+recuerdo	117	Hoy ya ha ido de visita a casa del jugador.
+recuerdo	118	Hoy ya ha recibido la visita del jugador.
+recuerdo	119	Le ha pedido o le ha hecho un encargo.
+recuerdo	120	Se ha presentado al jugador en su casa con cajas el día que llegó.
+recuerdo	121	Ya le ha dado el regalo de recién llegado.
+recuerdo	122	Acabó la búsqueda del tesoro sin recogerlo.
+recuerdo	123	Veces que han hablado hoy en una tienda o edificio.
+recuerdo	124	Hoy ha llegado a «conocidos» (amistad alta).
+recuerdo	125	Ya ha llegado a «conocidos» (amistad alta).
+recuerdo	126	Su cumpleaños: qué devuelve en otra isla.
+recuerdo	127	Pascua: el jugador se quedó sin recoger algo de él.
+recuerdo	129	Halloween: hoy el jugador le ha asustado vestido de calabaza.
+recuerdo	130	Halloween: hoy le ha dado caramelos al jugador.
+recuerdo	131	Fuegos artificiales: le ha dado fuegos al hablar.
+recuerdo	132	Halloween: ha hablado con el jugador en esta escena.
+recuerdo	133	Halloween: le ha dado caramelos en esta escena.
+recuerdo	136	Halloween: en la última charla el jugador se quedó sin premio.
+recuerdo	137	Halloween: el premio que se quedó sin dar en la última charla.
+recuerdo	138	Día de la Cosecha: ya han hecho un trueque.
+recuerdo	139	Navidad: ya ha recibido un regalo de Papá Noel.
+recuerdo	140	Navidad: el jugador tenía los bolsillos llenos y no recibió su regalo.
+recuerdo	141	Navidad: le ha devuelto un regalo.
+recuerdo	142	Navidad: han cambiado regalos.
+recuerdo	143	Navidad: qué regalo le dio el jugador en el intercambio.
+recuerdo	144	Nochebuena: el jugador va vestido de Papá Noel.
+recuerdo	145	Navidad: el jugador se quedó sin recoger algo de él.
+recuerdo	146	Navidad (día 25): ya ha tenido la charla del día.
+recuerdo	147	Navidad: el jugador tenía los bolsillos llenos y no recibió el papel de regalo.
+recuerdo	148	Navidad: qué regalo le dio el jugador para Papá Noel.
+recuerdo	149	Navidad: el color del regalo del intercambio.
+recuerdo	150	Navidad: el color del regalo para Papá Noel.
+recuerdo	151	Carnaval: ha hablado con el jugador sin plumas.
+recuerdo	152	Carnaval: han cambiado plumas.
+recuerdo	153	Carnaval: hoy ha hablado con el jugador fuera.
+recuerdo	154	Carnaval: ha hablado de cambiar plumas.
+recuerdo	155	San Valentín: le ha dado su regalo.
+recuerdo	156	Pascua: hoy ha hablado con el jugador fuera.
+recuerdo	157	Pascua: han cambiado huevos.
+recuerdo	158	Pascua: ha hablado de cambiar huevos.
+recuerdo	159	Pascua: lo que el jugador se quedó sin recoger era una receta.
+recuerdo	160	Decorar su casa: hoy el jugador le ha propuesto cambiar el interior.
+recuerdo	161	Decorar su casa: hoy el jugador le ha propuesto cambiar el exterior.
+recuerdo	162	Decorar su casa: hoy ya está hecho el interior propuesto.
+recuerdo	163	Decorar su casa: hoy ya está hecho el exterior propuesto.
+recuerdo	164	Decorar su casa: el interior de ahora lo propuso el jugador.
+recuerdo	165	Decorar su casa: el exterior de ahora lo propuso el jugador.
+recuerdo	166	Decorar su casa: hoy ya ha comentado la propuesta.
+recuerdo	167	Ya ha ido al archipiélago con el jugador tras recibir el bombón de recuerdo.
+recuerdo	168	Ya le ha contado lo de la cafetería del museo.
+recuerdo	169	Ya ha recibido el bombón de recuerdo.
+recuerdo	170	Contador para no elegir una foto como premio.
+recuerdo	171	Veces que hoy el jugador le ha bajado la amistad (megáfono, golpes, empujones).
