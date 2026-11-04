@@ -33,7 +33,7 @@ void dinero(Vista& v)
     auto cambiaPers = [] { partida::cambiaPersonal(); };
     // As the money of NHSE for Mac: the same cards, icons and notes.
     std::vector<Cifra> cifras = {
-        {"Monedero", "MoneyBag039", "Lo que llevas (hasta 99.999)", "Bayas en el monedero (máx. 99.999)", 99999, pers(MONEDERO), cambiaPers},
+        {"Monedero", "MoneyBag039", "Como mucho 99.999", "Bayas en el monedero (máx. 99.999)", 99999, pers(MONEDERO), cambiaPers},
         {"Ahorros", "MoneyBag069", "Las bayas del cajero", "Bayas en el banco (máx. 999.999.999)", 999999999, pers(BANCO), cambiaPers},
         {"Millas Nook", "Coin", numero(leerNumero(partida::personal().data() + MILLAS + 8)) + " ganadas en total", "Millas Nook", 999999999, pers(MILLAS), cambiaPers},
     };
