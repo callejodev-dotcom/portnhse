@@ -18,6 +18,17 @@ std::string leerTexto(const uint8_t* p, int max);
 void escribirTexto(uint8_t* p, const std::string& s, int max);
 int largoTexto(const std::string& s); // in UTF-16 letters, as the game counts them
 
+// Cambiar el nombre del jugador o de la isla, como NHSE (HorizonSave.ChangeIdentity): el nombre va también en cartas,
+// recuerdos de los vecinos..., así que se cambia cada copia de la «identidad» (número + nombre, 24 bytes) en todos
+// los archivos. reemplazarTodo devuelve cuántas copias ha cambiado en ese archivo.
+constexpr size_t TAM_IDENTIDAD = 24;
+constexpr uint32_t ID_ISLA = 0xC248;          // in personal.dat: the island (number + name)
+constexpr uint32_t ID_PERSONA = 0xC248 + 0x1C; // and the player (number + name)
+int reemplazarTodo(std::vector<uint8_t>& datos, const uint8_t* antes, const uint8_t* despues, size_t n);
+
+// Las Poki (el dinero del hotel), en wherearen.dat.
+constexpr uint32_t POKI = 0xB84228;
+
 // Una fecha de la partida (GSaveDate: año, mes, día; todo 0 = sin fecha).
 struct Fecha {
     uint16_t anio = 0;

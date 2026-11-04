@@ -130,6 +130,25 @@ void escribirTexto(uint8_t* p, const std::string& s, int max)
 
 int largoTexto(const std::string& s) { return (int)utf16(s).size(); }
 
+int reemplazarTodo(std::vector<uint8_t>& datos, const uint8_t* antes, const uint8_t* despues, size_t n)
+{
+    // Como ArrayUtil.ReplaceOccurrences de NHSE: de izquierda a derecha, seguir tras cada cambio.
+    if (memcmp(antes, despues, n) == 0 || datos.size() < n)
+        return 0;
+    int cuantos = 0;
+    for (size_t i = 0; i + n <= datos.size();)
+    {
+        auto it = std::search(datos.begin() + i, datos.end(), antes, antes + n);
+        if (it == datos.end())
+            break;
+        const size_t pos = it - datos.begin();
+        memcpy(datos.data() + pos, despues, n);
+        i = pos + n;
+        cuantos++;
+    }
+    return cuantos;
+}
+
 bool Fecha::valida() const { return mes >= 1 && mes <= 12 && dia >= 1 && anio >= 1 && dia <= diasDelMes(mes, anio); }
 
 Fecha leerFecha(const uint8_t* p) { return Fecha{l16(p), p[2], p[3]}; }

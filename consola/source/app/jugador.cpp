@@ -1,6 +1,8 @@
 // Sección «Jugador»: dinero, bolsillos, almacén, papelera y aprender todo (recetas, catálogo, reacciones). Las demás
 // tarjetas de la sección están en jugador_*.cpp (colecciones, récords, correo, perfil).
 #include "../core/jugador.hpp"
+#include <cstring>
+#include <functional>
 #include "objetos_ui.hpp"
 #include "partida.hpp"
 #include "ui.hpp"
@@ -10,30 +12,96 @@ using namespace ui;
 
 namespace {
 
+// Las Poki van en wherearen.dat (no lo tienen las partidas muy viejas).
+acnh::Archivo* dondeEstan() { return partida::otro(partida::jugador().carpeta + "/wherearen.dat"); }
+
 void dinero(Vista& v)
 {
     v.titulo = "Dinero y millas de " + partida::jugador().nombre;
     v.explicacion = "Toca un número para cambiarlo.";
-    const uint32_t pos[4] = {MONEDERO, BANCO, MILLAS, BILLETES_HOTEL};
-    const char* nombres[4] = {"Monedero", "Banco", "Millas Nook", "Billetes del hotel"};
-    const char* titulos[4] = {"Bayas en el monedero (máx. 99.999)", "Bayas en el banco (máx. 999.999.999)", "Millas Nook", "Billetes del hotel"};
-    const uint32_t maximos[4] = {99999, 999999999, 999999999, 999999999};
-    // Los billetes del hotel, solo si la partida ya tiene el hotel (como el Mac).
-    const int filas = hayHotel(partida::personal()) ? 4 : 3;
-    for (int i = 0; i < filas; i++)
+    struct Cifra {
+        const char* nombre;
+        const char* titulo;
+        uint32_t maximo;
+        const char* unidad;
+        std::function<uint8_t*()> donde;
+        std::function<void()> cambia;
+    };
+    auto pers = [](uint32_t pos) { return [pos] { return partida::personal().data() + pos; }; };
+    auto cambiaPers = [] { partida::cambiaPersonal(); };
+    std::vector<Cifra> cifras = {
+        {"Monedero", "Bayas en el monedero (máx. 99.999)", 99999, " bayas", pers(MONEDERO), cambiaPers},
+        {"Banco", "Bayas en el banco (máx. 999.999.999)", 999999999, " bayas", pers(BANCO), cambiaPers},
+        {"Millas Nook", "Millas Nook", 999999999, "", pers(MILLAS), cambiaPers},
+    };
+    // Los billetes del hotel y las Poki, solo si la partida ya los tiene (como el Mac).
+    if (hayHotel(partida::personal()))
+        cifras.push_back({"Billetes del hotel", "Billetes del hotel", 999999999, "", pers(BILLETES_HOTEL), cambiaPers});
+    if (dondeEstan())
+        cifras.push_back({"Poki", "Poki", 999999999, "", [] { return dondeEstan()->datos.data() + POKI; },
+            [] { partida::cambiaOtro(partida::jugador().carpeta + "/wherearen.dat"); }});
+    for (int i = 0; i < (int)cifras.size(); i++)
     {
-        const uint32_t p = pos[i], maximo = maximos[i];
-        const std::string t = titulos[i];
-        v.b.push_back({{100, 160 + i * 105, 1080, 90}, std::string(nombres[i]) + ": " + numero(leerNumero(partida::personal().data() + p)) + (i < 2 ? " bayas" : ""), [p, maximo, t] {
-            uint32_t n = leerNumero(partida::personal().data() + p);
-            if (pedirNumero(t, n, maximo))
+        const Cifra c = cifras[i];
+        v.b.push_back({{60 + (i % 2) * 590, 160 + (i / 2) * 120, 570, 100}, std::string(c.nombre) + ": " + numero(leerNumero(c.donde())) + c.unidad, [c] {
+            uint32_t n = leerNumero(c.donde());
+            if (pedirNumero(c.titulo, n, c.maximo))
             {
-                escribirNumero(partida::personal().data() + p, n);
-                partida::cambiaPersonal();
+                escribirNumero(c.donde(), n);
+                c.cambia();
                 cambiado();
             }
         }});
     }
+    v.b.push_back({{440, ABAJO - 90, 400, 70}, "Volver", [] { volver(); }});
+}
+
+// Cambiar el nombre del jugador o de la isla en todas sus copias (como el Mac).
+void renombrar(bool isla)
+{
+    auto& p = partida::personal();
+    const uint32_t pos = isla ? ID_ISLA : ID_PERSONA;
+    const std::string actual = leerTexto(p.data() + pos + 4, 10);
+    std::string nuevo = actual;
+    if (!pedirTexto(isla ? "Nombre de la isla" : "Nombre de " + actual, "Hasta 10 letras", nuevo, 10) || nuevo.empty() || nuevo == actual)
+        return;
+    if (largoTexto(nuevo) > 10)
+    {
+        avisar("Como mucho 10 letras.", true);
+        return;
+    }
+    uint8_t antes[TAM_IDENTIDAD], despues[TAM_IDENTIDAD];
+    memcpy(antes, p.data() + pos, TAM_IDENTIDAD);
+    escribirTexto(p.data() + pos + 4, nuevo, 10);
+    memcpy(despues, p.data() + pos, TAM_IDENTIDAD);
+    partida::cambiaPersonal();
+    int copias = 1;
+    if (int n = reemplazarTodo(partida::principal(), antes, despues, TAM_IDENTIDAD))
+        partida::cambiaPrincipal(), copias += n;
+    const char* const OTROS[] = {"postbox.dat", "photo_studio_island.dat", "profile.dat", "wherearen.dat"};
+    for (int j = 0; j < (int)partida::jugadores.size(); j++)
+    {
+        if (int n = reemplazarTodo(partida::personal(j), antes, despues, TAM_IDENTIDAD))
+            partida::cambiaPersonal(j), copias += n;
+        for (const char* f : OTROS)
+        {
+            const std::string ruta = partida::jugadores[j].carpeta + "/" + f;
+            if (acnh::Archivo* o = partida::otro(ruta))
+                if (int n = reemplazarTodo(o->datos, antes, despues, TAM_IDENTIDAD))
+                    partida::cambiaOtro(ruta), copias += n;
+        }
+        partida::jugadores[j].nombre = nombreJugador(partida::personal(j));
+    }
+    partida::isla = nombreIsla(partida::personal(0));
+    cambiado((isla ? "La isla se llama ahora " : "Ahora se llama ") + nuevo + " (" + std::to_string(copias) + " sitios)");
+}
+
+void nombres(Vista& v)
+{
+    v.titulo = "Nombres";
+    v.explicacion = "El nombre se cambia en todas partes: cartas, recuerdos de los vecinos, fotos…";
+    v.b.push_back({{100, 170, 1080, 100}, "Jugador: " + partida::jugador().nombre, [] { renombrar(false); }});
+    v.b.push_back({{100, 290, 1080, 100}, "Isla: " + partida::isla, [] { renombrar(true); }});
     v.b.push_back({{440, ABAJO - 90, 400, 70}, "Volver", [] { volver(); }});
 }
 
@@ -136,5 +204,9 @@ Registro r5({SeccionJugador, 35, [] { return std::string("Papelera de reciclaje"
 Registro r3({SeccionJugador, 90, [] { return std::string("Aprender todo"); },
     [] { return std::string("Recetas, catálogo y reacciones de golpe"); },
     [] { abrir(aprenderTodo); }});
+
+Registro rNombres({SeccionJugador, 15, [] { return std::string("Nombres"); },
+    [] { return partida::jugador().nombre + " de " + partida::isla; },
+    [] { abrir(nombres); }});
 
 } // namespace
