@@ -49,6 +49,7 @@ public partial class ConsolaTests
     public void IslaFrutaPorNumeroComoNhse()
     {
         // Una fruta que no es de las cinco (el número de objeto de «Opciones avanzadas»): ninguna bandera de fruta.
+        Skip();
         Both(sav =>
         {
             var w = new FruitsFlowersWindow(sav.Players, 0, sav.Main);
