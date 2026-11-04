@@ -20,12 +20,12 @@ ROMFS		:=	romfs
 
 APP_TITLE	:=	NHSE
 APP_AUTHOR	:=	NHSE para Mac
-APP_VERSION	:=	0.2.0
+APP_VERSION	:=	0.3.0
 
 ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 
 CFLAGS	:=	-g -Wall -O2 -ffunction-sections $(ARCH) $(DEFINES)
-CFLAGS	+=	$(INCLUDE) -D__SWITCH__ `$(PREFIX)pkg-config --cflags sdl2 SDL2_ttf 2>/dev/null`
+CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -DVERSION=\"$(APP_VERSION)\" `$(PREFIX)pkg-config --cflags sdl2 SDL2_ttf 2>/dev/null`
 CXXFLAGS	:= $(CFLAGS) -std=gnu++17 -fno-rtti -fno-exceptions
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)

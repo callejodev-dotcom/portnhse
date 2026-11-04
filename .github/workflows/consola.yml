@@ -23,4 +23,6 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: NHSE-switch
-          path: consola/NHSE.nro
+          path: |
+            consola/NHSE.nro
+            consola/NHSE.elf

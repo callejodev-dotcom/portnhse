@@ -1,6 +1,7 @@
 #include "ui.hpp"
 #include "../core/acnh.hpp"
 #include "dibujos.hpp"
+#include "registro.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -575,7 +576,12 @@ int foco() { return g_pila.empty() ? 0 : g_pila.back().foco; }
 void terminar() { g_salir = true; }
 bool terminando() { return g_salir; }
 
-void avisar(const std::string& s, bool malo) { g_aviso = s, g_avisoMalo = malo; }
+void avisar(const std::string& s, bool malo)
+{
+    g_aviso = s, g_avisoMalo = malo;
+    if (malo)
+        registro::apuntar("aviso: %s", s.c_str());
+}
 void cambiado(const std::string& que) { avisar(que + ". Falta guardar."); }
 
 // --------------------------------------------------------------------------------------------------------- teclado
@@ -1045,7 +1051,29 @@ void bucle(Pantalla inicio)
 
         Vista v;
         Entrada actual = g_pila.back();
+        const u32 antes = SDL_GetTicks();
         actual.p(v);
+        // The log: each new screen, and the slow ones (to know where it hangs or goes slow on the console).
+        {
+            static std::string ultima;
+            static u32 inicioFotograma = 0;
+            const u32 ahora = SDL_GetTicks();
+            if (v.titulo != ultima)
+            {
+#ifdef __SWITCH__
+                u64 usada = 0, total = 0;
+                svcGetInfo(&usada, InfoType_UsedMemorySize, CUR_PROCESS_HANDLE, 0);
+                svcGetInfo(&total, InfoType_TotalMemorySize, CUR_PROCESS_HANDLE, 0);
+                registro::apuntar("pantalla: %s (memoria %lu de %lu MB)", v.titulo.c_str(), (unsigned long)(usada >> 20), (unsigned long)(total >> 20));
+#else
+                registro::apuntar("pantalla: %s", v.titulo.c_str());
+#endif
+                ultima = v.titulo;
+            }
+            else if (inicioFotograma && ahora - inicioFotograma > 250)
+                registro::apuntar("lento: %u ms en «%s» (la pantalla tardó %u ms)", ahora - inicioFotograma, v.titulo.c_str(), ahora - antes);
+            inicioFotograma = ahora;
+        }
         // The menus get the icon that goes with their text, as the Mac (only buttons with two lines or cards, without
         // their own picture).
         for (auto& b : v.b)

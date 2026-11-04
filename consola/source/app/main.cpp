@@ -11,6 +11,7 @@
 #include <memory>
 #include "dibujos.hpp"
 #include "partida.hpp"
+#include "registro.hpp"
 #include "ui.hpp"
 
 using namespace ui;
@@ -57,7 +58,9 @@ std::vector<Tarjeta> deSeccion(Seccion s)
 
 void guardar()
 {
+    registro::apuntar("guardar");
     const std::string mal = partida::guardar();
+    registro::apuntar("guardar: %s", mal.empty() ? "bien" : mal.c_str());
     avisar(mal.empty() ? "Guardado y comprobado. Ya puedes abrir el juego." : mal, !mal.empty());
 }
 
@@ -152,9 +155,14 @@ Lateral lateral()
 
 } // namespace
 
+#ifndef VERSION
+#define VERSION "simulador"
+#endif
+
 int main(int, char**)
 {
     romfsInit();
+    registro::empezar(VERSION);
     plInitialize(PlServiceType_User);
     SDL_Init(SDL_INIT_VIDEO);
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1"); // the screens are drawn a bit smaller: smooth
@@ -178,6 +186,10 @@ int main(int, char**)
 
     const std::string error = partida::abrir();
     if (error.empty())
+        registro::apuntar("partida abierta: %d jugadores, isla %s", (int)partida::jugadores.size(), partida::isla.c_str());
+    else
+        registro::apuntar("no se abre la partida: %s", error.c_str());
+    if (error.empty())
     {
         ponerLateral(lateral);
         bucle(seccion(SeccionJugador));
@@ -192,6 +204,7 @@ int main(int, char**)
         });
 
     partida::cerrar();
+    registro::terminar();
     TTF_CloseFont(g_fuente);
     TTF_CloseFont(g_pequena);
     TTF_CloseFont(g_grande);

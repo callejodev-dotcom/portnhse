@@ -1,4 +1,5 @@
 #include "partida.hpp"
+#include "registro.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <ctime>
@@ -27,27 +28,39 @@ struct Otro {
 };
 std::map<std::string, Otro> g_otros; // other encrypted files, by path
 
-bool leer(const char* ruta, std::vector<uint8_t>& out)
+bool leer(const char* ruta, std::vector<uint8_t>& out, bool callar = false)
 {
     FsFile f;
-    if (R_FAILED(fsFsOpenFile(&g_fs, ruta, FsOpenMode_Read, &f)))
+    Result rc = fsFsOpenFile(&g_fs, ruta, FsOpenMode_Read, &f);
+    if (R_FAILED(rc))
+    {
+        if (!callar)
+            registro::apuntar("no se abre %s (error 0x%x)", ruta, rc);
         return false;
+    }
     s64 tam = 0;
     fsFileGetSize(&f, &tam);
     out.resize(tam);
     u64 leidos = 0;
-    Result rc = fsFileRead(&f, 0, out.data(), tam, FsReadOption_None, &leidos);
+    rc = fsFileRead(&f, 0, out.data(), tam, FsReadOption_None, &leidos);
     fsFileClose(&f);
+    if (R_FAILED(rc) || (s64)leidos != tam)
+        registro::apuntar("no se lee %s (error 0x%x, %lu de %ld bytes)", ruta, rc, (unsigned long)leidos, (long)tam);
     return R_SUCCEEDED(rc) && (s64)leidos == tam;
 }
 
 bool escribir(const char* ruta, const std::vector<uint8_t>& datos)
 {
     FsFile f;
-    if (R_FAILED(fsFsOpenFile(&g_fs, ruta, FsOpenMode_Write, &f)))
+    Result rc = fsFsOpenFile(&g_fs, ruta, FsOpenMode_Write, &f);
+    if (R_FAILED(rc))
+    {
+        registro::apuntar("no se abre para escribir %s (error 0x%x)", ruta, rc);
         return false;
-    Result rc = fsFileWrite(&f, 0, datos.data(), datos.size(), FsWriteOption_Flush);
+    }
+    rc = fsFileWrite(&f, 0, datos.data(), datos.size(), FsWriteOption_Flush);
     fsFileClose(&f);
+    registro::apuntar("escrito %s: %s (0x%x, %zu bytes)", ruta, R_SUCCEEDED(rc) ? "bien" : "MAL", rc, datos.size());
     return R_SUCCEEDED(rc);
 }
 
@@ -172,8 +185,11 @@ std::string abrir()
     FsSaveDataAttribute attr = {};
     attr.application_id = ACNH;
     attr.save_data_type = FsSaveDataType_Device;
-    if (R_FAILED(fsOpenSaveDataFileSystem(&g_fs, FsSaveDataSpaceId_User, &attr)))
+    if (Result rc = fsOpenSaveDataFileSystem(&g_fs, FsSaveDataSpaceId_User, &attr); R_FAILED(rc))
+    {
+        registro::apuntar("no se abre la partida del juego (error 0x%x)", rc);
         return "No encuentro la partida de Animal Crossing. ¿Está el juego cerrado?";
+    }
     g_abierta = true;
     if (!leer("/main.dat", g_main.datos) || !leer("/mainHeader.dat", g_main.cabecera))
         return "No he podido leer la partida.";
@@ -188,7 +204,7 @@ std::string abrir()
     {
         Jugador j;
         j.carpeta = "/Villager" + std::to_string(i);
-        if (!leer((j.carpeta + "/personal.dat").c_str(), j.a.datos) || !leer((j.carpeta + "/personalHeader.dat").c_str(), j.a.cabecera))
+        if (!leer((j.carpeta + "/personal.dat").c_str(), j.a.datos, true) || !leer((j.carpeta + "/personalHeader.dat").c_str(), j.a.cabecera))
             continue;
         if (j.a.datos.size() != TAM_PERSONAL)
             return "Esta partida no es de la versión 3.0 del juego: no la toco.";
@@ -206,6 +222,7 @@ std::string abrir()
     char fecha[32];
     strftime(fecha, sizeof(fecha), "%Y-%m-%d %H.%M.%S", localtime(&t));
     copia = std::string(CARPETA) + "copias/" + fecha + "/";
+    registro::apuntar("copia de seguridad en %s", copia.c_str());
     if (!copiarCarpeta("/", copia))
         return "No he podido hacer la copia de seguridad en la SD: no toco nada.";
     return "";
@@ -243,8 +260,11 @@ std::string guardar()
     for (const auto& p : pendientes)
         if (!escribir(p.ruta.c_str(), p.cifrado.datos))
             return "No he podido escribir. La partida no ha cambiado (sales sin guardar).";
-    if (R_FAILED(fsFsCommit(&g_fs)))
+    if (Result rc = fsFsCommit(&g_fs); R_FAILED(rc))
+    {
+        registro::apuntar("commit MAL (error 0x%x)", rc);
         return "No he podido guardar. La partida no ha cambiado.";
+    }
     for (const auto& p : pendientes)
         if (!comprobar(p.ruta, p.cifrado.cabecera, p.plano))
             return "¡Ojo! Lo guardado no coincide. Restaura la copia de la SD.";
