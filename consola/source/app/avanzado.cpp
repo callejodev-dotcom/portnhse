@@ -9,6 +9,7 @@
 #include "../core/avanzado.hpp"
 #include "../core/avanzado_marcas.hpp"
 #include "avanzado.hpp"
+#include "dibujos.hpp"
 #include "partida.hpp"
 #include "ui.hpp"
 
@@ -65,8 +66,7 @@ namespace {
 // ------------------------------------------------------------------------------------------------ marcas de progreso
 constexpr int NUM_ISLA = sizeof(MARCAS_ISLA) / sizeof(MARCAS_ISLA[0]);
 constexpr int NUM_JUGADOR = sizeof(MARCAS_JUGADOR) / sizeof(MARCAS_JUGADOR[0]);
-const char* const FILTROS[4] = {"Ver todas", "Activadas", "Sin activar", "Cambiadas"};
-constexpr int FILAS = 6;
+const char* const FILTROS[4] = {"Todas", "Activadas", "Sin activar", "Cambiadas"};
 
 struct EstadoMarcas {
     bool isla = true;
@@ -94,18 +94,19 @@ struct EstadoMarcas {
         else
             partida::cambiaPersonal(jugador);
     }
-    void filtrar()
+    // Las que tienen todas las palabras de «q» y pasan el filtro.
+    std::vector<int> buscar(const std::string& q, int filtro)
     {
         std::vector<std::string> palabras;
         std::string w;
-        for (char c : normalizar(busqueda) + " ")
+        for (char c : normalizar(q) + " ")
         {
             if (c != ' ')
                 w += c;
             else if (!w.empty())
                 palabras.push_back(w), w.clear();
         }
-        vistas.clear();
+        std::vector<int> r;
         for (int k = 0; k < total; k++)
         {
             bool ok = true;
@@ -114,8 +115,13 @@ struct EstadoMarcas {
             const int16_t v = valor(k);
             ok = ok && (filtro == 0 || (filtro == 1 && v != 0) || (filtro == 2 && v == 0) || (filtro == 3 && v != original[k]));
             if (ok)
-                vistas.push_back(k);
+                r.push_back(k);
         }
+        return r;
+    }
+    void filtrar()
+    {
+        vistas = buscar(busqueda, filtro);
         pagina = 0;
     }
     int cambiadas()
@@ -180,6 +186,62 @@ void masMarcas(std::shared_ptr<EstadoMarcas> e)
         }, 1);
 }
 
+// Una marca como fila: la casilla (o la de un número) a la izquierda, lo que significa y, debajo en gris, su número, su
+// nombre interno y su valor si no es de sí o no.
+Fila filaMarca(std::shared_ptr<EstadoMarcas> e, int k)
+{
+    const MarcaConNombre& m = e->lista[k];
+    const int16_t valor = e->valor(k);
+    const bool siNo = m.maximo == 1;
+    const int maximo = m.maximo > 1 ? m.maximo : 32767;
+    std::string detalle = "#" + std::to_string(m.indice) + " · " + m.interno;
+    if (!siNo)
+        detalle = "Vale " + numero((uint32_t)std::max<int16_t>(valor, 0)) + "  ·  " + detalle;
+    if (valor != e->original[k])
+        detalle += "  ·  cambiada";
+    Fila f{m.texto, [e, k, siNo, maximo] {
+        const int16_t actual = e->valor(k);
+        if (siNo)
+        {
+            e->poner(k, actual ? 0 : 1);
+            cambiado(actual ? "Desactivada" : "Activada");
+            return;
+        }
+        uint32_t n = actual < 0 ? 0 : (uint32_t)actual;
+        if (!pedirNumero("Marca nº " + std::to_string(e->lista[k].indice) + ": nuevo valor (0 a " + numero(maximo) + ")", n, maximo))
+            return;
+        e->poner(k, (int16_t)n);
+        cambiado();
+    }};
+    f.detalle = detalle;
+    f.imagen = siNo ? casilla(valor != 0) : cifra();
+    return f;
+}
+
+// Buscar escribiendo: lo encontrado se ve (y se cambia) mientras se escribe; al volver, la lista se queda con ello.
+void buscarMarcas(std::shared_ptr<EstadoMarcas> e)
+{
+    auto vistas = std::make_shared<std::vector<int>>();
+    Buscador bu;
+    bu.titulo = "Buscar en " + std::string(e->isla ? "el progreso de la isla" : "el progreso de " + partida::jugador(e->jugador).nombre);
+    bu.explicacion = "Escribe parte de lo que buscas (museo, Tom Nook, Totakeke…). Toca una para cambiarla.";
+    bu.texto = e->busqueda;
+    bu.filtrar = [e, vistas](const std::string& t) {
+        *vistas = e->buscar(t, 0);
+        return (int)vistas->size();
+    };
+    bu.fila = [e, vistas](int k) {
+        Fila f = filaMarca(e, (*vistas)[k]);
+        f.detalle.clear(); // the rows are low: only what it means
+        return f;
+    };
+    bu.alSalir = [e](const std::string& t) {
+        e->busqueda = t;
+        e->filtrar();
+    };
+    abrir(buscador(bu), 10);
+}
+
 Pantalla marcas(bool isla)
 {
     auto e = std::make_shared<EstadoMarcas>();
@@ -194,92 +256,63 @@ Pantalla marcas(bool isla)
     }
     e->filtrar();
 
-    auto buscar = [e] {
-        std::string q = e->busqueda;
-        if (!pedirTexto("Buscar", "Museo, Tom Nook, Totakeke… (vacío: todas)", q))
-            return;
-        e->busqueda = q;
-        e->filtrar();
-        enfocar(0);
-    };
     auto filtro = [e] {
         e->filtro = (e->filtro + 1) % 4;
         e->filtrar();
-        enfocar(0);
     };
-    return [e, buscar, filtro](Vista& v) {
+    return [e, filtro](Vista& v) {
+        constexpr int FILAS_V = 7, Y_FILAS = 206, ALTO = 52, PASO = 56;
         const int total = (int)e->vistas.size();
-        const int paginas = std::max(1, (total + FILAS - 1) / FILAS);
+        const int paginas = std::max(1, (total + FILAS_V - 1) / FILAS_V);
         e->pagina = std::clamp(e->pagina, 0, paginas - 1);
         v.titulo = e->isla ? "Progreso de la isla" : "Progreso de " + partida::jugador(e->jugador).nombre;
-        std::string s = e->busqueda.empty() ? "" : "«" + e->busqueda + "» ";
-        if (e->filtro)
-            s += std::string("(") + FILTROS[e->filtro] + ") ";
-        const int cambiadas = e->cambiadas();
-        v.explicacion = (s.empty() ? "" : s + "· ") + numero(total) + " de " + numero(e->total) + " · " + std::to_string(cambiadas) +
-            (cambiadas == 1 ? " cambiada" : " cambiadas") + " · página " + std::to_string(e->pagina + 1) + " de " + std::to_string(paginas);
-        for (int f = 0; f < FILAS && e->pagina * FILAS + f < total; f++)
+        v.explicacion = e->isla ? "Lo que el juego recuerda de la isla: construcciones, eventos, visitas…" :
+            "Lo que el juego recuerda de este jugador: conversaciones, encargos, primeras veces…";
+
+        // On top, as the Mac: the search field and the filters.
+        Boton bb{{60, 108, 600, 50}, e->busqueda.empty() ? "Buscar (museo, Tom Nook, Totakeke…)" : e->busqueda, [e] { buscarMarcas(e); }};
+        bb.imagen = lupa();
+        v.b.push_back(bb);
+        for (int k = 0; k < 4; k++)
         {
-            const int k = e->vistas[e->pagina * FILAS + f];
-            const MarcaConNombre& m = e->lista[k];
-            const int16_t valor = e->valor(k);
-            const bool siNo = m.maximo == 1;
-            const int maximo = m.maximo > 1 ? m.maximo : 32767;
-            std::string detalle = siNo ? (valor ? "Sí" : "No") : "Vale " + std::to_string(valor);
-            if (valor != e->original[k])
-                detalle += " (cambiada)";
-            detalle += "  ·  nº " + std::to_string(m.indice) + " · " + m.interno;
-            Boton b{{60, 192 + f * 68, 1160, 60}, m.texto, [e, k, siNo, maximo] {
-                const int16_t actual = e->valor(k);
-                if (siNo)
-                {
-                    e->poner(k, actual ? 0 : 1);
-                    cambiado(actual ? "Desactivada" : "Activada");
-                    return;
-                }
-                uint32_t n = actual < 0 ? 0 : (uint32_t)actual;
-                if (!pedirNumero("Marca nº " + std::to_string(e->lista[k].indice) + ": nuevo valor (0 a " + numero(maximo) + ")", n, maximo))
-                    return;
-                e->poner(k, (int16_t)n);
-                cambiado();
-            }, true, valor != 0, detalle};
+            Boton c{{676 + k * 138, 108, 130, 50}, FILTROS[k], [e, k] {
+                e->filtro = k;
+                e->filtrar();
+            }};
+            c.marcado = e->filtro == k;
+            c.pequena = true;
+            v.b.push_back(c);
+        }
+
+        for (int f = 0; f < FILAS_V && e->pagina * FILAS_V + f < total; f++)
+        {
+            const Fila fi = filaMarca(e, e->vistas[e->pagina * FILAS_V + f]);
+            Boton b{{60, Y_FILAS + f * PASO, W - 120, ALTO}, fi.texto, fi.accion, true, false, fi.detalle};
+            b.imagen = fi.imagen;
             v.b.push_back(b);
         }
-        if (total == 0)
-            v.dibujo = [] { texto("No hay ninguna con eso.", W / 2, 360, MARRON_SUAVE, nullptr, Centro); };
-        else
-        {
-            // The whole explanation of the chosen one, above the rows (the row cuts it if it is long).
-            const int f = foco();
-            if (f >= 0 && f < (int)v.b.size())
-            {
-                const std::string completo = v.b[f].texto;
-                v.dibujo = [completo] { texto(completo, 60, 136, MARRON, g_pequena, Izquierda, 1160); };
-            }
-        }
-        struct Abajo {
-            std::string texto;
-            std::function<void()> accion;
-            bool activo;
-            bool marcado = false;
+
+        const int cambiadas = e->cambiadas();
+        const std::string resumen = numero(total) + " de " + numero(e->total) + " · " + std::to_string(cambiadas) + (cambiadas == 1 ? " cambiada" : " cambiadas");
+        const std::string pagina = paginas > 1 ? "Página " + std::to_string(e->pagina + 1) + " de " + std::to_string(paginas) : "";
+        v.dibujo = [resumen, pagina, total] {
+            texto(resumen, 64, 172, MARRON_SUAVE, g_pequena);
+            texto(pagina, W - 64, 172, MARRON_SUAVE, g_pequena, Derecha);
+            if (total == 0)
+                texto("No hay ninguna con eso.", W / 2, 360, MARRON_SUAVE, nullptr, Centro);
         };
+
         auto e2 = e;
-        std::vector<Abajo> abajo = {
-            {"Anteriores", [e2] { e2->pagina--; }, e->pagina > 0},
-            {"Siguientes", [e2] { e2->pagina++; }, e->pagina + 1 < paginas},
-            {"Buscar…", buscar, true},
-            {FILTROS[e->filtro], filtro, true, e->filtro != 0},
-            {"Más…", [e2] { masMarcas(e2); }, true},
-            {"Volver", [] { volver(); }, true},
-        };
-        const int ancho = (W - 120 - 5 * 14) / 6;
-        for (int i = 0; i < 6; i++)
-            v.b.push_back({{60 + i * (ancho + 14), ABAJO - 62, ancho, 52}, abajo[i].texto, abajo[i].accion, abajo[i].activo, abajo[i].marcado});
+        const int y = ABAJO - 56, h = 46, ancho = 180;
+        v.b.push_back({{60, y, ancho, h}, "Anteriores", [e2] { e2->pagina--; }, e->pagina > 0});
+        v.b.push_back({{60 + ancho + 12, y, ancho, h}, "Siguientes", [e2] { e2->pagina++; }, e->pagina + 1 < paginas});
+        v.b.push_back({{W - 60 - 2 * ancho - 12, y, ancho, h}, "Más…", [e2] { masMarcas(e2); }});
+        v.b.push_back({{W - 60 - ancho, y, ancho, h}, "Volver", [] { volver(); }});
         v.paginar = [e, paginas](int d) { e->pagina = std::clamp(e->pagina + d, 0, paginas - 1); };
-        v.x = buscar;
+        v.x = [e] { buscarMarcas(e); };
         v.y = filtro;
         v.menos = [e] { masMarcas(e); };
-        v.teclas = {{"A", "Cambiar"}, {"X", "Buscar"}, {"Y", "Ver"}, {"−", "Más"}, {"L R", "Página"}, {"B", "Volver"}};
+        v.teclas = {{"A", "Cambiar"}, {"X", "Buscar"}, {"Y", "Filtro"}, {"L R", "Página"}, {"B", "Volver"}};
     };
 }
 
@@ -296,63 +329,66 @@ int activadas(bool isla)
 const char* const AVISO_MARCAS = "Ojo: se pueden repetir o saltar eventos.";
 
 // --------------------------------------------------------------------------------------------------------- clima
+// Como las dos tarjetas del clima del Mac (con la cifra grande), y el hemisferio de las islas misteriosas.
 void clima(Vista& v)
 {
     v.titulo = "Clima";
-    v.explicacion = "Las semillas deciden el tiempo de cada día. Cámbialas solo si sabes lo que haces.";
+    v.explicacion = "Las semillas deciden el tiempo de cada día. Cámbialas solo si sabes lo que haces. Toca una para cambiarla.";
     auto& m = partida::principal();
     auto semilla = [](uint32_t pos, const std::string& titulo) {
-        uint32_t n = leer32(partida::principal(), pos);
-        if (!pedirNumero(titulo, n, 0xFFFFFFFFu))
-            return;
-        escribir32(partida::principal(), pos, n);
-        partida::cambiaPrincipal();
-        cambiado();
-    };
-    Boton b1{{60, 160, 1160, 100}, "Semilla del clima: " + std::to_string(leer32(m, SEMILLA_CLIMA)),
-        [semilla] { semilla(SEMILLA_CLIMA, "Semilla del clima de la isla"); }};
-    b1.detalle = "El tiempo de cada día en la isla";
-    Boton b2{{60, 280, 1160, 100}, "Islas misteriosas: semilla " + std::to_string(leer32(m, SEMILLA_TOUR)),
-        [semilla] { semilla(SEMILLA_TOUR, "Semilla del clima de las islas misteriosas"); }};
-    b2.detalle = "El tiempo de las islas que visitas con un billete Nook";
-    const bool sur = m[HEMISFERIO_TOUR] != 0;
-    Boton b3{{60, 400, 1160, 100}, std::string("Islas misteriosas: hemisferio ") + (sur ? "sur" : "norte"), [] {
-        auto& d = partida::principal();
-        elegir("Hemisferio de las islas misteriosas", "Como en el editor clásico de NHSE.", {"Norte", "Sur"}, d[HEMISFERIO_TOUR] ? 1 : 0, [](int i) {
-            auto& d2 = partida::principal();
-            if (d2[HEMISFERIO_TOUR] == i)
+        return [pos, titulo] {
+            uint32_t n = leer32(partida::principal(), pos);
+            if (!pedirNumero(titulo, n, 0xFFFFFFFFu))
                 return;
-            d2[HEMISFERIO_TOUR] = (uint8_t)i;
+            escribir32(partida::principal(), pos, n);
             partida::cambiaPrincipal();
             cambiado();
-        });
+        };
+    };
+    Boton b1{{60, 130, 570, 150}, "Semilla del clima", semilla(SEMILLA_CLIMA, "Semilla del clima de la isla")};
+    b1.valor = std::to_string(leer32(m, SEMILLA_CLIMA));
+    b1.detalle = "Decide el tiempo de cada día en la isla";
+    Boton b2{{650, 130, 570, 150}, "Islas misteriosas", semilla(SEMILLA_TOUR, "Semilla del clima de las islas misteriosas")};
+    b2.valor = std::to_string(leer32(m, SEMILLA_TOUR));
+    b2.detalle = "El tiempo de las islas del billete Nook";
+    const bool sur = m[HEMISFERIO_TOUR] != 0;
+    Boton b3{{60, 300, 570, 150}, "Hemisferio de las islas misteriosas", [] {
+        auto& d = partida::principal();
+        d[HEMISFERIO_TOUR] = d[HEMISFERIO_TOUR] ? 0 : 1;
+        partida::cambiaPrincipal();
+        cambiado(d[HEMISFERIO_TOUR] ? "Ahora en el sur" : "Ahora en el norte");
     }};
-    b3.detalle = "Las estaciones de las islas que visitas";
-    v.b.push_back(b1);
-    v.b.push_back(b2);
-    v.b.push_back(b3);
-    v.b.push_back({{440, ABAJO - 90, 400, 70}, "Volver", [] { volver(); }});
+    b3.valor = sur ? "Sur" : "Norte";
+    b3.detalle = "Sus estaciones. Toca para pasar al " + std::string(sur ? "norte" : "sur");
+    for (Boton* b : {&b1, &b2, &b3})
+    {
+        b->grande = true;
+        b->imagen = dibujos::menu(b == &b3 ? "PltPalm" : "Syabon");
+        v.b.push_back(*b);
+    }
+    v.b.push_back({{W - 60 - 220, ABAJO - 56, 220, 46}, "Volver", [] { volver(); }});
 }
 
 // --------------------------------------------------------------------------------------------- huecos abiertos
 void huecos(Vista& v)
 {
     v.titulo = "Huecos abiertos de " + partida::jugador().nombre;
-    v.explicacion = "Cuántos huecos tiene abiertos, como en el editor clásico de NHSE. Lo normal: 20 y 20 en los bolsillos.";
+    v.explicacion = "Cuántos huecos tiene abiertos. Lo normal: 20 y 20 en los bolsillos. Toca uno para cambiarlo.";
     const auto& p = partida::personal();
     struct H {
         uint32_t pos;
         const char* nombre;
+        const char* icono;
         const char* titulo;
         uint32_t maximo;
     };
-    const H hs[3] = {{HUECOS_BOLSILLOS1, "Bolsillos, primera parte", "Huecos abiertos en la primera parte de los bolsillos (0 a 20)", 20},
-        {HUECOS_BOLSILLOS2, "Bolsillos, segunda parte", "Huecos abiertos en la segunda parte de los bolsillos (0 a 20)", 20},
-        {HUECOS_ALMACEN, "Almacén", "Huecos abiertos en el almacén (0 a 9.000)", ALMACEN_MAX}};
+    const H hs[3] = {{HUECOS_BOLSILLOS1, "Bolsillos, primera parte", "Bag", "Huecos abiertos en la primera parte de los bolsillos (0 a 20)", 20},
+        {HUECOS_BOLSILLOS2, "Bolsillos, segunda parte", "Bag", "Huecos abiertos en la segunda parte de los bolsillos (0 a 20)", 20},
+        {HUECOS_ALMACEN, "Almacén", "Cardboard", "Huecos abiertos en el almacén (0 a 9.000)", ALMACEN_MAX}};
     for (int i = 0; i < 3; i++)
     {
         const H h = hs[i];
-        Boton b{{60, 160 + i * 120, 1160, 100}, std::string(h.nombre) + ": " + numero(leer32(p, h.pos)) + " de " + numero(h.maximo), [h] {
+        Boton b{{60 + i * 393, 130, 374, 150}, h.nombre, [h] {
             uint32_t n = leer32(partida::personal(), h.pos);
             if (!pedirNumero(h.titulo, n, h.maximo))
                 return;
@@ -360,9 +396,13 @@ void huecos(Vista& v)
             partida::cambiaPersonal();
             cambiado();
         }};
+        b.grande = true;
+        b.valor = numero(leer32(p, h.pos));
+        b.detalle = "de " + numero(h.maximo);
+        b.imagen = dibujos::menu(h.icono);
         v.b.push_back(b);
     }
-    v.b.push_back({{440, ABAJO - 90, 400, 70}, "Volver", [] { volver(); }});
+    v.b.push_back({{W - 60 - 220, ABAJO - 56, 220, 46}, "Volver", [] { volver(); }});
 }
 
 // ---------------------------------------------------------------------------------------------- comprobar
@@ -428,39 +468,72 @@ std::vector<Resultado> comprobarTodo()
 
 Pantalla comprobacion(std::shared_ptr<std::vector<Resultado>> res)
 {
-    Lista l;
-    l.titulo = "Comprobar la partida";
-    l.explicacion = [res] {
+    auto pagina = std::make_shared<int>(0);
+    return [res, pagina](Vista& v) {
+        constexpr int COLS = 2, FILAS_C = 5, POR = COLS * FILAS_C;
+        const int total = (int)res->size();
+        const int paginas = std::max(1, (total + POR - 1) / POR);
+        *pagina = std::clamp(*pagina, 0, paginas - 1);
         int mal = 0, pendientes = 0;
         for (const auto& x : *res)
             mal += x.estado == 1, pendientes += x.estado == 2;
+        v.titulo = "Comprobar la partida";
+        v.explicacion = "Las sumas de control de cada archivo: si no cuadran, el juego cree que la partida está dañada.";
+
+        // A summary on top, as the message of the Mac.
+        std::string titulo, nota;
         if (mal)
-            return "¡Ojo! " + std::to_string(mal) + (mal == 1 ? " archivo tiene" : " archivos tienen") + " comprobaciones que no cuadran. Toca uno para ver cuáles.";
-        if (pendientes)
-            return std::string("Nada está mal. Lo que tiene cambios sin guardar se comprueba al guardar.");
-        return "Todo bien: las comprobaciones de los " + std::to_string(res->size()) + " archivos cuadran.";
+        {
+            titulo = "¡Ojo! " + std::to_string(mal) + (mal == 1 ? " archivo no cuadra" : " archivos no cuadran");
+            nota = "Toca uno en rojo para ver dónde. Al guardar se rehacen todas las comprobaciones.";
+        }
+        else if (pendientes)
+        {
+            titulo = "Nada está mal";
+            nota = "Lo que tiene cambios sin guardar (en amarillo) se rehace y se vuelve a comprobar al guardar.";
+        }
+        else
+        {
+            titulo = "Todo bien";
+            nota = "Las comprobaciones de los " + std::to_string(total) + " archivos cuadran.";
+        }
+        const int estadoGeneral = mal ? 1 : pendientes ? 2 : 0;
+        v.dibujo = [titulo, nota, estadoGeneral] {
+            panel({60, 112, W - 120, 96}, "");
+            SDL_Rect d = {80, 128, 64, 64};
+            SDL_RenderCopy(g_r, estado(estadoGeneral), nullptr, &d);
+            texto(titulo, 164, 126, MARRON, g_negrita);
+            texto(nota, 164, 162, MARRON_SUAVE, g_pequena, Izquierda, W - 120 - 124);
+        };
+
+        const int ancho = (W - 120 - 20) / COLS;
+        for (int k = 0; k < POR && *pagina * POR + k < total; k++)
+        {
+            const Resultado& x = (*res)[*pagina * POR + k];
+            Boton b{{60 + (k / FILAS_C) * (ancho + 20), 224 + (k % FILAS_C) * 76, ancho, 66}, x.nombre, [x] {
+                if (x.estado == 1)
+                    avisar(x.nombre + ": " + x.fallos, true);
+                else if (x.estado == 2)
+                    avisar("Tiene cambios sin guardar: al guardar se rehacen sus comprobaciones y se vuelve a comprobar.");
+                else
+                    avisar(x.nombre + ": " + x.detalle + ".");
+            }};
+            b.detalle = x.detalle;
+            b.imagen = estado(x.estado);
+            v.b.push_back(b);
+        }
+        const int y = ABAJO - 56, h = 46;
+        if (paginas > 1)
+        {
+            v.b.push_back({{60, y, 180, h}, "Anteriores", [pagina] { (*pagina)--; }, *pagina > 0});
+            v.b.push_back({{252, y, 180, h}, "Siguientes", [pagina] { (*pagina)++; }, *pagina + 1 < paginas});
+            v.paginar = [pagina, paginas](int d) { *pagina = std::clamp(*pagina + d, 0, paginas - 1); };
+        }
+        v.b.push_back({{W - 60 - 220 - 12 - 300, y, 300, h}, "Volver a comprobar", [res] {
+            conEspera("Comprobar la partida", "Comprobando la partida…", [res] { *res = comprobarTodo(); });
+        }});
+        v.b.push_back({{W - 60 - 220, y, 220, h}, "Volver", [] { volver(); }});
     };
-    l.cuantas = [res] { return (int)res->size(); };
-    l.columnas = 2;
-    l.porColumna = 7;
-    l.fila = [res](int i) {
-        const Resultado& x = (*res)[i];
-        Fila f{x.nombre, [x] {
-            if (x.estado == 1)
-                avisar(x.nombre + ": " + x.fallos, true);
-            else if (x.estado == 2)
-                avisar("Tiene cambios sin guardar: al guardar se rehacen sus comprobaciones y se vuelve a comprobar.");
-            else
-                avisar(x.nombre + ": " + x.detalle + ".");
-        }};
-        f.detalle = x.detalle;
-        f.color = x.estado == 0 ? VERDE_OSCURO : x.estado == 1 ? ROJO : x.estado == 2 ? AMARILLO : GRIS;
-        return f;
-    };
-    l.abajo.push_back([res] {
-        return Fila{"Volver a comprobar", [res] { conEspera("Comprobar la partida", "Comprobando la partida…", [res] { *res = comprobarTodo(); }); }};
-    });
-    return lista(l);
 }
 
 // ------------------------------------------------------------------------------------- exportar e importar descifrada
@@ -577,12 +650,47 @@ void importar()
         avisar("No hay ninguna partida descifrada en /switch/NHSE/descifrada/.", true);
         return;
     }
-    elegir("Importar descifrada", "Elige la carpeta (de /switch/NHSE/descifrada/). Se cargan main.dat y los archivos de cada jugador.",
-        carpetas, -1, [carpetas](int i) {
-            const std::string c = carpetas[i];
+    // How many players each one has (counted once, not in every frame).
+    auto jugadores = std::make_shared<std::vector<int>>();
+    for (const auto& c : carpetas)
+    {
+        int n = 0;
+        for (int j = 0; j < 8; j++)
+        {
+            struct stat st;
+            if (stat((std::string(CARPETA_DESCIFRADA) + c + "/Villager" + std::to_string(j) + "/personal.dat").c_str(), &st) == 0)
+                n++;
+        }
+        jugadores->push_back(n);
+    }
+    Lista l;
+    l.titulo = "Importar descifrada";
+    l.explicacion = [] { return std::string("Elige una de las guardadas en /switch/NHSE/descifrada/. Se cargan main.dat y los archivos de cada jugador."); };
+    l.cuantas = [carpetas] { return (int)carpetas.size(); };
+    l.columnas = 1;
+    l.porColumna = 6;
+    l.alto = 66;
+    l.fila = [carpetas, jugadores](int i) {
+        const std::string c = carpetas[i];
+        // «2026-11-04 18.30.00» → «4/11/2026, 18:30»
+        std::string nombre = c;
+        int a, me, d, h, mi, s;
+        if (sscanf(c.c_str(), "%d-%d-%d %d.%d.%d", &a, &me, &d, &h, &mi, &s) == 6)
+        {
+            char t[48];
+            snprintf(t, sizeof(t), "Del %d/%d/%d a las %d:%02d", d, me, a, h, mi);
+            nombre = t;
+        }
+        const int n = (*jugadores)[i];
+        Fila f{nombre, [c] {
             confirmar("Importar descifrada", "¿Cambiar la partida por la de «" + c + "»? No se escribe en la consola hasta que pulses «Guardar».",
                 "Cargar", [c] { cargarDe(c); });
-        }, 1);
+        }};
+        f.detalle = "La isla" + (n ? " y " + std::to_string(n) + (n == 1 ? " jugador" : " jugadores") : std::string()) + "  ·  carpeta «" + c + "»";
+        f.imagen = dibujos::menu("Cardboard");
+        return f;
+    };
+    abrir(lista(l));
 }
 
 // ------------------------------------------------------------------------------------------------------- tarjetas
@@ -591,18 +699,18 @@ Registro r1({SeccionAvanzado, 10, [] { return std::string("Progreso de la isla")
     [] {
         abrir(marcas(true));
         avisar(AVISO_MARCAS);
-    }});
+    }, nullptr, "Book"});
 
 Registro r2({SeccionAvanzado, 20, [] { return "Progreso de " + partida::jugador().nombre; },
     [] { return numero(activadas(false)) + " de " + numero(NUM_JUGADOR) + " activadas"; },
     [] {
         abrir(marcas(false));
         avisar(AVISO_MARCAS);
-    }});
+    }, nullptr, "Book"});
 
 Registro r3({SeccionAvanzado, 30, [] { return std::string("Clima"); },
     [] { return std::string("Semillas del tiempo y hemisferio"); },
-    [] { abrir(clima); }});
+    [] { abrir(clima); }, nullptr, "Syabon"});
 
 Registro r4({SeccionAvanzado, 40, [] { return std::string("Huecos abiertos"); },
     [] {
@@ -610,7 +718,7 @@ Registro r4({SeccionAvanzado, 40, [] { return std::string("Huecos abiertos"); },
         return "Bolsillos " + std::to_string(leer32(p, HUECOS_BOLSILLOS1)) + "+" + std::to_string(leer32(p, HUECOS_BOLSILLOS2)) + ", almacén " +
             numero(leer32(p, HUECOS_ALMACEN));
     },
-    [] { abrir(huecos); }});
+    [] { abrir(huecos); }, nullptr, "Bag"});
 
 Registro r5({SeccionAvanzado, 50, [] { return std::string("Comprobar la partida"); },
     [] { return std::string("Que cada archivo esté sano"); },
@@ -620,14 +728,14 @@ Registro r5({SeccionAvanzado, 50, [] { return std::string("Comprobar la partida"
             *res = comprobarTodo();
             abrir(comprobacion(res));
         });
-    }});
+    }, nullptr, "Timer"});
 
 Registro r6({SeccionAvanzado, 60, [] { return std::string("Exportar descifrada"); },
     [] { return std::string("Guardarla sin cifrar en la SD"); },
-    [] { exportar(); }});
+    [] { exportar(); }, nullptr, "Cardboard"});
 
 Registro r7({SeccionAvanzado, 70, [] { return std::string("Importar descifrada"); },
     [] { return std::string("Cargar una descifrada de la SD"); },
-    [] { importar(); }});
+    [] { importar(); }, nullptr, "Cardboard"});
 
 } // namespace

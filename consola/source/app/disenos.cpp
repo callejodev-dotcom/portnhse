@@ -10,6 +10,7 @@
 #include <memory>
 #include "../core/acnh.hpp"
 #include "../core/disenos.hpp"
+#include "dibujos.hpp"
 #include "partida.hpp"
 #include "ui.hpp"
 
@@ -470,15 +471,60 @@ Pantalla elegirCarpeta(Tipo t, int i)
 }
 
 // ------------------------------------------------------------------------------------------------------- rejilla
-// Los huecos de un tipo en una rejilla de dibujos (7 x 4 por página), con el elegido en grande a la derecha. Con
-// «elegido», es para elegir un hueco (copiar a otro hueco).
-constexpr int COLS = 7, FILAS = 4, POR_PAGINA = COLS * FILAS;
-constexpr int TX = 56, TY = 146, TW = 104, IMG = 64, ETIQ = 30, PASO_X = 112, PASO_Y = 108;
+// Como la ventana de diseños del Mac: a la izquierda los huecos en una cuadrícula de dibujos (5 x 4 por página), cada
+// uno con su nombre debajo; a la derecha, en un recuadro, el elegido en grande con su nombre, quién lo hizo, sus colores
+// y lo que se puede hacer con él. Con «elegido», es para elegir un hueco (copiar a otro hueco).
+constexpr int COLS = 5, FILAS = 4, POR_PAGINA = COLS * FILAS;
+constexpr int GX = 60, GY = 140, CW = 136, CH = 130, CAJA = 96;
+constexpr int PX = 770, PW = 450, PY = 140, PH = 466; // the panel on the right
+constexpr int ABAJO_Y = ABAJO - 56, ABAJO_H = 46;      // the buttons along the bottom
 
-SDL_Rect imagenDe(int k) { return {TX + (k % COLS) * PASO_X + (TW - IMG) / 2, TY + (k / COLS) * PASO_Y, IMG, IMG}; }
-SDL_Rect etiquetaDe(int k) { return {TX + (k % COLS) * PASO_X, TY + (k / COLS) * PASO_Y + IMG + 4, TW, ETIQ}; }
+const SDL_Color VERDE_FONDO = {0xD6, 0xEE, 0xDD, 255}; // the chosen one, as the Mac
+const SDL_Color LINEA = {0xD1, 0xD1, 0xD6, 255};       // edges
+const SDL_Color APAGADO_ = {0xAE, 0xAE, 0xB2, 255};    // «Vacío»
+
+SDL_Rect celda(int k) { return {GX + (k % COLS) * CW, GY + (k / COLS) * CH, CW - 8, CH - 2}; }
+SDL_Rect cajaDe(int k)
+{
+    const SDL_Rect c = celda(k);
+    return {c.x + (c.w - CAJA) / 2, c.y + 4, CAJA, CAJA};
+}
+
+// Las cosas del recuadro de la derecha (se dibujan en «dibujo»; los botones van encima).
+void dibujarElegido(Tipo t, int i, const std::string& encabezado)
+{
+    panel({PX, PY, PW, PH}, "");
+    const Hueco& h = hueco(t, i);
+    const SDL_Rect img = {PX + 20, PY + 20, 180, 180};
+    const int x2 = img.x + img.w + 22, ancho2 = PX + PW - 20 - x2;
+    texto(encajar(encabezado, ancho2, g_pequena), x2, PY + 18, MARRON_SUAVE, g_pequena);
+    if (h.vacio)
+    {
+        redondo(img, 12, LINEA);
+        redondo({img.x + 2, img.y + 2, img.w - 4, img.h - 4}, 10, CREMA);
+        texto("Vacío", img.x + img.w / 2, img.y + img.h / 2, APAGADO_, nullptr, Centro);
+        texto("Hueco vacío", PX + 20, PY + 214, MARRON, g_negrita);
+        texto("Trae un diseño de la SD para llenarlo.", PX + 20, PY + 252, MARRON_SUAVE, g_pequena, Izquierda, PW - 40);
+        return;
+    }
+    redondo({img.x - 2, img.y - 2, img.w + 4, img.h + 4}, 6, LINEA);
+    dibujo(textura(t, i), img, 15);
+    texto("Colores", x2, PY + 52, MARRON, g_pequena);
+    for (int c = 0; c < COLORES; c++)
+    {
+        uint8_t r, g, b;
+        color(h.d, c, r, g, b);
+        const SDL_Rect q = {x2 + (c % 5) * 36, PY + 86 + (c / 5) * 36, 28, 28};
+        redondo({q.x - 2, q.y - 2, q.w + 4, q.h + 4}, 16, LINEA);
+        redondo(q, 14, {r, g, b, 255});
+    }
+    texto(encajar(nombreVisible(h), PW - 40, g_negrita), PX + 20, PY + 212, MARRON, g_negrita);
+    std::string quien = quienLoHizo(h.d);
+    texto(quien, PX + 20, PY + 250, MARRON_SUAVE, g_pequena, Izquierda, PW - 40);
+}
 
 Pantalla ficha(Tipo t, int i);
+void masOpciones(Tipo t, int i);
 
 Pantalla rejilla(Tipo t, int inicial, std::function<void(int)> elegido = nullptr, int excepto = -1)
 {
@@ -504,98 +550,159 @@ Pantalla rejilla(Tipo t, int inicial, std::function<void(int)> elegido = nullptr
         if (elegido)
         {
             v.titulo = "Copiar a otro hueco";
-            v.explicacion = "Elige el hueco donde poner la copia del diseño " + std::to_string(excepto + 1) + ".";
+            v.explicacion = "Elige el hueco donde poner la copia de «" + nombreVisible(hueco(t, excepto)) + "».";
         }
         else
         {
             v.titulo = TITULOS[t];
-            v.explicacion = std::to_string(usados(t)) + " de " + std::to_string(total) + " huecos usados. Elige uno para verlo y cambiarlo.";
+            v.explicacion = std::to_string(usados(t)) + " de " + std::to_string(total) + " huecos usados. Elige un diseño para verlo en grande.";
         }
         if (paginas > 1)
             v.explicacion += " (página " + std::to_string(e->pagina + 1) + " de " + std::to_string(paginas) + ")";
-        for (int k = 0; k < enPagina; k++)
-        {
-            const int i = desde + k;
-            const Hueco& h = hueco(t, i);
-            v.b.push_back({etiquetaDe(k), nombreVisible(h), [abrirHueco, i] { abrirHueco(i); }, i != excepto});
-        }
         const int f = foco();
         if (f >= 0 && f < enPagina)
             e->ultimo = desde + f;
         e->ultimo = std::clamp(e->ultimo, 0, total - 1);
+        if (e->ultimo < desde || e->ultimo >= hasta)
+            e->ultimo = desde;
 
-        // Bottom: pages, and in the normal grid «save all» and «load a folder».
-        std::vector<Boton> abajo;
-        if (paginas > 1)
+        // The grid: a square with the picture (or «Vacío»); the name goes below, in «dibujo».
+        for (int k = 0; k < enPagina; k++)
         {
-            abajo.push_back({{}, "Anteriores", [e] { e->pagina--; }, e->pagina > 0});
-            abajo.push_back({{}, "Siguientes", [e] { e->pagina++; }, e->pagina + 1 < paginas});
+            const int i = desde + k;
+            const Hueco& h = hueco(t, i);
+            Boton b{cajaDe(k), h.vacio ? "Vacío" : nombreVisible(h), [abrirHueco, i] { abrirHueco(i); }, i != excepto};
+            b.casilla = true;
+            b.marcado = i == e->ultimo && !h.vacio;
+            if (h.vacio)
+                b.color = CREMA;
+            else
+                b.imagen = textura(t, i);
+            v.b.push_back(b);
         }
+
+        // The panel on the right: what can be done with the chosen one.
+        const int i = e->ultimo;
+        const Hueco& h = hueco(t, i);
+        const bool vacio = h.vacio, otro = !vacio && deOtro(h.d);
         if (!elegido)
         {
-            abajo.push_back({{}, "Guardar todos", [t] { guardarTodos(t); }, usados(t) > 0});
-            abajo.push_back({{}, "Cargar carpeta", [t, e] { abrir(elegirCarpeta(t, e->ultimo)); }});
+            const int y0 = PY + 312, bw = (PW - 40 - 10) / 2, bh = 44;
+            auto boton = [&](int fila, int col, const std::string& s, std::function<void()> a, bool activo) {
+                Boton b{{PX + 20 + col * (bw + 10), y0 + fila * (bh + 8), bw, bh}, s, std::move(a), activo};
+                b.pequena = true;
+                v.b.push_back(b);
+            };
+            boton(0, 0, "Cambiar nombre", [t, i] {
+                auto d = hueco(t, i).d;
+                std::string n = nombre(d);
+                if (!pedirTexto("Nombre del diseño", "Hasta 20 letras", n, 20))
+                    return;
+                ponerNombre(d, n);
+                poner(t, i, d);
+                cambiado("Nombre cambiado");
+            }, !vacio);
+            boton(0, 1, "Hacerlo mío", [t, i] {
+                auto d = hueco(t, i).d;
+                hacerMio(d, partida::personal());
+                poner(t, i, d);
+                cambiado("Ahora es tuyo");
+            }, otro);
+            boton(1, 0, "Guardar imagen", [t, i] { guardarImagen(t, i); }, !vacio);
+            boton(1, 1, "Guardar en la SD", [t, i] { guardarArchivo(t, i); }, !vacio);
+            boton(2, 0, "Traer de la SD…", [t, i] { abrir(elegirArchivo(t, i)); }, true);
+            boton(2, 1, "Más…", [t, i] { masOpciones(t, i); }, true);
         }
-        abajo.push_back({{}, elegido ? "Cancelar" : "Volver", [] { volver(); }});
-        const int n = (int)abajo.size();
-        const int ancho = std::min(260, (W - 120 - (n - 1) * 16) / n);
-        for (int k = 0; k < n; k++)
-        {
-            abajo[k].r = {k == n - 1 ? W - 60 - ancho : 60 + k * (ancho + 16), ABAJO - 66, ancho, 56};
-            v.b.push_back(abajo[k]);
-        }
-        if (paginas > 1)
-            v.paginar = [e, paginas](int d) { e->pagina = std::clamp(e->pagina + d, 0, paginas - 1); };
 
-        v.dibujo = [t, e, desde, enPagina, f] {
+        // Along the bottom: pages and «Volver».
+        if (paginas > 1)
+        {
+            Boton ant{{PX, ABAJO_Y, 155, ABAJO_H}, "Anteriores", [e] { e->pagina--; }, e->pagina > 0};
+            Boton sig{{PX + 165, ABAJO_Y, 155, ABAJO_H}, "Siguientes", [e] { e->pagina++; }, e->pagina + 1 < paginas};
+            ant.pequena = sig.pequena = true;
+            v.b.push_back(ant);
+            v.b.push_back(sig);
+            v.paginar = [e, paginas](int d) { e->pagina = std::clamp(e->pagina + d, 0, paginas - 1); };
+        }
+        Boton vb{{PX + PW - 120, ABAJO_Y, 120, ABAJO_H}, elegido ? "Cancelar" : "Volver", [] { volver(); }};
+        vb.pequena = true;
+        v.b.push_back(vb);
+
+        const std::string pie = "Hueco " + std::to_string(i + 1) + " de " + std::to_string(total);
+        const bool copiando = elegido != nullptr;
+        v.dibujo = [t, e, desde, enPagina, pie, copiando] {
             for (int k = 0; k < enPagina; k++)
             {
-                const SDL_Rect r = imagenDe(k);
-                if (k == f)
-                    redondo({r.x - (TW - IMG) / 2 - 5, r.y - 5, TW + 10, IMG + ETIQ + 14}, 18, AZUL);
-                if (hueco(t, desde + k).vacio)
-                    redondo(r, 8, CREMA_OSCURA);
-                else
-                    dibujo(textura(t, desde + k), r, 8);
+                const SDL_Rect c = celda(k);
+                const int i = desde + k;
+                const Hueco& h = hueco(t, i);
+                if (i == e->ultimo)
+                    redondo(c, 14, VERDE_FONDO);
+                if (!h.vacio)
+                    texto(encajar(nombreVisible(h), c.w - 6, g_pequena), c.x + c.w / 2, c.y + CAJA + 6 + TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena, Centro);
             }
-            // The chosen one, large.
-            const int i = e->ultimo;
-            const Hueco& h = hueco(t, i);
-            const int x = 880;
-            texto(encajar(std::to_string(i + 1) + ". " + nombreVisible(h), 360), x, TY - 4, MARRON);
-            if (h.vacio)
-            {
-                redondo({x, TY + 36, 288, 288}, 12, CREMA_OSCURA);
-                texto("Hueco vacío", x + 144, TY + 180, MARRON_SUAVE, nullptr, Centro);
-                return;
-            }
-            dibujo(textura(t, i), {x, TY + 36, 288, 288}, 18);
-            paleta(h.d, x, TY + 338, 16);
-            texto(quienLoHizo(h.d), x, TY + 372, MARRON_SUAVE, g_pequena, Izquierda, 360);
+            dibujarElegido(t, e->ultimo, pie);
+            if (copiando)
+                texto("Pulsa A en un hueco para poner allí la copia. Si ya tiene un diseño, se te pregunta antes.", PX + 20, PY + 330, MARRON_SUAVE,
+                    g_pequena, Izquierda, PW - 40);
         };
-        v.entrada = [enPagina, desde, abrirHueco, excepto](u64, u64, int tx, int ty) {
-            for (int k = 0; k < enPagina; k++)
-            {
-                const SDL_Rect r = imagenDe(k);
-                if (tx >= r.x && tx < r.x + r.w && ty >= r.y && ty < r.y + r.h)
-                {
-                    enfocar(k);
-                    if (desde + k != excepto)
-                        abrirHueco(desde + k);
-                    return true;
-                }
-            }
-            return false;
-        };
-        v.teclas = {{"A", elegido ? "Copiar aquí" : "Ver"}};
+        v.teclas = {{"A", elegido ? "Copiar aquí" : "Ver en grande"}};
         if (paginas > 1)
             v.teclas.push_back({"L R", "Página"});
         v.teclas.push_back({"B", elegido ? "Cancelar" : "Volver"});
     };
 }
 
+// Lo que no cabe en el recuadro: copiar, vaciar, y guardar o traer todos de golpe.
+void masOpciones(Tipo t, int i)
+{
+    const bool vacio = hueco(t, i).vacio;
+    std::vector<uint8_t> limpio;
+    const bool hayBlanco = blancoDe(t, limpio);
+    std::vector<std::pair<std::string, std::function<void()>>> op;
+    if (!vacio && cuantos(t) > 1)
+        op.push_back({"Copiar a otro hueco…", [t, i] {
+            abrir(rejilla(t, i, [t, i](int j) {
+                auto copiar = [t, i, j] {
+                    auto d = hueco(t, i).d;
+                    arreglarUso(d, t);
+                    poner(t, j, d);
+                    volver();
+                    cambiado("Copiado al hueco " + std::to_string(j + 1));
+                };
+                if (hueco(t, j).vacio)
+                    copiar();
+                else
+                    confirmar("Copiar a otro hueco", "En el hueco " + std::to_string(j + 1) + " está «" + nombreVisible(hueco(t, j)) + "». ¿Cambiarlo por la copia?", "Cambiarlo", copiar);
+            }, i), i % POR_PAGINA);
+        }});
+    if (!vacio && hayBlanco)
+        op.push_back({"Vaciar el hueco", [t, i] {
+            confirmar("Vaciar el hueco", "¿Quitar «" + nombreVisible(hueco(t, i)) + "»? El hueco se queda vacío, como uno sin usar del juego.", "Vaciar", [t, i] {
+                std::vector<uint8_t> d;
+                if (!blancoDe(t, d))
+                    return;
+                poner(t, i, d);
+                cambiado("Hueco vaciado");
+            });
+        }});
+    if (cuantos(t) > 1)
+    {
+        if (usados(t) > 0)
+            op.push_back({"Guardar todos en la SD", [t] { guardarTodos(t); }});
+        op.push_back({"Cargar desde una carpeta…", [t, i] { abrir(elegirCarpeta(t, i)); }});
+    }
+    std::vector<std::string> textos;
+    for (const auto& o : op)
+        textos.push_back(o.first);
+    const std::string n = vacio ? "el hueco " + std::to_string(i + 1) : "«" + nombreVisible(hueco(t, i)) + "»";
+    elegir("Más opciones", "Para " + n + ". «Cargar desde una carpeta» pone sus diseños en este hueco y los siguientes.", textos, -1,
+        [op](int k) { op[k].second(); }, 1);
+}
+
 // --------------------------------------------------------------------------------------------------------- ficha
-// Un diseño en grande con lo que se puede hacer con él. L y R pasan al anterior y al siguiente.
+// Un diseño en grande con lo que se puede hacer con él (y la bandera, que es uno solo, como su ventana del Mac). L y R
+// pasan al anterior y al siguiente.
 Pantalla ficha(Tipo t, int inicial)
 {
     auto actual = std::make_shared<int>(inicial);
@@ -603,26 +710,51 @@ Pantalla ficha(Tipo t, int inicial)
         const int i = *actual;
         const Hueco& h = hueco(t, i);
         const bool vacio = h.vacio, otro = !vacio && deOtro(h.d);
-        v.titulo = cuantos(t) == 1 ? std::string(TITULOS[t]) : std::string(TITULOS[t]) + " · hueco " + std::to_string(i + 1) + " de " + std::to_string(cuantos(t));
-        v.explicacion = vacio ? "Este hueco está vacío. Trae un diseño de un archivo para llenarlo." : quienLoHizo(h.d);
-        if (otro)
-            v.explicacion += " Lo hizo otra persona, así que el juego no te deja retocarlo. Hazlo tuyo para poder hacerlo.";
+        const bool varios = cuantos(t) > 1;
+        v.titulo = TITULOS[t];
+        v.explicacion = varios ? "Hueco " + std::to_string(i + 1) + " de " + std::to_string(cuantos(t)) + ". Con L y R pasas al anterior y al siguiente." :
+            "Puedes cambiarle el nombre, guardarlo como imagen o cambiarlo por uno de la SD.";
 
-        v.dibujo = [t, i, vacio] {
-            const SDL_Rect r = {60, 160, 384, 384};
+        // Left, the picture; right, a panel with the name, who made it, the colours and the actions.
+        constexpr int IX = 60, IY = 140, IL = 440;
+        constexpr int RX = IX + IL + 20, RW = W - 60 - RX, RY = 140;
+        std::string quien = vacio ? "Este hueco está vacío. Trae un diseño de la SD para llenarlo." : quienLoHizo(h.d);
+        if (otro)
+            quien += " Lo hizo otra persona, así que el juego no te deja retocarlo. Hazlo tuyo para poder hacerlo.";
+        const int altoQuien = TTF_FontHeight(g_pequena) * (otro ? 2 : 1);
+        const int yColores = RY + 148 + altoQuien;
+        v.dibujo = [t, i, vacio, quien, yColores] {
+            panel({IX, IY, IL, IL}, "");
+            const SDL_Rect r = {IX + 20, IY + 20, IL - 40, IL - 40};
             if (vacio)
             {
-                redondo(r, 16, CREMA_OSCURA);
-                texto("Vacío", r.x + r.w / 2, r.y + r.h / 2, MARRON_SUAVE, g_grande, Centro);
-                return;
+                redondo(r, 12, CREMA);
+                texto("Vacío", r.x + r.w / 2, r.y + r.h / 2, APAGADO_, g_grande, Centro);
             }
-            dibujo(textura(t, i), r, 24);
-            texto("Colores", 480, 250, MARRON, g_pequena);
-            paleta(hueco(t, i).d, 480, 282);
+            else
+            {
+                redondo({r.x - 2, r.y - 2, r.w + 4, r.h + 4}, 6, LINEA);
+                dibujo(textura(t, i), r, 25);
+            }
+            panel({RX, RY, RW, ABAJO - 72 - RY}, "");
+            texto("Nombre", RX + 20, RY + 16, MARRON, g_pequena);
+            texto(quien, RX + 20, RY + 122, MARRON_SUAVE, g_pequena, Izquierda, RW - 40);
+            if (vacio)
+                return;
+            texto("Colores", RX + 20, yColores, MARRON, g_pequena);
+            const auto& d = hueco(t, i).d;
+            for (int c = 0; c < COLORES; c++)
+            {
+                uint8_t cr, cg, cb;
+                color(d, c, cr, cg, cb);
+                const SDL_Rect q = {RX + 20 + c * 42, yColores + 32, 32, 32};
+                redondo({q.x - 2, q.y - 2, q.w + 4, q.h + 4}, 18, LINEA);
+                redondo(q, 16, {cr, cg, cb, 255});
+            }
         };
 
-        const int x1 = 480, x2 = 860, ancho = 360, alto = 66;
-        Boton nb{{x1, 160, 740, 72}, "Nombre: " + nombreVisible(h), [t, i] {
+        // The name, as the text field of the Mac: touch it to change it.
+        Boton nb{{RX + 20, RY + 46, RW - 40, 66}, nombreVisible(h), [t, i] {
             auto d = hueco(t, i).d;
             std::string n = nombre(d);
             if (!pedirTexto("Nombre del diseño", "Hasta 20 letras", n, 20))
@@ -632,6 +764,8 @@ Pantalla ficha(Tipo t, int inicial)
             cambiado("Nombre cambiado");
         }, !vacio};
         nb.grande = true;
+        nb.detalle = vacio ? "" : "Toca para cambiarlo";
+        nb.imagen = dibujos::menu("MyDesignPro");
         v.b.push_back(nb);
 
         std::vector<uint8_t> limpio;
@@ -648,11 +782,11 @@ Pantalla ficha(Tipo t, int inicial)
                 poner(t, i, d);
                 cambiado("Ahora es tuyo");
             }, otro},
-            {"Guardar en la SD", [t, i] { guardarArchivo(t, i); }, !vacio},
             {"Guardar como imagen", [t, i] { guardarImagen(t, i); }, !vacio},
-            {"Cambiar por un archivo…", [t, i] { abrir(elegirArchivo(t, i)); }, true},
+            {"Guardar en la SD", [t, i] { guardarArchivo(t, i); }, !vacio},
+            {"Traer de la SD…", [t, i] { abrir(elegirArchivo(t, i)); }, true},
         };
-        if (cuantos(t) > 1)
+        if (varios)
             acciones.push_back({"Copiar a otro hueco…", [t, i] {
                 abrir(rejilla(t, i, [t, i](int j) {
                     auto copiar = [t, i, j] {
@@ -677,17 +811,21 @@ Pantalla ficha(Tipo t, int inicial)
                 cambiado("Hueco vaciado");
             });
         }, !vacio && hayBlanco});
+        const int bw = (RW - 40 - 12) / 2, bh = 48;
+        const int y0 = yColores + 84;
         for (size_t k = 0; k < acciones.size(); k++)
         {
             const int fila = (int)k / 2, col = (int)k % 2;
-            v.b.push_back({{col ? x2 : x1, 340 + fila * (alto + 14), ancho, alto}, acciones[k].texto, acciones[k].hacer, acciones[k].activo});
+            v.b.push_back({{RX + 20 + col * (bw + 12), y0 + fila * (bh + 10), bw, bh}, acciones[k].texto, acciones[k].hacer, acciones[k].activo});
         }
-        v.b.push_back({{x2, ABAJO - 80, ancho, 64}, "Volver", [] { volver(); }});
-        if (cuantos(t) > 1)
+        if (varios)
         {
+            v.b.push_back({{IX, ABAJO_Y, 200, ABAJO_H}, "Anterior", [actual] { (*actual)--; }, i > 0});
+            v.b.push_back({{IX + 212, ABAJO_Y, 200, ABAJO_H}, "Siguiente", [actual] { (*actual)++; }, i + 1 < cuantos(t)});
             v.paginar = [t, actual](int d) { *actual = std::clamp(*actual + (d > 0 ? 1 : -1), 0, cuantos(t) - 1); };
             v.teclas = {{"A", "Elegir"}, {"L R", "Otro diseño"}, {"B", "Volver"}};
         }
+        v.b.push_back({{W - 60 - 220, ABAJO_Y, 220, ABAJO_H}, "Volver", [] { volver(); }});
     };
 }
 
@@ -716,9 +854,9 @@ void abrirTipo(Tipo t)
     abrir(rejilla(t, primero), primero % POR_PAGINA);
 }
 
-Registro r1({SeccionDisenos, 10, [] { return std::string(TITULOS[Normales]); }, [] { return resumen(Normales); }, [] { abrirTipo(Normales); }});
-Registro r2({SeccionDisenos, 20, [] { return std::string(TITULOS[Pro]); }, [] { return resumen(Pro); }, [] { abrirTipo(Pro); }});
-Registro r3({SeccionDisenos, 30, [] { return std::string(TITULOS[Bandera]); }, [] { return resumen(Bandera); }, [] { abrirTipo(Bandera); }});
-Registro r4({SeccionDisenos, 40, [] { return std::string(TITULOS[Sastreria]); }, [] { return resumen(Sastreria); }, [] { abrirTipo(Sastreria); }});
+Registro r1({SeccionDisenos, 10, [] { return std::string(TITULOS[Normales]); }, [] { return resumen(Normales); }, [] { abrirTipo(Normales); }, nullptr, "MyDesignPro"});
+Registro r2({SeccionDisenos, 20, [] { return std::string(TITULOS[Pro]); }, [] { return resumen(Pro); }, [] { abrirTipo(Pro); }, nullptr, "MyDesignPro"});
+Registro r3({SeccionDisenos, 30, [] { return std::string(TITULOS[Bandera]); }, [] { return resumen(Bandera); }, [] { abrirTipo(Bandera); }, nullptr, "Flowershower"});
+Registro r4({SeccionDisenos, 40, [] { return std::string(TITULOS[Sastreria]); }, [] { return resumen(Sastreria); }, [] { abrirTipo(Sastreria); }, nullptr, "TailorTicket"});
 
 } // namespace
