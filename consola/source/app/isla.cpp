@@ -129,7 +129,7 @@ void frutasYFlores(Vista& v)
     v.titulo = "Fruta y flores de tu isla";
     v.explicacion = "La fruta y las flores que crecen solas en tu isla. Toca una para elegirla.";
     const FrutasFlores f = leerFrutasFlores(partida::principal(), partida::personal());
-    constexpr int ARRIBA = 136, FILA[2] = {224, 384}, DER = 550;
+    static constexpr int ARRIBA = 136, FILA[2] = {224, 384}, DER = 550;
     constexpr int LADO_FRUTA = 78, LADO_FLOR = 70;
     struct Grupo {
         std::string titulo, explicacion;
