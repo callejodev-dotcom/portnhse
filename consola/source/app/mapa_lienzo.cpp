@@ -9,6 +9,7 @@
 #include "../core/mapa_objetos.hpp"
 #include "dibujos.hpp"
 #include "retratos.hpp"
+#include "foto.hpp"
 #include "mapa_pintor.hpp"
 #include "ui.hpp"
 
@@ -754,6 +755,8 @@ void Lienzo::componerFoto(std::vector<uint8_t>& main, int t)
         }
         // Las casas de los vecinos llevan su cara (como el Mac); las demás, su dibujo.
         SDL_Texture* cara = nullptr;
+        if (b.tipo >= 1 && b.tipo <= 8)
+            cara = suave(foto::deJugador(b.tipo - 1)); // the houses of the players, with their photo (as the Mac)
         if (b.tipo >= 9 && b.tipo <= 18)
         {
             const int hueco = (int8_t)main[acnh::CASAS + (b.tipo - 9) * acnh::TAM_CASA + 0x1C4];

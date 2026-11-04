@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Bibliotecas (SDL2)
-        run: dkp-pacman -Sy --noconfirm --needed switch-sdl2 switch-sdl2_ttf || true
+        run: dkp-pacman -Sy --noconfirm --needed switch-sdl2 switch-sdl2_ttf switch-sdl2_image || true
       - name: Nomes de arquivo sen repetir (o Makefile xunta os .o polo nome)
         run: |
           dup=$(ls consola/source/app/*.cpp consola/source/core/*.cpp | xargs -n1 basename | sort | uniq -d)

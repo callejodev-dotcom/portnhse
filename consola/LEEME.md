@@ -30,7 +30,7 @@ escrito para comprobar que es exactamente lo que quería guardar y que la partid
 - `prueba`: el núcleo desde la línea de órdenes, `prueba <carpeta> <orden> ...`. Cada archivo registra sus órdenes con
   `OrdenPrueba`. `tests/NHSE.Mac.Tests/Consola*Tests.cs` lo compila y comprueba que cada cambio deja la partida byte a
   byte igual que NHSE (con `ConsolaTests.Both`).
-- `simulador`: la app entera en el Mac, sin consola (`brew install sdl2 sdl2_ttf`, luego `simulador/compilar.sh`). Lee
+- `simulador`: la app entera en el Mac, sin consola (`brew install sdl2 sdl2_ttf sdl2_image`, luego `simulador/compilar.sh`). Lee
   una copia de la partida, pulsa los botones de un guion (también toques y lo que se escribe en el teclado) y saca
   fotos de la pantalla; ver `simulador/sim.cpp`.
 

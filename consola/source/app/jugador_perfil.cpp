@@ -4,6 +4,7 @@
 #include "../core/jugador.hpp"
 #include "../core/jugador_listas.hpp"
 #include "dibujos.hpp"
+#include "foto.hpp"
 #include "jugador_comun.hpp"
 #include "partida.hpp"
 #include "ui.hpp"
@@ -77,7 +78,8 @@ void perfil(Vista& v)
         // Who it is.
         jugador::recuadro({60, 112, 570, 110});
         redondo({80, 126, 82, 82}, 14, {0x2B, 0x2B, 0x40, 255});
-        jugador::imagen(dibujos::menu("Onepiece"), 89, 135, 64);
+        SDL_Texture* f = foto::deJugador(partida::yo);
+        jugador::imagen(f ? f : dibujos::menu("Onepiece"), 89, 135, 64);
         texto(encajar(nombre, 430, g_titulo), 180, 128, MARRON, g_titulo);
         texto(encajar(isla, 430, g_pequena), 180, 178, MARRON_SUAVE, g_pequena);
         // The cards.

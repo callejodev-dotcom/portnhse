@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <memory>
 #include "dibujos.hpp"
+#include "foto.hpp"
 #include "partida.hpp"
 #include "registro.hpp"
 #include "ui.hpp"
@@ -130,7 +131,8 @@ Lateral lateral()
 {
     Lateral l;
     const auto& j = partida::jugador();
-    l.entradas.push_back({j.nombre, dibujos::menu("Onepiece"), j.nombre.substr(0, j.nombre.empty() ? 0 : (((unsigned char)j.nombre[0] & 0xE0) == 0xC0 ? 2 : 1)),
+    SDL_Texture* cara = foto::deJugador(partida::yo);
+    l.entradas.push_back({j.nombre, cara ? cara : dibujos::menu("Onepiece"), j.nombre.substr(0, j.nombre.empty() ? 0 : (((unsigned char)j.nombre[0] & 0xE0) == 0xC0 ? 2 : 1)),
         g_seccion == SeccionJugador, [] {
             if (partida::jugadores.size() > 1 && g_seccion == SeccionJugador)
             {

@@ -30,7 +30,7 @@ CXXFLAGS	:= $(CFLAGS) -std=gnu++17 -fno-rtti -fno-exceptions
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lSDL2_ttf -lSDL2 -Wl,--start-group -lfreetype -lharfbuzz -lpng16 -lbz2 -lz -Wl,--end-group -lEGL -lglapi -ldrm_nouveau -lnx
+LIBS	:= `$(PREFIX)pkg-config --libs --static SDL2_image SDL2_ttf sdl2` -lnx
 LIBDIRS	:= $(PORTLIBS) $(LIBNX)
 
 ifneq ($(BUILD),$(notdir $(CURDIR)))
