@@ -24,7 +24,7 @@ void cambiar(std::function<void(Perfil&)> f)
     cambiado();
 }
 
-std::string fruta(uint16_t id)
+[[maybe_unused]] std::string fruta(uint16_t id)
 {
     for (const auto& f : FRUTAS)
         if (f.id == id)
