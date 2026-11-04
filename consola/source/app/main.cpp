@@ -127,7 +127,7 @@ Lateral lateral()
 {
     Lateral l;
     const auto& j = partida::jugador();
-    l.entradas.push_back({j.nombre, nullptr, j.nombre.substr(0, j.nombre.empty() ? 0 : (((unsigned char)j.nombre[0] & 0xE0) == 0xC0 ? 2 : 1)),
+    l.entradas.push_back({j.nombre, dibujos::menu("Onepiece"), j.nombre.substr(0, j.nombre.empty() ? 0 : (((unsigned char)j.nombre[0] & 0xE0) == 0xC0 ? 2 : 1)),
         g_seccion == SeccionJugador, [] {
             if (partida::jugadores.size() > 1 && g_seccion == SeccionJugador)
             {

@@ -327,6 +327,22 @@ static void dibujarBoton(const Boton& b, bool foco)
         x0 = d.x + lado + 14 - (b.grande ? 0 : 0);
         w0 = b.r.x + b.r.w - x0;
     }
+    if (b.grande && !b.valor.empty())
+    {
+        // A number card, as the money of the Mac: what it is, the number big, and a note.
+        const int x = conDibujo ? x0 : b.r.x + 24;
+        const int ancho = b.r.x + b.r.w - x - 16;
+        const int h1 = TTF_FontHeight(g_pequena), h2 = TTF_FontHeight(g_titulo), h3 = b.detalle.empty() ? 0 : TTF_FontHeight(g_pequena);
+        const int junto = 8;
+        int y = b.r.y + (b.r.h - (h1 + h2 + h3 - 2 * junto)) / 2;
+        texto(encajar(b.texto, ancho, g_pequena), x, y, MARRON_SUAVE, g_pequena);
+        y += h1 - junto;
+        texto(encajar(b.valor, ancho, g_titulo), x, y, letra, g_titulo);
+        y += h2 - junto;
+        if (!b.detalle.empty())
+            texto(encajar(b.detalle, ancho, g_pequena), x, y, MARRON_SUAVE, g_pequena);
+        return;
+    }
     if (b.grande)
     {
         // A card of the Mac: title in bold, and what there is now in grey.
@@ -383,17 +399,37 @@ void barra(const std::string& aviso, bool malo, bool suave, const Teclas& teclas
     rect({0, ABAJO, W, H - ABAJO}, BLANCO);
     rect({0, ABAJO, W, 1}, BORDE);
     int x = W - 24;
+    // Each key as a light grey button with its letter (two keys, «L R», two buttons), as the Mac shows its shortcuts.
+    const SDL_Color teclaFondo = {0xE8, 0xE8, 0xED, 255}, teclaBorde = {0xD1, 0xD1, 0xD6, 255};
     for (auto it = teclas.rbegin(); it != teclas.rend(); ++it)
     {
-        Letras l = letras(it->second, g_pequena, MARRON, 0);
+        Letras l = letras(it->second, g_pequena, MARRON_SUAVE, 0);
         x -= l.w;
-        texto(it->second, x, H - 24 - l.h / 2, MARRON, g_pequena);
-        Letras k = letras(it->first, g_pequena, BLANCO, 0);
-        const int ancho = std::max(30, k.w + 22);
-        x -= 8 + ancho;
-        redondo({x, H - 39, ancho, 30}, 15, MARRON);
-        texto(it->first, x + ancho / 2, H - 24, BLANCO, g_pequena, Centro);
-        x -= 26;
+        texto(it->second, x, H - 24 - l.h / 2, MARRON_SUAVE, g_pequena);
+        x -= 8;
+        std::vector<std::string> partes;
+        std::string w;
+        for (char c : it->first + " ")
+        {
+            if (c == ' ')
+            {
+                if (!w.empty())
+                    partes.push_back(w);
+                w.clear();
+            }
+            else
+                w += c;
+        }
+        for (auto p = partes.rbegin(); p != partes.rend(); ++p)
+        {
+            const int ancho = std::max(28, anchoTexto(*p, g_negrita) + 14);
+            x -= ancho;
+            redondo({x, H - 38, ancho, 28}, 8, teclaBorde);
+            redondo({x + 1, H - 37, ancho - 2, 25}, 7, teclaFondo);
+            texto(*p, x + ancho / 2, H - 25, MARRON, g_pequena, Centro);
+            x -= 4;
+        }
+        x -= 22;
     }
     if (!aviso.empty())
     {

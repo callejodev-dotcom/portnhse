@@ -62,6 +62,8 @@ struct Boton {
     bool casilla = false;           // a square of items, as the Mac: «color» is its background, «imagen» in the middle,
                                     // «detalle» (how many) at the bottom right
     bool vertical = false;          // a card with the picture big on top and the text below (villagers, as the Mac)
+    std::string valor;              // with «grande»: a number card, as the money of the Mac («texto» small on top,
+                                    // «valor» big, «detalle» below)
 };
 void dibujar(const Boton& b, bool foco);
 

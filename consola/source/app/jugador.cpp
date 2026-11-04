@@ -3,6 +3,7 @@
 #include "../core/jugador.hpp"
 #include <cstring>
 #include <functional>
+#include "dibujos.hpp"
 #include "objetos_ui.hpp"
 #include "partida.hpp"
 #include "ui.hpp"
@@ -18,32 +19,34 @@ acnh::Archivo* dondeEstan() { return partida::otro(partida::jugador().carpeta + 
 void dinero(Vista& v)
 {
     v.titulo = "Dinero y millas de " + partida::jugador().nombre;
-    v.explicacion = "Toca un número para cambiarlo.";
+    v.explicacion = "Toca una cantidad para cambiarla.";
     struct Cifra {
         const char* nombre;
+        const char* icono;
+        std::string nota;
         const char* titulo;
         uint32_t maximo;
-        const char* unidad;
         std::function<uint8_t*()> donde;
         std::function<void()> cambia;
     };
     auto pers = [](uint32_t pos) { return [pos] { return partida::personal().data() + pos; }; };
     auto cambiaPers = [] { partida::cambiaPersonal(); };
+    // As the money of NHSE for Mac: the same cards, icons and notes.
     std::vector<Cifra> cifras = {
-        {"Monedero", "Bayas en el monedero (máx. 99.999)", 99999, " bayas", pers(MONEDERO), cambiaPers},
-        {"Banco", "Bayas en el banco (máx. 999.999.999)", 999999999, " bayas", pers(BANCO), cambiaPers},
-        {"Millas Nook", "Millas Nook", 999999999, "", pers(MILLAS), cambiaPers},
+        {"Monedero", "MoneyBag039", "Lo que llevas (hasta 99.999)", "Bayas en el monedero (máx. 99.999)", 99999, pers(MONEDERO), cambiaPers},
+        {"Ahorros", "MoneyBag069", "Las bayas del cajero", "Bayas en el banco (máx. 999.999.999)", 999999999, pers(BANCO), cambiaPers},
+        {"Millas Nook", "Coin", numero(leerNumero(partida::personal().data() + MILLAS + 8)) + " ganadas en total", "Millas Nook", 999999999, pers(MILLAS), cambiaPers},
     };
     // Los billetes del hotel y las Poki, solo si la partida ya los tiene (como el Mac).
-    if (hayHotel(partida::personal()))
-        cifras.push_back({"Billetes del hotel", "Billetes del hotel", 999999999, "", pers(BILLETES_HOTEL), cambiaPers});
     if (dondeEstan())
-        cifras.push_back({"Poki", "Poki", 999999999, "", [] { return dondeEstan()->datos.data() + POKI; },
+        cifras.push_back({"Poki", "Coin", "Moneda del hotel", "Poki", 999999999, [] { return dondeEstan()->datos.data() + POKI; },
             [] { partida::cambiaOtro(partida::jugador().carpeta + "/wherearen.dat"); }});
+    if (hayHotel(partida::personal()))
+        cifras.push_back({"Billetes del hotel", "RollanTicket", "Para gastar en el hotel", "Billetes del hotel", 999999999, pers(BILLETES_HOTEL), cambiaPers});
     for (int i = 0; i < (int)cifras.size(); i++)
     {
         const Cifra c = cifras[i];
-        v.b.push_back({{60 + (i % 2) * 590, 160 + (i / 2) * 120, 570, 100}, std::string(c.nombre) + ": " + numero(leerNumero(c.donde())) + c.unidad, [c] {
+        Boton b{{60 + (i % 3) * 390, 130 + (i / 3) * 150, 375, 136}, c.nombre, [c] {
             uint32_t n = leerNumero(c.donde());
             if (pedirNumero(c.titulo, n, c.maximo))
             {
@@ -51,9 +54,14 @@ void dinero(Vista& v)
                 c.cambia();
                 cambiado();
             }
-        }});
+        }};
+        b.grande = true;
+        b.valor = numero(leerNumero(c.donde()));
+        b.detalle = c.nota;
+        b.imagen = dibujos::menu(c.icono);
+        v.b.push_back(b);
     }
-    v.b.push_back({{440, ABAJO - 90, 400, 70}, "Volver", [] { volver(); }});
+    v.b.push_back({{W / 2 - 200, ABAJO - 80, 400, 64}, "Volver", [] { volver(); }});
 }
 
 // Cambiar el nombre del jugador o de la isla en todas sus copias (como el Mac).
