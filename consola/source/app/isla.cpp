@@ -10,6 +10,7 @@
 #include "../core/tablas.hpp"
 #include "../core/vecinos.hpp"
 #include "partida.hpp"
+#include "retratos.hpp"
 #include "ui.hpp"
 
 using namespace acnh;
@@ -231,10 +232,12 @@ Pantalla elegirVecino(const std::string& titulo, const std::string& actual, std:
     l.fila = [e, actual, elegido](int k) {
         const auto& x = LISTA_VECINOS[e->vistos[k]];
         const std::string interno = x.interno;
-        return Fila{x.nombre, [interno, elegido] {
+        Fila f{x.nombre, [interno, elegido] {
             volver();
             elegido(interno);
         }, true, interno == actual};
+        f.imagen = retratos::de(interno);
+        return f;
     };
     l.columnas = 3;
     l.abajo.push_back([buscar] { return Fila{"Buscar…", buscar}; });
@@ -265,11 +268,18 @@ void camping(Vista& v)
         vive = vive || vecinoEn(m, i) == quien;
     const std::string nombre = quien.empty() ? std::string("Nadie") : nombreVecino(quien);
     const FechaIsla f = fechaCamping(m);
-    v.dibujo = [nombre, quien, vive] {
-        texto(nombre, 60, 150, MARRON, g_grande);
-        texto(quien.empty() ? "No hay nadie en la zona de acampada." : "Está en la zona de acampada.", 60, 205, MARRON_SUAVE, g_pequena);
+    SDL_Texture* cara = quien.empty() ? nullptr : retratos::de(quien);
+    v.dibujo = [nombre, quien, vive, cara] {
+        const int x = cara ? 60 + 120 + 16 : 60;
+        if (cara)
+        {
+            SDL_Rect d = {60, 140, 120, 120};
+            SDL_RenderCopy(g_r, cara, nullptr, &d);
+        }
+        texto(nombre, x, 150, MARRON, g_grande);
+        texto(quien.empty() ? "No hay nadie en la zona de acampada." : "Está en la zona de acampada.", x, 205, MARRON_SUAVE, g_pequena);
         if (vive)
-            texto(nombre + " ya vive en tu isla.", 60, 235, ROJO, g_pequena);
+            texto(nombre + " ya vive en tu isla.", x, 235, ROJO, g_pequena);
     };
     v.b.push_back({{60, 280, 570, 80}, "Elegir campista…", [quien] {
         abrir(elegirVecino("Elegir campista", quien, [](const std::string& interno) {
