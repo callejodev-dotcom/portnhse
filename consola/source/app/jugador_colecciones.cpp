@@ -234,11 +234,11 @@ void reacciones(Vista& v)
     v.titulo = "Reacciones de " + partida::jugador().nombre;
     const Progreso p = acnh::reacciones(yo());
     v.explicacion = "Sabe " + numero(p.tiene) + " de " + numero(p.total) + " reacciones.";
-    Boton a{{100, 160, 1080, 90}, "Las que sabe, una a una", [] { reaccionesUnaAUna(); }};
+    Boton a{{60, 160, 1160, 90}, "Las que sabe, una a una", [] { reaccionesUnaAUna(); }};
     a.detalle = "Buscar, aprender u olvidar";
-    Boton b{{100, 265, 1080, 90}, "Rueda de reacciones", [] { abrir(ruedaReacciones); }};
+    Boton b{{60, 265, 1160, 90}, "Rueda de reacciones", [] { abrir(ruedaReacciones); }};
     b.detalle = "Elegir las ocho que tiene a mano";
-    Boton c{{100, 370, 1080, 90}, "Aprender todas", [] {
+    Boton c{{60, 370, 1160, 90}, "Aprender todas", [] {
         const int n = aprenderReacciones(yo());
         partida::cambiaPersonal();
         cambiado(numero(n) + " reacciones nuevas");

@@ -158,8 +158,8 @@ Pantalla bruto()
                     const bool cambiado = e->cambiados.count(((uint64_t)e->archivo << 32) | p) > 0;
                     if (cursor)
                     {
-                        redondo({xHex(c) - 4, y - 1, 36, ALTO_FILA}, 6, AMARILLO);
-                        rect({X_TEXTO + c * ANCHO_TEXTO - 2, y - 1, ANCHO_TEXTO, ALTO_FILA}, AMARILLO);
+                        redondo({xHex(c) - 4, y - 1, 36, ALTO_FILA}, 6, {0xCF, 0xE3, 0xFF, 255});
+                        rect({X_TEXTO + c * ANCHO_TEXTO - 2, y - 1, ANCHO_TEXTO, ALTO_FILA}, {0xCF, 0xE3, 0xFF, 255});
                     }
                     texto(dosCifras(d[p]), xHex(c), y, cambiado ? ROJO : MARRON, g_pequena);
                     const char ch = d[p] >= 32 && d[p] < 127 ? (char)d[p] : '.';

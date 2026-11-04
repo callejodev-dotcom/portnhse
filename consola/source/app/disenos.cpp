@@ -473,7 +473,7 @@ Pantalla elegirCarpeta(Tipo t, int i)
 // Los huecos de un tipo en una rejilla de dibujos (7 x 4 por página), con el elegido en grande a la derecha. Con
 // «elegido», es para elegir un hueco (copiar a otro hueco).
 constexpr int COLS = 7, FILAS = 4, POR_PAGINA = COLS * FILAS;
-constexpr int TX = 40, TY = 146, TW = 104, IMG = 64, ETIQ = 30, PASO_X = 112, PASO_Y = 108;
+constexpr int TX = 56, TY = 146, TW = 104, IMG = 64, ETIQ = 30, PASO_X = 112, PASO_Y = 108;
 
 SDL_Rect imagenDe(int k) { return {TX + (k % COLS) * PASO_X + (TW - IMG) / 2, TY + (k / COLS) * PASO_Y, IMG, IMG}; }
 SDL_Rect etiquetaDe(int k) { return {TX + (k % COLS) * PASO_X, TY + (k / COLS) * PASO_Y + IMG + 4, TW, ETIQ}; }
@@ -552,7 +552,7 @@ Pantalla rejilla(Tipo t, int inicial, std::function<void(int)> elegido = nullptr
             {
                 const SDL_Rect r = imagenDe(k);
                 if (k == f)
-                    redondo({r.x - (TW - IMG) / 2 - 5, r.y - 5, TW + 10, IMG + ETIQ + 14}, 18, AMARILLO);
+                    redondo({r.x - (TW - IMG) / 2 - 5, r.y - 5, TW + 10, IMG + ETIQ + 14}, 18, AZUL);
                 if (hueco(t, desde + k).vacio)
                     redondo(r, 8, CREMA_OSCURA);
                 else
@@ -570,7 +570,7 @@ Pantalla rejilla(Tipo t, int inicial, std::function<void(int)> elegido = nullptr
                 return;
             }
             dibujo(textura(t, i), {x, TY + 36, 288, 288}, 18);
-            paleta(h.d, x, TY + 338, 18);
+            paleta(h.d, x, TY + 338, 16);
             texto(quienLoHizo(h.d), x, TY + 372, MARRON_SUAVE, g_pequena, Izquierda, 360);
         };
         v.entrada = [enPagina, desde, abrirHueco, excepto](u64, u64, int tx, int ty) {

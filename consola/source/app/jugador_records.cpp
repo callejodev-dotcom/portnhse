@@ -83,7 +83,7 @@ void record(int k)
                     cambia();
                 }
             }};
-            c.detalle = "Cuántas veces (toca para cambiarlo)";
+            c.detalle = "Toca para cambiarlo";
             v.b.push_back(c);
         }
         else
@@ -131,7 +131,7 @@ void mas()
     abrir([](Vista& v) {
         v.titulo = "Récords de " + partida::jugador().nombre;
         v.explicacion = "Para todos los récords a la vez.";
-        Boton a{{100, 170, 1080, 100}, "Completar todos", [] {
+        Boton a{{60, 170, 1160, 100}, "Completar todos", [] {
             confirmar("Completar todos", "¿Completar todos los récords y conseguir todos sus sellos?", "Completar", [] {
                 completarRecords(yo(), jugador::hoy());
                 volver();
@@ -139,7 +139,7 @@ void mas()
             });
         }};
         a.detalle = "Todos los sellos, con fecha de hoy";
-        Boton b{{100, 290, 1080, 100}, "Empezar todos de cero", [] {
+        Boton b{{60, 290, 1160, 100}, "Empezar todos de cero", [] {
             confirmar("Empezar todos de cero", "¿Poner todos los récords a cero y quitar todos los sellos?", "Poner a cero", [] {
                 borrarRecords(yo());
                 volver();

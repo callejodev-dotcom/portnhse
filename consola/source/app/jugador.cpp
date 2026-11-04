@@ -100,8 +100,8 @@ void nombres(Vista& v)
 {
     v.titulo = "Nombres";
     v.explicacion = "El nombre se cambia en todas partes: cartas, recuerdos de los vecinos, fotos…";
-    v.b.push_back({{100, 170, 1080, 100}, "Jugador: " + partida::jugador().nombre, [] { renombrar(false); }});
-    v.b.push_back({{100, 290, 1080, 100}, "Isla: " + partida::isla, [] { renombrar(true); }});
+    v.b.push_back({{60, 170, 1160, 100}, "Jugador: " + partida::jugador().nombre, [] { renombrar(false); }});
+    v.b.push_back({{60, 290, 1160, 100}, "Isla: " + partida::isla, [] { renombrar(true); }});
     v.b.push_back({{440, ABAJO - 90, 400, 70}, "Volver", [] { volver(); }});
 }
 
@@ -154,7 +154,7 @@ void aprenderTodo(Vista& v)
     const Progreso r = recetas(partida::personal()), c = catalogo(partida::personal()), e = reacciones(partida::personal());
     auto fila = [&](int i, const std::string& t, Progreso p, int (*hacer)(std::vector<uint8_t>&), const char* cosa) {
         const std::string que = cosa;
-        Boton bt{{100, 160 + i * 120, 1080, 100}, t, [hacer, que] {
+        Boton bt{{60, 160 + i * 120, 1160, 100}, t, [hacer, que] {
             const int n = hacer(partida::personal());
             partida::cambiaPersonal();
             cambiado(std::to_string(n) + " " + que + " nuevas");

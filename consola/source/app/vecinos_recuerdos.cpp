@@ -33,7 +33,7 @@ std::string textoFecha(const FechaVecino& f)
     return std::to_string(f.dia) + " de " + MESES[f.mes - 1] + " de " + std::to_string(f.anio);
 }
 
-std::string nombreSaludo(int i) { return i == 0 ? std::string("Saludo") : "Saludo " + std::to_string(i); }
+std::string nombreSaludo(int i) { return "Saludo " + std::to_string(i + 1); }
 
 int saludosConTexto(int hueco, int r)
 {
@@ -80,7 +80,7 @@ void fecha(int hueco, int r)
         const bool hay = fechaValida(f);
         v.titulo = "Fecha del saludo";
         v.explicacion = "El día en que " + recuerdo(partida::principal(), hueco, r).jugador + " le enseñó el saludo a " + nombre(hueco) +
-            ". Ahora: " + textoFecha(f) + ".";
+            ". Ahora: " + (hay ? textoFecha(f) : std::string("sin fecha")) + ".";
         // Al cambiar una parte sin fecha, se empieza por el día en que salió el juego.
         auto poner = [hueco, r](std::function<void(FechaVecino&)> cambiar) {
             FechaVecino n = fechaSaludo(partida::principal(), hueco, r);
@@ -92,28 +92,28 @@ void fecha(int hueco, int r)
             ponerFechaSaludo(partida::principal(), hueco, r, n);
             cambio("Fecha: " + textoFecha(n));
         };
-        Boton anio{{60, 160, 360, 100}, "Año", [poner, f, hay] {
+        Boton anio{{847, 150, 373, 110}, "Año", [poner, f, hay] {
             uint32_t a = hay ? f.anio : 2020;
             if (pedirNumero("Año (de 2000 a 2099)", a, 2099, 2000))
                 poner([a](FechaVecino& n) { n.anio = (uint16_t)a; });
         }};
         anio.detalle = hay ? std::to_string(f.anio) : "—";
-        Boton mes{{460, 160, 360, 100}, "Mes", [poner, f, hay] {
+        Boton mes{{453, 150, 374, 110}, "Mes", [poner, f, hay] {
             uint32_t m = hay ? f.mes : 3;
             if (pedirNumero("Mes (de 1 a 12)", m, 12, 1))
                 poner([m](FechaVecino& n) { n.mes = (uint8_t)m; });
         }};
         mes.detalle = hay ? dosCifras(f.mes) : "—";
-        Boton dia{{860, 160, 360, 100}, "Día", [poner, f, hay] {
+        Boton dia{{60, 150, 373, 110}, "Día", [poner, f, hay] {
             uint32_t d = hay ? f.dia : 20;
             if (pedirNumero("Día (de 1 a 31)", d, 31, 1))
                 poner([d](FechaVecino& n) { n.dia = (uint8_t)d; });
         }};
         dia.detalle = hay ? dosCifras(f.dia) : "—";
-        v.b.push_back(anio);
-        v.b.push_back(mes);
         v.b.push_back(dia);
-        v.b.push_back({{60, 300, 560, 90}, "Sin fecha", [hueco, r] {
+        v.b.push_back(mes);
+        v.b.push_back(anio);
+        v.b.push_back({{60, 280, 570, 80}, "Sin fecha", [hueco, r] {
             ponerFechaSaludo(partida::principal(), hueco, r, FechaVecino{});
             cambio("Sin fecha");
         }, !f.vacia()});

@@ -10,6 +10,19 @@ using namespace ui;
 namespace objetos {
 
 namespace {
+// La primera letra en mayúscula (los nombres del juego van en minúscula): para los títulos.
+std::string capitalizar(std::string s)
+{
+    if (s.empty())
+        return s;
+    const unsigned char c = s[0];
+    if (c >= 'a' && c <= 'z')
+        s[0] = (char)(c - 32);
+    else if (c == 0xC3 && s.size() > 1 && (unsigned char)s[1] >= 0xA0 && (unsigned char)s[1] <= 0xBE)
+        s[1] = (char)((unsigned char)s[1] - 0x20);
+    return s;
+}
+
 constexpr int NUM_OBJETOS = sizeof(OBJETOS) / sizeof(OBJETOS[0]);
 
 std::string nombreFosil(uint16_t id)
@@ -195,10 +208,11 @@ Pantalla editor(Huecos h, int i)
         v.teclas = {{"A", "Elegir"}, {"X", "Buscar"}, {"B", "Volver"}};
         // What there is now, big, at the top.
         SDL_Texture* t = dibujos::de(o);
-        const std::string ahora = o.vacio() ? "Vacío" : nombre(o);
+        const std::string ahora = o.vacio() ? "Vacío" : capitalizar(nombre(o));
         v.explicacion.clear();
         v.dibujo = [t, ahora] {
-            redondo({60, 120, W - 120, 110}, 14, BLANCO);
+            redondo({60, 120, W - 120, 110}, 14, {0xD1, 0xD1, 0xD6, 255});
+            redondo({62, 122, W - 124, 106}, 12, BLANCO);
             int x = 84;
             if (t)
             {
@@ -286,7 +300,7 @@ Pantalla rejilla(Huecos h, std::function<std::vector<int>()> indices, std::funct
             const bool abierto = !h.abierto || h.abierto(i);
             SDL_Texture* t = dibujos::de(o);
             const SDL_Color fondo = o.vacio() ? BLANCO : dibujos::color(o.id);
-            const std::string nom = !abierto ? "Hueco sin ampliar" : o.vacio() ? "Hueco " + std::to_string(i + 1) + " vacío" : nombre(o);
+            const std::string nom = !abierto ? "Hueco sin ampliar" : o.vacio() ? "Hueco " + std::to_string(i + 1) + " vacío" : capitalizar(nombre(o));
             v.dibujo = [=] {
                 redondo({px, 132, pw, 456}, 14, {0xD1, 0xD1, 0xD6, 255});
                 redondo({px + 1, 133, pw - 2, 454}, 13, BLANCO);
@@ -333,7 +347,7 @@ Pantalla todos(Huecos h, int)
         int usados = 0;
         for (int i = 0; i < total; i++)
             usados += !h.leer(i).vacio();
-        return std::to_string(usados) + " objetos. Elige una casilla y luego qué hacer a la derecha; A otra vez abre todo.";
+        return std::to_string(usados) + " objetos. Elige una casilla y, a la derecha, qué hacer con ella.";
     }, nullptr);
 }
 

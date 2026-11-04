@@ -112,7 +112,7 @@ Pantalla seccion(Seccion s)
         v.teclas = {{"A", "Elegir"}, {"Y", "Guardar"}, {"+", "Salir"}};
         if (paginas > 1)
             v.teclas.insert(v.teclas.begin() + 1, {"L R", "Página"});
-        avisoFijo(partida::hayCambios() ? "Hay cambios sin guardar." : "Al abrir se guardó una copia en " + partida::copia.substr(5));
+        avisoFijo(partida::hayCambios() ? "Hay cambios sin guardar." : "Al abrir se hizo una copia de seguridad de la partida.");
     };
 }
 

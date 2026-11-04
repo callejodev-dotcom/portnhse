@@ -173,7 +173,7 @@ void marco(SDL_Rect r, SDL_Color c, int grosor)
     for (int i = 0; i < grosor; i++)
     {
         SDL_Rect q = {r.x - i, r.y - i, r.w + 2 * i, r.h + 2 * i};
-        SDL_RenderDrawRect(g_r, &q);
+        borde(q);
     }
 }
 
@@ -382,7 +382,7 @@ void fichas(const Estado& e, const Medidas& m, int capa, Ficha f, double alfa)
                 for (int i = 0; i < 3; i++)
                 {
                     SDL_Rect k = {q.x + i, q.y + i, q.w - 2 * i, q.h - 2 * i};
-                    SDL_RenderDrawRect(g_r, &k);
+                    ui::borde(k);
                 }
                 break;
             }
@@ -470,9 +470,9 @@ void dibujarHabitacion(Estado& e)
         SDL_SetRenderDrawBlendMode(g_r, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(g_r, 0x30, 0x20, 0x10, 0x1C);
         for (int i = 1; i < m.suelo.w / std::max(1, (int)m.u); i++)
-            SDL_RenderDrawLine(g_r, (int)(m.suelo.x + i * m.u), m.suelo.y, (int)(m.suelo.x + i * m.u), m.suelo.y + m.suelo.h);
+            linea((int)(m.suelo.x + i * m.u), m.suelo.y, (int)(m.suelo.x + i * m.u), m.suelo.y + m.suelo.h);
         for (int i = 1; i < casas::FILAS_PARED; i++)
-            SDL_RenderDrawLine(g_r, m.suelo.x, (int)(m.suelo.y + i * m.u), m.suelo.x + m.suelo.w, (int)(m.suelo.y + i * m.u));
+            linea(m.suelo.x, (int)(m.suelo.y + i * m.u), m.suelo.x + m.suelo.w, (int)(m.suelo.y + i * m.u));
         rect({m.suelo.x, m.suelo.y + m.suelo.h - (int)(m.u * 0.3), m.suelo.w, (int)(m.u * 0.3)}, {0x5A, 0x40, 0x28, 0x80});
         fichas(e, m, capa, Ajustada, 1);
     }
@@ -487,9 +487,9 @@ void dibujarHabitacion(Estado& e)
         SDL_SetRenderDrawColor(g_r, 0x30, 0x20, 0x10, 0x30);
         const Zona l = limites(e);
         for (int i = 1; i < l.w / 2; i++)
-            SDL_RenderDrawLine(g_r, (int)(m.suelo.x + i * 2 * m.u), m.suelo.y, (int)(m.suelo.x + i * 2 * m.u), m.suelo.y + m.suelo.h);
+            linea((int)(m.suelo.x + i * 2 * m.u), m.suelo.y, (int)(m.suelo.x + i * 2 * m.u), m.suelo.y + m.suelo.h);
         for (int i = 1; i < l.h / 2; i++)
-            SDL_RenderDrawLine(g_r, m.suelo.x, (int)(m.suelo.y + i * 2 * m.u), m.suelo.x + m.suelo.w, (int)(m.suelo.y + i * 2 * m.u));
+            linea(m.suelo.x, (int)(m.suelo.y + i * 2 * m.u), m.suelo.x + m.suelo.w, (int)(m.suelo.y + i * 2 * m.u));
         // Las paredes dan un poco de sombra al suelo.
         marco(encoger(m.suelo, m.u * 0.25 - 1), {0, 0, 0, 0x18}, std::max(1, (int)(m.u * 0.25)));
         // Las puertas: la entrada en medio de la pared de abajo de la principal; las demás, hacia la principal.

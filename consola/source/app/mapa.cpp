@@ -925,9 +925,9 @@ void dibujarMapa(std::shared_ptr<Estado> e)
     {
         SDL_SetRenderDrawColor(g_r, 255, 255, 255, (uint8_t)std::clamp(s.zoom * 8, 30.0, 80.0));
         for (int x = ((int)s.vx) & ~1; x <= s.vx + AREA.w / s.zoom; x += 2)
-            SDL_RenderDrawLine(g_r, pantallaX(s, x), AREA.y, pantallaX(s, x), AREA.y + AREA.h);
+            linea(pantallaX(s, x), AREA.y, pantallaX(s, x), AREA.y + AREA.h);
         for (int y = ((int)s.vy) & ~1; y <= s.vy + AREA.h / s.zoom; y += 2)
-            SDL_RenderDrawLine(g_r, AREA.x, pantallaY(s, y), AREA.x + AREA.w, pantallaY(s, y));
+            linea(AREA.x, pantallaY(s, y), AREA.x + AREA.w, pantallaY(s, y));
     }
     // Los nombres de los edificios (las casas solo si caben).
     std::vector<SDL_Rect> puestos;
@@ -958,7 +958,7 @@ void dibujarMapa(std::shared_ptr<Estado> e)
         for (int i = 0; i < grosor; i++)
         {
             SDL_Rect q = {r.x - i, r.y - i, r.w + 2 * i, r.h + 2 * i};
-            SDL_RenderDrawRect(g_r, &q);
+            borde(q);
         }
     };
     if (s.hayZona)

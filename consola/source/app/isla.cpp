@@ -494,7 +494,7 @@ void planSemana(Vista& v)
     }
     v.dibujo = [dias] {
         for (int k = 0; k < 7; k++)
-            texto(dias[k], 60, 150 + k * 62 + 27, MARRON, nullptr, Izquierda);
+            texto(dias[k], 60, 150 + k * 62 + 27 - TTF_FontHeight(g_fuente) / 2, MARRON, nullptr, Izquierda);
     };
     v.b.push_back({{440, ABAJO - 70, 400, 60}, "Volver", [] { volver(); }});
 }

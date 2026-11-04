@@ -81,19 +81,10 @@ void dibujarCuarto(int hueco, int elegido)
     auto marca = [](SDL_Color c, bool si) { return si ? SDL_Color{(Uint8)std::min(255, c.r + 30), (Uint8)std::min(255, c.g + 30), (Uint8)std::max(0, c.b - 40), 255} : c; };
     // Paredes de los lados (columnas de un píxel) y suelo (filas).
     const SDL_Color lado = marca(paredLado, elegido == CuartoPared);
-    for (int x = L; x < l; x++)
-    {
-        const int arriba = entre(T, t, x - L, l - L), abajo = entre(B, b, x - L, l - L);
-        rect({x, arriba, 1, abajo - arriba}, lado);
-        const int xd = R - 1 - (x - L);
-        rect({xd, arriba, 1, abajo - arriba}, lado);
-    }
+    poligono({{(float)L, (float)T}, {(float)l, (float)t}, {(float)l, (float)b}, {(float)L, (float)B}}, lado);
+    poligono({{(float)R, (float)T}, {(float)r, (float)t}, {(float)r, (float)b}, {(float)R, (float)B}}, lado);
     const SDL_Color s = marca(suelo, elegido == CuartoSuelo);
-    for (int y = b; y < B; y++)
-    {
-        const int a = entre(l, L, y - b, B - b), c = entre(r, R, y - b, B - b);
-        rect({a, y, c - a, 1}, s);
-    }
+    poligono({{(float)l, (float)b}, {(float)r, (float)b}, {(float)R, (float)B}, {(float)L, (float)B}}, s);
     const SDL_Color fondo = acento ? marca(fondoAcento, elegido == CuartoAcento) : marca(pared, elegido == CuartoPared);
     rect({l, t, r - l, b - t}, fondo);
     // Las líneas de las esquinas.

@@ -34,6 +34,13 @@ struct Letras {
 Letras letras(const std::string& s, TTF_Font* f, SDL_Color c, int ancho = 0);
 void rect(const SDL_Rect& r, SDL_Color c);
 void redondo(const SDL_Rect& r, int radio, SDL_Color c);
+// Un borde de «grosor» puntos por fuera del rectángulo, y un polígono convexo relleno. Las pantallas se dibujan un poco
+// más pequeñas: las líneas de un punto (SDL_RenderDrawLine/Rect) se pueden perder; mejor estas.
+void marco(const SDL_Rect& r, SDL_Color c, int grosor);
+void poligono(const std::vector<SDL_FPoint>& p, SDL_Color c);
+// Como SDL_RenderDrawLine (solo horizontales o verticales) y SDL_RenderDrawRect, con el color puesto, pero de 2 puntos.
+void linea(int x1, int y1, int x2, int y2);
+void borde(const SDL_Rect& r);
 enum Alinear { Izquierda, Centro, Derecha };
 // Texto en (x, y): con Centro, centrado en x e y; con Derecha, acaba en x. Con «ancho», en varias líneas.
 int texto(const std::string& s, int x, int y, SDL_Color c, TTF_Font* f = nullptr, Alinear a = Izquierda, int ancho = 0);

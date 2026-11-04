@@ -4,7 +4,9 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 #include <map>
+#include <set>
 #include <tuple>
 
 namespace ui {
@@ -106,6 +108,94 @@ void redondo(const SDL_Rect& r, int radio, SDL_Color c)
     SDL_RenderGeometry(g_r, nullptr, v.data(), (int)v.size(), idx.data(), (int)idx.size());
 }
 
+// ---------------------------------------------------------------------------------- revisar el diseño (simulador)
+// Con NHSE_REVISAR en el simulador, la app dice cada texto que se sale de su botón o de la pantalla y cada botón que se
+// sale o se monta sobre otro. En la Switch no hace nada.
+namespace {
+const bool g_revisar = getenv("NHSE_REVISAR") != nullptr;
+bool g_enPantalla = false;             // drawing the screen (virtual coordinates), not the bars
+const SDL_Rect* g_dentroDe = nullptr;  // the button being drawn
+std::string g_pantallaActual;
+std::set<std::string> g_avisados;
+std::vector<std::pair<SDL_Rect, std::string>> g_libres; // texts drawn outside buttons this frame
+
+// NHSE_EXPLORAR (simulador): la app se recorre sola, pulsando cada botón de cada pantalla, para revisarlas todas. Guarda
+// una foto de cada pantalla nueva en la carpeta de NHSE_EXPLORAR.
+const char* const g_explorar = getenv("NHSE_EXPLORAR");
+struct Explorando {
+    size_t profundidad;
+    int siguiente;
+};
+std::vector<Explorando> g_exploracion;
+std::set<std::string> g_vistas; // the screens already explored (title + buttons)
+std::set<std::string> g_fotos;  // titles with a photo
+int g_seccionExplorada = 0;
+int g_pasos = 0;
+std::string g_hacerFoto;
+
+void revisar(const std::string& que, const std::string& texto)
+{
+    const std::string m = "[" + g_pantallaActual + "] " + que + ": «" + texto + "»";
+    if (g_avisados.insert(m).second)
+        fprintf(stderr, "REVISAR %s\n", m.c_str());
+}
+
+// The letters of a line have some room above and below: a few points of margin.
+void revisarTexto(const SDL_Rect& d, const std::string& s)
+{
+    if (!g_revisar || !g_enPantalla)
+        return;
+    constexpr int M = 4;
+    if (g_dentroDe)
+    {
+        const SDL_Rect& r = *g_dentroDe;
+        if (d.x < r.x - 1 || d.x + d.w > r.x + r.w + 1 || d.y < r.y - M || d.y + d.h > r.y + r.h + M)
+            revisar("se sale del botón", s);
+    }
+    else
+    {
+        if (d.x < 0 || d.x + d.w > W || d.y < 0 || d.y + d.h > ABAJO + M)
+            revisar("se sale de la pantalla", s);
+        g_libres.push_back({{d.x + 1, d.y + M, d.w - 2, d.h - 2 * M}, s});
+    }
+}
+} // namespace
+
+void marco(const SDL_Rect& r, SDL_Color c, int grosor)
+{
+    grosor = std::max(2, grosor);
+    rect({r.x - grosor, r.y - grosor, r.w + 2 * grosor, grosor}, c);
+    rect({r.x - grosor, r.y + r.h, r.w + 2 * grosor, grosor}, c);
+    rect({r.x - grosor, r.y, grosor, r.h}, c);
+    rect({r.x + r.w, r.y, grosor, r.h}, c);
+}
+
+void linea(int x1, int y1, int x2, int y2)
+{
+    SDL_Rect r = x1 == x2 ? SDL_Rect{x1, std::min(y1, y2), 2, std::abs(y2 - y1) + 1} : SDL_Rect{std::min(x1, x2), y1, std::abs(x2 - x1) + 1, 2};
+    SDL_RenderFillRect(g_r, &r);
+}
+
+void borde(const SDL_Rect& r)
+{
+    const SDL_Rect lados[4] = {{r.x, r.y, r.w, 2}, {r.x, r.y + r.h - 2, r.w, 2}, {r.x, r.y, 2, r.h}, {r.x + r.w - 2, r.y, 2, r.h}};
+    SDL_RenderFillRects(g_r, lados, 4);
+}
+
+void poligono(const std::vector<SDL_FPoint>& p, SDL_Color c)
+{
+    if (p.size() < 3)
+        return;
+    std::vector<SDL_Vertex> v;
+    std::vector<int> idx;
+    for (const auto& q : p)
+        v.push_back({q, c, {0, 0}});
+    for (int i = 1; i + 1 < (int)p.size(); i++)
+        idx.insert(idx.end(), {0, i, i + 1});
+    SDL_SetRenderDrawBlendMode(g_r, SDL_BLENDMODE_BLEND);
+    SDL_RenderGeometry(g_r, nullptr, v.data(), (int)v.size(), idx.data(), (int)idx.size());
+}
+
 int texto(const std::string& s, int x, int y, SDL_Color c, TTF_Font* f, Alinear a, int ancho)
 {
     if (s.empty())
@@ -114,6 +204,7 @@ int texto(const std::string& s, int x, int y, SDL_Color c, TTF_Font* f, Alinear 
     if (!l.t)
         return 0;
     SDL_Rect d = {a == Centro ? x - l.w / 2 : a == Derecha ? x - l.w : x, a == Centro ? y - l.h / 2 : y, l.w, l.h};
+    revisarTexto(d, s);
     SDL_RenderCopy(g_r, l.t, nullptr, &d);
     return l.h;
 }
@@ -130,6 +221,8 @@ std::string encajar(std::string s, int ancho, TTF_Font* f)
     f = f ? f : g_fuente;
     if (anchoTexto(s, f) <= ancho)
         return s;
+    if (g_revisar && g_enPantalla)
+        revisar("recortado", s);
     while (!s.empty())
     {
         size_t i = s.size() - 1;
@@ -151,24 +244,36 @@ static void tarjeta(const SDL_Rect& r, int radio, SDL_Color fondo, SDL_Color bor
     redondo({r.x + grosor, r.y + grosor, r.w - 2 * grosor, r.h - 2 * grosor}, std::max(0, radio - grosor), fondo);
 }
 
+static void dibujarBoton(const Boton& b, bool foco);
+
 void dibujar(const Boton& b, bool foco)
+{
+    g_dentroDe = &b.r;
+    dibujarBoton(b, foco);
+    g_dentroDe = nullptr;
+}
+
+static void dibujarBoton(const Boton& b, bool foco)
 {
     if (b.vertical)
     {
         if (foco)
             redondo({b.r.x - 4, b.r.y - 4, b.r.w + 8, b.r.h + 8}, 16, AZUL);
         tarjeta(b.r, 12, !b.activo ? GRIS : BLANCO, b.marcado ? VERDE : BORDE, b.marcado ? 3 : 2);
-        const int lado = std::min(b.r.w - 40, b.r.h - 70);
+        // The picture on top and, below, the name and the detail, all inside the card.
+        const int h1 = TTF_FontHeight(g_fuente), h2 = b.detalle.empty() ? 0 : TTF_FontHeight(g_pequena) - 2;
+        const int textos = h1 + h2;
+        const int lado = b.imagen ? std::max(0, std::min(b.r.w - 40, b.r.h - 10 - textos - 10)) : 0;
         if (b.imagen)
         {
-            SDL_Rect d = {b.r.x + (b.r.w - lado) / 2, b.r.y + 12, lado, lado};
+            SDL_Rect d = {b.r.x + (b.r.w - lado) / 2, b.r.y + 10, lado, lado};
             SDL_RenderCopy(g_r, b.imagen, nullptr, &d);
         }
         const SDL_Color letra = b.activo ? MARRON : MARRON_SUAVE;
-        const int y = b.imagen ? b.r.y + 12 + lado + 6 : b.r.y + b.r.h / 2 - 16;
-        texto(encajar(b.texto, b.r.w - 16), b.r.x + b.r.w / 2, y + 16, letra, nullptr, Centro);
+        const int y = b.imagen ? b.r.y + 10 + lado + 2 : b.r.y + (b.r.h - textos) / 2;
+        texto(encajar(b.texto, b.r.w - 16), b.r.x + b.r.w / 2, y + h1 / 2, letra, nullptr, Centro);
         if (!b.detalle.empty())
-            texto(encajar(b.detalle, b.r.w - 16, g_pequena), b.r.x + b.r.w / 2, y + 44, MARRON_SUAVE, g_pequena, Centro);
+            texto(encajar(b.detalle, b.r.w - 16, g_pequena), b.r.x + b.r.w / 2, y + h1 + h2 / 2 - 1, MARRON_SUAVE, g_pequena, Centro);
         return;
     }
     if (b.casilla)
@@ -188,7 +293,7 @@ void dibujar(const Boton& b, bool foco)
         if (!b.detalle.empty())
         {
             // The number with a white edge, so it is read on any colour.
-            const int x = b.r.x + b.r.w - 5, y = b.r.y + b.r.h - 26;
+            const int x = b.r.x + b.r.w - 5, y = b.r.y + b.r.h - TTF_FontHeight(g_pequena) - 2;
             for (int dx = -1; dx <= 1; dx++)
                 for (int dy = -1; dy <= 1; dy++)
                     if (dx || dy)
@@ -203,7 +308,8 @@ void dibujar(const Boton& b, bool foco)
     const SDL_Color letra = !b.activo ? APAGADO : b.principal ? BLANCO : MARRON;
     if (foco)
         redondo({b.r.x - 4, b.r.y - 4, b.r.w + 8, b.r.h + 8}, radio + 4, AZUL);
-    tarjeta(b.r, radio, fondo, borde, b.marcado && !b.principal ? 3 : 2);
+    // With the cursor on it, the blue ring is enough (the green edge of the chosen one would make it thick).
+    tarjeta(b.r, radio, fondo, foco ? fondo : borde, b.marcado && !b.principal && !foco ? 3 : 2);
     int x0 = b.r.x, w0 = b.r.w;
     const bool conDibujo = b.color.a > 0 || b.imagen;
     if (b.color.a > 0)
@@ -239,58 +345,74 @@ void dibujar(const Boton& b, bool foco)
     const int margen = std::min(24, w0 / 8);
     // Small letters if the button is low or the text does not fit with the normal ones.
     TTF_Font* f = b.r.h < 40 || anchoTexto(b.texto) > w0 - margen ? g_pequena : g_fuente;
-    if (conDibujo)
+    const SDL_Color gris = b.principal ? BLANCO : !b.activo ? APAGADO : MARRON_SUAVE;
+    // With a picture, the text on the left, as the lists of the Mac; if not, centred.
+    const int ancho = conDibujo ? w0 - 12 : w0 - margen;
+    const int cx = conDibujo ? x0 : x0 + w0 / 2;
+    const Alinear al = conDibujo ? Izquierda : Centro;
+    auto linea = [&](const std::string& t, TTF_Font* fu, SDL_Color c, int arriba) {
+        const std::string e = encajar(t, ancho, fu);
+        texto(e, cx, conDibujo ? arriba : arriba + TTF_FontHeight(fu) / 2, c, fu, al);
+    };
+    if (b.detalle.empty())
     {
-        // With a picture, the text on the left, as the lists of the Mac.
-        const int ancho = w0 - 12;
-        if (b.detalle.empty())
-            texto(encajar(b.texto, ancho, f), x0, b.r.y + b.r.h / 2 - letras("Ag", f, letra).h / 2, letra, f);
-        else
-        {
-            texto(encajar(b.texto, ancho), x0, b.r.y + b.r.h / 2 - 30, letra);
-            texto(encajar(b.detalle, ancho, g_pequena), x0, b.r.y + b.r.h / 2 + 2, b.activo ? MARRON_SUAVE : APAGADO, g_pequena);
-        }
+        linea(b.texto, f, letra, b.r.y + (b.r.h - TTF_FontHeight(f)) / 2);
         return;
     }
-    if (b.detalle.empty())
-        texto(encajar(b.texto, w0 - margen, f), x0 + w0 / 2, b.r.y + b.r.h / 2, letra, f, Centro);
-    else
+    // Two lines: the title (smaller if the button is low) and the detail, together in the middle; if they do not fit,
+    // in one line.
+    TTF_Font* f1 = b.r.h >= 66 && anchoTexto(b.texto) <= ancho ? g_fuente : g_pequena;
+    const int h1 = TTF_FontHeight(f1), h2 = TTF_FontHeight(g_pequena);
+    // The lines of the font have room above and below: they can come a bit closer.
+    const int junto = std::max(6, h1 / 4);
+    if (h1 + h2 - junto - 4 > b.r.h)
     {
-        texto(encajar(b.texto, w0 - margen), x0 + w0 / 2, b.r.y + b.r.h / 2 - 14, letra, nullptr, Centro);
-        texto(encajar(b.detalle, w0 - margen, g_pequena), x0 + w0 / 2, b.r.y + b.r.h / 2 + 18, b.principal ? BLANCO : !b.activo ? APAGADO : MARRON_SUAVE, g_pequena, Centro);
+        linea(b.texto + " · " + b.detalle, g_pequena, letra, b.r.y + (b.r.h - h2) / 2);
+        return;
     }
+    const int arriba = b.r.y + (b.r.h - (h1 + h2 - junto)) / 2;
+    linea(b.texto, f1, letra, arriba);
+    linea(b.detalle, g_pequena, gris, arriba + h1 - junto);
 }
 
 namespace {
 // La barra de abajo: un aviso a la izquierda y la ayuda de los botones a la derecha.
 void barra(const std::string& aviso, bool malo, bool suave, const Teclas& teclas)
 {
-    const bool fuerte = malo || (!aviso.empty() && !suave);
-    rect({0, ABAJO, W, H - ABAJO}, malo ? ROJO : fuerte ? VERDE_OSCURO : BLANCO);
-    if (!fuerte)
-        rect({0, ABAJO, W, 1}, BORDE);
+    // White, as the Mac; a notice goes in green (done) or red (something went wrong), with a dot.
+    rect({0, ABAJO, W, H - ABAJO}, BLANCO);
+    rect({0, ABAJO, W, 1}, BORDE);
     int x = W - 24;
-    const SDL_Color letra = fuerte ? BLANCO : MARRON;
     for (auto it = teclas.rbegin(); it != teclas.rend(); ++it)
     {
-        Letras l = letras(it->second, g_pequena, letra, 0);
+        Letras l = letras(it->second, g_pequena, MARRON, 0);
         x -= l.w;
-        texto(it->second, x, H - 24 - l.h / 2, letra, g_pequena);
-        Letras k = letras(it->first, g_pequena, MARRON, 0);
-        const int ancho = std::max(30, k.w + 16);
+        texto(it->second, x, H - 24 - l.h / 2, MARRON, g_pequena);
+        Letras k = letras(it->first, g_pequena, BLANCO, 0);
+        const int ancho = std::max(30, k.w + 22);
         x -= 8 + ancho;
-        redondo({x, H - 39, ancho, 30}, 15, letra);
-        texto(it->first, x + ancho / 2, H - 24, fuerte ? (malo ? ROJO : VERDE_OSCURO) : CREMA, g_pequena, Centro);
+        redondo({x, H - 39, ancho, 30}, 15, MARRON);
+        texto(it->first, x + ancho / 2, H - 24, BLANCO, g_pequena, Centro);
         x -= 26;
     }
     if (!aviso.empty())
-        texto(encajar(aviso, x - 40, g_pequena), 24, H - 24 - letras("Ag", g_pequena, letra, 0).h / 2, letra, g_pequena);
+    {
+        const SDL_Color c = malo ? ROJO : suave ? MARRON_SUAVE : VERDE_OSCURO;
+        int ax = 24;
+        if (!suave || malo)
+        {
+            redondo({ax, H - 30, 12, 12}, 6, c);
+            ax += 22;
+        }
+        texto(encajar(aviso, x - ax - 20, g_pequena), ax, H - 24 - letras("Ag", g_pequena, c, 0).h / 2, c, g_pequena);
+    }
 }
 
 // ---------------------------------------------------------------------------------------------- pantallas apiladas
 struct Entrada {
     Pantalla p;
     int foco;
+    bool vista = false; // drawn at least once
 };
 std::vector<Entrada> g_pila;
 std::vector<std::function<void()>> g_pendiente; // changes to the stack, done after the action
@@ -363,12 +485,12 @@ void dibujarLateral(const Lateral& l, int focoLateral)
         {
             // «Guardar cambios», blue as in the Mac (grey if there is nothing to save).
             redondo(r, 12, h[i].activo ? AZUL : CREMA_OSCURA);
-            texto("Guardar", r.x + r.w / 2, r.y + r.h / 2, h[i].activo ? BLANCO : APAGADO, h[i].activo ? g_negrita : g_fuente, Centro);
+            texto("Guardar", r.x + r.w / 2, r.y + r.h / 2, h[i].activo ? BLANCO : APAGADO, g_pequena, Centro);
         }
         else
         {
             tarjeta(r, 12, BLANCO, BORDE, 2);
-            texto("Salir", r.x + r.w / 2, r.y + r.h / 2, MARRON, g_fuente, Centro);
+            texto("Salir", r.x + r.w / 2, r.y + r.h / 2, MARRON, g_pequena, Centro);
         }
     }
 }
@@ -481,7 +603,11 @@ Pantalla lista(Lista l)
         v.titulo = l.titulo;
         v.explicacion = l.explicacion ? l.explicacion() : "";
         if (paginas > 1)
-            v.explicacion += (v.explicacion.empty() ? "" : " ") + std::string("(página ") + std::to_string(p + 1) + " de " + std::to_string(paginas) + ")";
+        {
+            while (!v.explicacion.empty() && (v.explicacion.back() == '.' || v.explicacion.back() == ' '))
+                v.explicacion.pop_back();
+            v.explicacion += (v.explicacion.empty() ? std::string("P") : std::string(" · p")) + "ágina " + std::to_string(p + 1) + " de " + std::to_string(paginas) + ".";
+        }
         // Rows between y=140 and the bottom buttons.
         const int arriba = 140, abajoFilas = ABAJO - 72;
         const int hueco = 8;
@@ -505,14 +631,32 @@ Pantalla lista(Lista l)
         for (const auto& a : l.abajo)
             abajo.push_back(a());
         abajo.push_back({"Volver", [] { volver(); }});
+        // Each one as wide as its text needs (and «Volver» on the right), sharing the width.
         const int n = (int)abajo.size();
-        const int anchoAbajo = std::min(300, (W - 120 - (n - 1) * 16) / n);
+        std::vector<int> anchos(n);
+        int suma = 0;
+        for (int i = 0; i < n; i++)
+            suma += anchos[i] = std::max(150, anchoTexto(abajo[i].texto) + 48);
+        const int libre = W - 120 - (n - 1) * 14;
+        TTF_Font* letra = g_fuente;
+        if (suma > libre)
+        {
+            // Smaller letters, and widths in proportion.
+            suma = 0;
+            for (int i = 0; i < n; i++)
+                suma += anchos[i] = std::max(110, anchoTexto(abajo[i].texto, g_pequena) + 32);
+            letra = g_pequena;
+        }
+        const double k = suma > libre ? (double)libre / suma : 1.0;
+        int x = 60;
         for (int i = 0; i < n; i++)
         {
-            // «Volver» on the right; the rest from the left.
-            const int x = i == n - 1 ? W - 60 - anchoAbajo : 60 + i * (anchoAbajo + 16);
-            v.b.push_back({{x, ABAJO - 66, anchoAbajo, 56}, abajo[i].texto, abajo[i].accion, abajo[i].activo, abajo[i].marcado});
+            const int w = (int)(anchos[i] * k);
+            const int xi = i == n - 1 ? W - 60 - w : x;
+            v.b.push_back({{xi, ABAJO - 66, w, 56}, abajo[i].texto, abajo[i].accion, abajo[i].activo, abajo[i].marcado});
+            x += w + 14;
         }
+        (void)letra;
         if (paginas > 1)
             v.paginar = [pagina, paginas](int d) { *pagina = std::clamp(*pagina + d, 0, paginas - 1); };
         if (l.extra)
@@ -534,6 +678,8 @@ void elegir(const std::string& titulo, const std::string& explicacion, const std
         }, true, i == actual};
     };
     l.columnas = columnas;
+    // Few options: fewer rows per column, so they are taller.
+    l.porColumna = std::clamp((int)(opciones.size() + columnas - 1) / columnas, 4, 8);
     const int porPagina = l.columnas * l.porColumna;
     abrir(lista(l), actual >= 0 && actual < (int)opciones.size() ? actual % porPagina : 0);
 }
@@ -543,11 +689,12 @@ void confirmar(const std::string& titulo, const std::string& pregunta, const std
     abrir([=](Vista& v) {
         v.titulo = titulo;
         v.explicacion = pregunta;
-        v.b.push_back({{140, 330, 480, 100}, si, [accion] {
+        Boton s{{60, 150, 570, 90}, si, [accion] {
             volver();
             accion();
-        }});
-        v.b.push_back({{660, 330, 480, 100}, "No", [] { volver(); }});
+        }};
+        v.b.push_back(s);
+        v.b.push_back({{650, 150, 570, 90}, "No", [] { volver(); }});
     }, 1);
 }
 
@@ -673,7 +820,7 @@ void bucle(Pantalla inicio)
         hidGetTouchScreenStates(&ts, 1);
         const bool toque = ts.count > 0 && !touchAntes;
         touchAntes = ts.count > 0;
-        const int tx = toque ? (int)ts.touches[0].x : -1, ty = toque ? (int)ts.touches[0].y : -1;
+        int tx = toque ? (int)ts.touches[0].x : -1, ty = toque ? (int)ts.touches[0].y : -1;
 
         Vista v;
         Entrada actual = g_pila.back();
@@ -696,8 +843,12 @@ void bucle(Pantalla inicio)
                 }
         }
         int& foco = g_pila.back().foco;
-        if (foco >= (int)v.b.size() || foco < 0)
-            foco = 0;
+        // A screen with no buttons of its own: no cursor until the D-pad goes to the side bar.
+        if (!g_pila.back().vista && propios == 0)
+            foco = -1;
+        g_pila.back().vista = true;
+        if (foco >= (int)v.b.size() || (foco < 0 && propios > 0))
+            foco = propios > 0 ? 0 : -1;
 
         // A touch: on the side bar, or (in the coordinates of the screens) on the screen.
         int vx = -1, vy = -1, pulsadoLateral = -1;
@@ -717,6 +868,68 @@ void bucle(Pantalla inicio)
             g_aviso.clear();
             f();
         };
+        if (g_explorar && g_lateral && ++g_pasos < 200000)
+        {
+            // A new screen: explore it (if it has not been seen).
+            std::string firma = v.titulo;
+            for (int i = 0; i < propios; i++)
+                firma += "|" + v.b[i].texto;
+            // Every screen (and every page of it) is drawn at least once before going on, to check it.
+            const bool sinVer = g_vistas.insert(firma).second;
+            if (g_exploracion.empty() || g_exploracion.back().profundidad < g_pila.size())
+                g_exploracion.push_back({g_pila.size(), sinVer ? 0 : 1 << 30});
+            while (!g_exploracion.empty() && g_exploracion.back().profundidad > g_pila.size())
+                g_exploracion.pop_back();
+            auto& ex = g_exploracion.back();
+            auto prohibido = [&](const Boton& b) {
+                return b.texto == "Salir" || b.texto == "Salir sin guardar" || b.texto == "Guardar" || b.texto.rfind("Exportar", 0) == 0 ||
+                    b.texto.rfind("Guardar ", 0) == 0;
+            };
+            while (ex.siguiente < propios && (!v.b[ex.siguiente].activo || !v.b[ex.siguiente].accion || prohibido(v.b[ex.siguiente])))
+                ex.siguiente++;
+            const std::string titulo = v.titulo;
+            const bool foto = g_fotos.insert(titulo).second;
+            if (sinVer && !foto)
+            {
+                // Only drawn this frame.
+            }
+            else if (foto)
+            {
+                // First the photo (this frame is only drawn); the next frame goes on.
+                char n[16];
+                snprintf(n, sizeof(n), "%03d", (int)g_fotos.size());
+                g_hacerFoto = std::string(g_explorar) + "/" + n + ".bmp";
+                fprintf(stderr, "FOTO %s [%s]\n", n, titulo.c_str());
+            }
+            else if (ex.siguiente < propios && ex.profundidad < 6)
+            {
+                const int i = ex.siguiente++;
+                fprintf(stderr, "EXPLORAR %zu [%s] → «%s»\n", ex.profundidad, titulo.c_str(), v.b[i].texto.c_str());
+                foco = i;
+                accion(v.b[i].accion);
+            }
+            else if (g_pila.size() > 1)
+                accion([] { volver(); });
+            else if (++g_seccionExplorada < (int)lat.entradas.size())
+            {
+                g_exploracion.clear();
+                accion(lat.entradas[g_seccionExplorada].accion);
+            }
+            else
+                g_salir = true;
+            // Nothing else this frame (the action may have changed the stack).
+            if (!g_pendiente.empty() || g_salir)
+            {
+                auto p = std::move(g_pendiente);
+                g_pendiente.clear();
+                for (auto& f : p)
+                    f();
+                continue;
+            }
+            down = 0;
+            tx = ty = vx = vy = -1;
+            pulsadoLateral = -1;
+        }
         bool usada = pulsadoLateral < 0 && v.entrada && v.entrada(down, held, vx, vy);
         if (pulsadoLateral >= 0)
             usada = false;
@@ -725,6 +938,11 @@ void bucle(Pantalla inicio)
             auto mover = [&](int dx, int dy) {
                 if (v.b.empty())
                     return;
+                if (foco < 0)
+                {
+                    foco = propios;
+                    return;
+                }
                 const SDL_Rect& a = v.b[foco].r;
                 const int ax = a.x + a.w / 2, ay = a.y + a.h / 2;
                 int mejor = -1;
@@ -767,7 +985,7 @@ void bucle(Pantalla inicio)
                 accion(hl[pulsadoLateral - propios].accion);
                 pulsadoLateral = -1;
             }
-            if (down & HidNpadButton_A)
+            if ((down & HidNpadButton_A) && foco >= 0)
                 pulsado = foco;
             for (int i = 0; i < propios && vx >= 0; i++)
                 if (vx >= v.b[i].r.x && vx < v.b[i].r.x + v.b[i].r.w && vy >= v.b[i].r.y && vy < v.b[i].r.y + v.b[i].r.h)
@@ -809,12 +1027,46 @@ void bucle(Pantalla inicio)
         SDL_RenderSetScale(g_r, ESCALA, ESCALA);
         SDL_Rect vista = {(int)std::lround(LAT / ESCALA), (int)std::lround(ARRIBA_REAL / ESCALA), W, ABAJO};
         SDL_RenderSetViewport(g_r, &vista);
-        texto(encajar(v.titulo, W - 120, g_titulo), 60, 22, MARRON, g_titulo);
-        texto(v.explicacion, 60, 92, MARRON_SUAVE, g_pequena, Izquierda, 1160);
+        g_enPantalla = true;
+        if (g_revisar)
+        {
+            g_pantallaActual = v.titulo;
+            for (int i = 0; i < propios; i++)
+            {
+                const SDL_Rect& a = v.b[i].r;
+                const std::string n = v.b[i].texto.empty() ? "(" + std::to_string(i) + ")" : v.b[i].texto;
+                if (a.x < 0 || a.y < 0 || a.x + a.w > W || a.y + a.h > ABAJO)
+                    revisar("botón fuera de la pantalla", n);
+                for (int j = i + 1; j < propios; j++)
+                {
+                    SDL_Rect x;
+                    if (SDL_IntersectRect(&a, &v.b[j].r, &x))
+                        revisar("botones montados", n + "» y «" + (v.b[j].texto.empty() ? "(" + std::to_string(j) + ")" : v.b[j].texto));
+                }
+            }
+        }
+        texto(encajar(v.titulo, W - 120, g_titulo), 60, 14, MARRON, g_titulo);
+        texto(v.explicacion, 60, 78, MARRON_SUAVE, g_pequena, Izquierda, 1160);
         if (v.dibujo)
             v.dibujo();
         for (int i = 0; i < propios; i++)
             dibujar(v.b[i], i == foco);
+        if (g_revisar)
+        {
+            // Texts drawn outside the buttons, under a button or on top of each other.
+            for (size_t k = 0; k < g_libres.size(); k++)
+            {
+                SDL_Rect x;
+                for (int i = 0; i < propios; i++)
+                    if (SDL_IntersectRect(&g_libres[k].first, &v.b[i].r, &x) && x.w > 2 && x.h > 2)
+                        revisar("texto debajo de un botón", g_libres[k].second + "» bajo «" + v.b[i].texto);
+                for (size_t j = k + 1; j < g_libres.size(); j++)
+                    if (SDL_IntersectRect(&g_libres[k].first, &g_libres[j].first, &x) && x.w > 2 && x.h > 2)
+                        revisar("textos montados", g_libres[k].second + "» y «" + g_libres[j].second);
+            }
+        }
+        g_libres.clear();
+        g_enPantalla = false;
         SDL_RenderSetViewport(g_r, nullptr);
         SDL_RenderSetScale(g_r, 1, 1);
         if (g_lateral)
@@ -831,6 +1083,14 @@ void bucle(Pantalla inicio)
             barra(g_aviso, g_avisoMalo, false, teclas);
         else
             barra(g_pila.size() == 1 ? g_avisoFijo : "", false, true, teclas);
+        if (!g_hacerFoto.empty())
+        {
+            SDL_Surface* sf = SDL_CreateRGBSurfaceWithFormat(0, W, H, 32, SDL_PIXELFORMAT_ARGB8888);
+            SDL_RenderReadPixels(g_r, nullptr, SDL_PIXELFORMAT_ARGB8888, sf->pixels, sf->pitch);
+            SDL_SaveBMP(sf, g_hacerFoto.c_str());
+            SDL_FreeSurface(sf);
+            g_hacerFoto.clear();
+        }
         SDL_RenderPresent(g_r);
     }
     for (auto& l : g_letras)

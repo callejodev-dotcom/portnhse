@@ -156,6 +156,8 @@ int usados(int hueco, int lista)
 // El nombre de una receta por su número (los objetos «Receta: …» llevan el número en la cantidad).
 std::string nombreReceta(uint16_t receta)
 {
+    if (receta == 0xFFFF)
+        return "Nada";
     static const std::map<uint16_t, int> indice = [] {
         std::map<uint16_t, int> m;
         for (int i = 0; i < (int)(sizeof(OBJETOS) / sizeof(OBJETOS[0])); i++)
@@ -175,7 +177,7 @@ std::string dosCifras(int n) { return (n < 10 ? "0" : "") + std::to_string(n); }
 std::string resumenBricolaje(int hueco)
 {
     const Bricolaje b = bricolaje(partida::principal(), hueco);
-    if (!b.haciendo())
+    if (!b.haciendo() || b.receta == 0xFFFF)
         return "No está haciendo nada";
     return "Hace " + nombreReceta(b.receta) + " hasta las " + dosCifras(b.hora) + ":" + dosCifras(b.minuto);
 }
@@ -372,28 +374,29 @@ void ficha(Vista& v, int hueco)
     boton("Exportar a la SD", "Para llevarlo a otra isla", [hueco] { exportar(hueco); });
     for (int i = 0; i < (int)b.size(); i++)
     {
-        b[i].r = {290 + (i % 3) * 315, 140 + (i / 3) * 88, 300, 80};
+        // Two columns, so what each one has fits.
+        b[i].r = {266 + (i % 2) * 482, 124 + (i / 2) * 60, 472, 54};
         v.b.push_back(b[i]);
     }
     // A la izquierda, su cara, su nombre y su personalidad.
     SDL_Texture* cara = retratos::de(interno);
     const std::string especie = p < 8 ? PERSONALIDADES[p] : "";
     v.dibujo = [cara, n, especie, muda] {
-        const SDL_Rect tarjeta = {50, 140, 220, 432};
+        const SDL_Rect tarjeta = {60, 124, 190, 470};
         redondo({tarjeta.x, tarjeta.y + 4, tarjeta.w, tarjeta.h}, 14, CREMA_OSCURA);
         redondo(tarjeta, 14, BLANCO);
         if (cara)
         {
-            const SDL_Rect r = {60, 160, 200, 200};
+            const SDL_Rect r = {70, 150, 170, 170};
             SDL_RenderCopy(g_r, cara, nullptr, &r);
         }
-        texto(encajar(n, 200, g_grande), 160, 400, MARRON, g_grande, Centro);
-        texto(especie, 160, 448, MARRON_SUAVE, nullptr, Centro);
+        texto(encajar(n, 170, g_grande), 155, 360, MARRON, g_grande, Centro);
+        texto(encajar(especie, 170, g_pequena), 155, 404, MARRON_SUAVE, g_pequena, Centro);
         if (muda)
-            texto("Se va a mudar", 160, 490, ROJO, g_pequena, Centro);
+            texto("Se va a mudar", 155, 440, ROJO, g_pequena, Centro);
     };
-    v.b.push_back({{50, ABAJO - 76, 380, 64}, "Importar de la SD…", [hueco] { importar(hueco); }});
-    v.b.push_back({{850, ABAJO - 76, 380, 64}, "Volver", [] { volver(); }});
+    v.b.push_back({{60, ABAJO - 62, 380, 54}, "Importar de la SD…", [hueco] { importar(hueco); }});
+    v.b.push_back({{840, ABAJO - 62, 380, 54}, "Volver", [] { volver(); }});
     v.paginar = [hueco](int d) {
         // L y R: el vecino anterior o el siguiente.
         for (int k = 1; k < NUM_VECINOS; k++)
@@ -423,7 +426,7 @@ void lista(Vista& v)
         {
             b.imagen = retratos::deHueco(i);
             const int p = personalidad(partida::principal(), i);
-            b.detalle = std::string(p < 8 ? PERSONALIDADES[p] : "?") + (seMuda(partida::principal(), i) ? " · Se va a mudar" : "");
+            b.detalle = seMuda(partida::principal(), i) ? std::string("Se va a mudar") : std::string(p < 8 ? PERSONALIDADES[p] : "?");
         }
         v.b.push_back(b);
     }

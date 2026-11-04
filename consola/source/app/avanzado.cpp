@@ -309,14 +309,14 @@ void clima(Vista& v)
         partida::cambiaPrincipal();
         cambiado();
     };
-    Boton b1{{100, 160, 1080, 100}, "Semilla del clima: " + std::to_string(leer32(m, SEMILLA_CLIMA)),
+    Boton b1{{60, 160, 1160, 100}, "Semilla del clima: " + std::to_string(leer32(m, SEMILLA_CLIMA)),
         [semilla] { semilla(SEMILLA_CLIMA, "Semilla del clima de la isla"); }};
     b1.detalle = "El tiempo de cada día en la isla";
-    Boton b2{{100, 280, 1080, 100}, "Islas misteriosas: semilla " + std::to_string(leer32(m, SEMILLA_TOUR)),
+    Boton b2{{60, 280, 1160, 100}, "Islas misteriosas: semilla " + std::to_string(leer32(m, SEMILLA_TOUR)),
         [semilla] { semilla(SEMILLA_TOUR, "Semilla del clima de las islas misteriosas"); }};
     b2.detalle = "El tiempo de las islas que visitas con un billete Nook";
     const bool sur = m[HEMISFERIO_TOUR] != 0;
-    Boton b3{{100, 400, 1080, 100}, std::string("Islas misteriosas: hemisferio ") + (sur ? "sur" : "norte"), [] {
+    Boton b3{{60, 400, 1160, 100}, std::string("Islas misteriosas: hemisferio ") + (sur ? "sur" : "norte"), [] {
         auto& d = partida::principal();
         elegir("Hemisferio de las islas misteriosas", "Como en el editor clásico de NHSE.", {"Norte", "Sur"}, d[HEMISFERIO_TOUR] ? 1 : 0, [](int i) {
             auto& d2 = partida::principal();
@@ -352,7 +352,7 @@ void huecos(Vista& v)
     for (int i = 0; i < 3; i++)
     {
         const H h = hs[i];
-        Boton b{{100, 160 + i * 120, 1080, 100}, std::string(h.nombre) + ": " + numero(leer32(p, h.pos)) + " de " + numero(h.maximo), [h] {
+        Boton b{{60, 160 + i * 120, 1160, 100}, std::string(h.nombre) + ": " + numero(leer32(p, h.pos)) + " de " + numero(h.maximo), [h] {
             uint32_t n = leer32(partida::personal(), h.pos);
             if (!pedirNumero(h.titulo, n, h.maximo))
                 return;

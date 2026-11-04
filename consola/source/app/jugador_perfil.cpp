@@ -52,7 +52,7 @@ void perfil(Vista& v)
     v.titulo = "Perfil de " + partida::jugador().nombre;
     v.explicacion = "El pasaporte de " + partida::jugador().nombre + ", de la isla " + nombreIsla(partida::personal()) + ".";
     auto fila = [&](int i, const std::string& t, const std::string& d, std::function<void()> f, bool marcado = false) {
-        Boton b{{100, 160 + i * 100, 1080, 86}, t, std::move(f), true, marcado};
+        Boton b{{60, 160 + i * 100, 1160, 86}, t, std::move(f), true, marcado};
         b.detalle = d;
         v.b.push_back(b);
     };
@@ -73,7 +73,7 @@ void perfil(Vista& v)
     fila(2, "Fecha de registro: " + textoFecha(p.registro), "El día en que le dieron el pasaporte", [p] {
         jugador::pedirFecha("Fecha de registro", p.registro, true, [](Fecha f) { cambiar([f](Perfil& x) { x.registro = f; }); });
     });
-    fila(3, std::string("Fundó la isla: ") + jugador::siNo(p.fundador), "El representante de la isla (mejor no tocarlo)", [] {
+    fila(3, std::string("Fundó la isla: ") + jugador::siNo(p.fundador), "Quien representa a la isla (mejor no tocarlo)", [] {
         cambiar([](Perfil& x) { x.fundador = !x.fundador; });
     }, p.fundador);
     v.b.push_back({{440, ABAJO - 80, 400, 64}, "Volver", [] { volver(); }});
