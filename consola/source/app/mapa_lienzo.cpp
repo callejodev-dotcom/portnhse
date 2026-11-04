@@ -8,6 +8,7 @@
 #include "../core/mapa.hpp"
 #include "../core/mapa_objetos.hpp"
 #include "dibujos.hpp"
+#include "retratos.hpp"
 #include "mapa_pintor.hpp"
 #include "ui.hpp"
 
@@ -751,7 +752,21 @@ void Lienzo::componerFoto(std::vector<uint8_t>& main, int t)
             SDL_FRect r = pantalla(b.x - b.w / 2 - 1, b.y - b.h / 2 - 1, std::ceil((b.w + 2) * FP) / FP, std::ceil((b.h + 2) * FP) / FP);
             SDL_RenderCopyF(g, e, nullptr, &r);
         }
-        if (const uint16_t icono = iconoEdificio(b.tipo))
+        // Las casas de los vecinos llevan su cara (como el Mac); las demás, su dibujo.
+        SDL_Texture* cara = nullptr;
+        if (b.tipo >= 9 && b.tipo <= 18)
+        {
+            const int hueco = (int8_t)main[acnh::CASAS + (b.tipo - 9) * acnh::TAM_CASA + 0x1C4];
+            if (hueco >= 0 && hueco < acnh::NUM_VECINOS)
+                cara = suave(retratos::de(acnh::vecinoEn(main, hueco)));
+        }
+        if (cara)
+        {
+            const double lado = std::min(b.w, b.h) * 0.78 * 0.7;
+            SDL_FRect r = encajado(cara, pantalla(b.x - lado / 2, b.y - b.h / 2 + b.h * 0.36 - lado / 2, lado, lado));
+            SDL_RenderCopyF(g, cara, nullptr, &r);
+        }
+        else if (const uint16_t icono = iconoEdificio(b.tipo))
             if (SDL_Texture* f = suave(dibujos::de(icono)))
             {
                 const double lado = std::min(b.w, b.h) * 0.5 * 0.7;

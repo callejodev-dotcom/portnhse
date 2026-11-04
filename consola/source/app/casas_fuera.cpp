@@ -1,5 +1,6 @@
 // La casa por fuera (ver casas_fuera.hpp).
 #include "casas_fuera.hpp"
+#include "cache_texturas.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -141,28 +142,6 @@ SDL_Texture* textura(const std::vector<uint8_t>& px, int w, int h)
     return t;
 }
 
-// Texturas guardadas por clave; se vacía si hay muchas.
-struct Guardadas {
-    std::map<std::string, SDL_Texture*> m;
-    size_t maximo;
-    explicit Guardadas(size_t n) : maximo(n) {}
-    SDL_Texture** buscar(const std::string& k)
-    {
-        auto it = m.find(k);
-        return it == m.end() ? nullptr : &it->second;
-    }
-    SDL_Texture* poner(const std::string& k, SDL_Texture* t)
-    {
-        if (m.size() >= maximo)
-        {
-            for (auto& x : m)
-                if (x.second)
-                    SDL_DestroyTexture(x.second);
-            m.clear();
-        }
-        return m[k] = t;
-    }
-};
 
 // ------------------------------------------------------------------------------------------------ la fachada compuesta
 struct Frente {
@@ -431,10 +410,11 @@ SDL_Color color(Parte p, uint16_t v)
 
 SDL_Texture* dibujo(Parte p, uint16_t v)
 {
-    static Guardadas g(48);
+    static CacheTexturas<std::string> g(48);
     const std::string n = interno(p, v);
-    if (SDL_Texture** t = g.buscar(n))
-        return *t;
+    bool hallada;
+    if (SDL_Texture* ya = g.buscar(n, hallada); hallada)
+        return ya;
     const Entrada* e = entrada(n);
     SDL_Texture* t = nullptr;
     if (e)

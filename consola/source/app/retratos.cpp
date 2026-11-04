@@ -1,4 +1,5 @@
 #include "retratos.hpp"
+#include "cache_texturas.hpp"
 #include "partida.hpp"
 #include "ui.hpp"
 #include <algorithm>
@@ -81,7 +82,7 @@ Paquete& paquete()
     return p;
 }
 
-std::map<uint32_t, SDL_Texture*> g_cache;
+CacheTexturas<uint32_t> g_cache(120);
 } // namespace
 
 SDL_Texture* de(const std::string& interno)
@@ -89,17 +90,10 @@ SDL_Texture* de(const std::string& interno)
     if (interno.empty())
         return nullptr;
     const uint32_t clave = (uint32_t)crc32(0, (const Bytef*)interno.data(), (uInt)interno.size());
-    auto it = g_cache.find(clave);
-    if (it != g_cache.end())
-        return it->second;
-    if (g_cache.size() > 80)
-    {
-        for (auto& c : g_cache)
-            if (c.second)
-                SDL_DestroyTexture(c.second);
-        g_cache.clear();
-    }
-    return g_cache[clave] = paquete().textura(clave);
+    bool hallada;
+    if (SDL_Texture* ya = g_cache.buscar(clave, hallada); hallada)
+        return ya;
+    return g_cache.poner(clave, paquete().textura(clave));
 }
 
 SDL_Texture* deHueco(int hueco) { return de(acnh::vecinoEn(partida::principal(), hueco)); }

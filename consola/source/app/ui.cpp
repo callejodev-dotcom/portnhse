@@ -200,6 +200,7 @@ bool g_salir = false;
 std::string g_aviso;
 bool g_avisoMalo = false;
 std::string g_avisoFijo; // the one shown when there is none (set by the home screen)
+uint64_t g_fotograma = 1;
 } // namespace
 
 void abrir(Pantalla p, int foco) { g_pendiente.push_back([p, foco] { g_pila.push_back({p, foco}); }); }
@@ -231,6 +232,7 @@ void enfocar(int f)
             g_pila.back().foco = f;
     });
 }
+uint64_t fotograma() { return g_fotograma; }
 int foco() { return g_pila.empty() ? 0 : g_pila.back().foco; }
 void terminar() { g_salir = true; }
 bool terminando() { return g_salir; }
@@ -480,6 +482,7 @@ void bucle(Pantalla inicio)
 
     while (!g_salir && appletMainLoop())
     {
+        g_fotograma++;
         padUpdate(&pad);
         u64 down = padGetButtonsDown(&pad);
         const u64 held = padGetButtons(&pad);

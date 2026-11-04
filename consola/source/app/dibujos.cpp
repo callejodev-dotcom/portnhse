@@ -1,4 +1,5 @@
 #include "dibujos.hpp"
+#include "cache_texturas.hpp"
 #include "ui.hpp"
 #include <algorithm>
 #include <cstdio>
@@ -101,7 +102,7 @@ Paquete& iconos()
     return p;
 }
 
-std::map<uint32_t, SDL_Texture*> g_cache;
+CacheTexturas<uint32_t> g_cache(400);
 } // namespace
 
 SDL_Texture* de(uint16_t id, uint16_t variante)
@@ -109,24 +110,16 @@ SDL_Texture* de(uint16_t id, uint16_t variante)
     if (id >= acnh::EXTENSION)
         return nullptr;
     const uint32_t clave = ((uint32_t)id << 16) | variante;
-    auto it = g_cache.find(clave);
-    if (it != g_cache.end())
-        return it->second;
-    if (g_cache.size() > 400)
-    {
-        for (auto& c : g_cache)
-            if (c.second)
-                SDL_DestroyTexture(c.second);
-        g_cache.clear();
-    }
+    bool hallada;
+    if (SDL_Texture* ya = g_cache.buscar(clave, hallada); hallada)
+        return ya;
     SDL_Texture* t = nullptr;
     const Paquete::Entrada* e = nullptr;
     if (sd().f && ((e = sd().buscar(clave)) || (e = sd().buscar((uint32_t)id << 16))))
         t = sd().textura(*e);
     if (!t && iconos().f && (e = iconos().buscar((uint32_t)id << 16)))
         t = iconos().textura(*e);
-    g_cache[clave] = t;
-    return t;
+    return g_cache.poner(clave, t);
 }
 
 SDL_Texture* de(const acnh::Objeto& o)

@@ -155,6 +155,9 @@ struct Registro {
     explicit Registro(Tarjeta t) { tarjetas().push_back(std::move(t)); }
 };
 
+// Cuántos fotogramas se han dibujado (para saber qué se ha usado en este).
+uint64_t fotograma();
+
 // El bucle: lee los botones, dibuja la pantalla de arriba y hace lo que se pulse. Devuelve al salir.
 void bucle(Pantalla inicio);
 
