@@ -61,20 +61,15 @@ std::string nombre(const Objeto& o)
 
 void buscar(std::function<void(const Objeto&)> elegido, const std::string& para)
 {
-    std::string q;
-    if (!pedirTexto("Buscar objeto", "Escribe parte del nombre (por ejemplo, «pepita» o «receta escalera»)", q) || q.empty())
-        return;
-    auto hallados = std::make_shared<std::vector<int>>(buscarObjetos(q));
-    if (hallados->empty())
-    {
-        avisar("No hay ningún objeto que se llame «" + q + "».", true);
-        return;
-    }
-    Lista l;
-    l.titulo = "«" + q + "»: " + (hallados->size() == 1 ? std::string("1 objeto") : numero((uint32_t)hallados->size()) + " objetos");
-    l.explicacion = [para] { return para.empty() ? std::string("Elige el objeto.") : "Elige el objeto para " + para + "."; };
-    l.cuantas = [hallados] { return (int)hallados->size(); };
-    l.fila = [hallados, elegido](int k) {
+    auto hallados = std::make_shared<std::vector<int>>();
+    Buscador bu;
+    bu.titulo = "Buscar objeto";
+    bu.explicacion = para.empty() ? "Escribe parte del nombre y elige el objeto." : "Escribe parte del nombre y elige el objeto para " + para + ".";
+    bu.filtrar = [hallados](const std::string& t) {
+        *hallados = t.empty() ? std::vector<int>{} : buscarObjetos(t);
+        return (int)hallados->size();
+    };
+    bu.fila = [hallados, elegido](int k) {
         const int i = (*hallados)[k];
         std::string t = OBJETOS[i].nombre;
         if (OBJETOS[i].pila > 1)
@@ -89,13 +84,7 @@ void buscar(std::function<void(const Objeto&)> elegido, const std::string& para)
         f.imagen = dibujos::de(OBJETOS[i].id);
         return f;
     };
-    l.abajo.push_back([elegido, para] {
-        return Fila{"Buscar otra cosa", [elegido, para] {
-            volver();
-            buscar(elegido, para);
-        }};
-    });
-    abrir(lista(l));
+    abrir(buscador(bu), 11); // the cursor on the «q»
 }
 
 Pantalla editor(Huecos h, int i)

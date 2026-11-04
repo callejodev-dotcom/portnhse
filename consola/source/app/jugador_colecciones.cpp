@@ -6,6 +6,7 @@
 #include "../core/jugador_listas.hpp"
 #include "jugador_comun.hpp"
 #include "partida.hpp"
+#include "dibujos.hpp"
 #include "ui.hpp"
 
 using namespace acnh;
@@ -111,6 +112,7 @@ void catalogoDe(int categoria)
     m.titulo = std::string("Catálogo: ") + CATEGORIAS[categoria];
     m.total = (int)ks->size();
     m.nombre = [ks](int i) { return std::string(CATALOGO_NOMBRES[(*ks)[i]].nombre); };
+    m.imagen = [ks](int i) { return dibujos::de(CATALOGO_NOMBRES[(*ks)[i]].id); };
     m.marcada = [ks](int i) { return recibido(yo(), CATALOGO_NOMBRES[(*ks)[i]].id); };
     m.marcar = [ks](int i, bool si) {
         recibir(yo(), (*ks)[i], si);

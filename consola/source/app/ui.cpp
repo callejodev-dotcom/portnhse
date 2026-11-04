@@ -1,9 +1,11 @@
 #include "ui.hpp"
 #include "../core/acnh.hpp"
+#include "dibujos.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <cctype>
 #include <cstdlib>
 #include <map>
 #include <set>
@@ -360,7 +362,7 @@ static void dibujarBoton(const Boton& b, bool foco)
     }
     const int margen = std::min(24, w0 / 8);
     // Small letters if the button is low or the text does not fit with the normal ones.
-    TTF_Font* f = b.r.h < 40 || anchoTexto(b.texto) > w0 - margen ? g_pequena : g_fuente;
+    TTF_Font* f = b.pequena || b.r.h < 40 || anchoTexto(b.texto) > w0 - margen ? g_pequena : g_fuente;
     const SDL_Color gris = b.principal ? BLANCO : !b.activo ? APAGADO : MARRON_SUAVE;
     // With a picture, the text on the left, as the lists of the Mac; if not, centred.
     const int ancho = conDibujo ? w0 - 12 : w0 - margen;
@@ -626,6 +628,163 @@ std::string numero(uint32_t n)
     return s;
 }
 
+
+// ------------------------------------------------------------------------------------------------ iconos y recuadros
+SDL_Texture* iconoPara(const std::string& t)
+{
+    // The first word that matches (more specific ones first). Icons of NHSE's menus, as the Mac uses them.
+    static const std::pair<const char*, const char*> PALABRAS[] = {
+        {"criaturas marinas", "Tako"}, {"marina", "Tako"}, {"pez", "FishAji"}, {"peces", "FishAji"}, {"bicho", "InsMonshirocho"},
+        {"fosil", "Fossil"}, {"arte", "Haniwa"}, {"obra", "Haniwa"}, {"receta", "BookRecipe"}, {"fabricad", "DIYWoodNormal"},
+        {"favorit", "StarPiece"}, {"olvidar", "Can"}, {"vaciar", "Can"}, {"borrar", "Can"}, {"quitar", "Can"}, {"retirar", "Can"},
+        {"aprender", "DIYRecipePlus"}, {"catalogo", "Book"}, {"todo", "Book"}, {"mueble", "Cardboard"}, {"pared", "Wall"},
+        {"suelo", "Floor"}, {"alfombra", "Carpet"}, {"ropa", "Onepiece"}, {"prenda", "Onepiece"}, {"herramienta", "Axe"},
+        {"material", "DIYWoodNormal"}, {"comida", "Dishes"}, {"planta", "PltCosmos0"}, {"flor", "PltCosmos0"}, {"otros", "Present"},
+        {"reaccion", "Love"}, {"rueda", "Love"}, {"record", "StarPiece"}, {"sello", "StarPiece"}, {"carta", "Post"},
+        {"correo", "Post"}, {"buzon", "Post"}, {"regalo", "Present"}, {"envolver", "Present"}, {"tejado", "Porch"},
+        {"fachada", "Porch"}, {"puerta", "Porch"}, {"casa", "Porch"}, {"amistad", "Love"}, {"amigos", "Love"},
+        {"muletilla", "Megaphone"}, {"saludo", "Megaphone"}, {"personalidad", "Leaf"}, {"bricolaje", "DIYWoodNormal"},
+        {"marcas", "Book"}, {"progreso", "Book"}, {"diseno", "MyDesignPro"}, {"exportar", "Cardboard"}, {"importar", "Cardboard"},
+        {"guardar todos", "Cardboard"}, {"mudar", "YellowPaperBag"}, {"recuerdo", "Book"}, {"fecha", "Timer"}, {"dia", "Timer"},
+        {"hemisferio", "PltPalm"}, {"aerodromo", "PlaneTicket"}, {"fruta", "Peach"}, {"museo", "Fossil"}, {"nabo", "Kabu"},
+        {"tendencia", "BadKabu"}, {"visitante", "Balloon"}, {"concierto", "Music"}, {"tablon", "Megaphone"}, {"nota", "Megaphone"},
+        {"monedero", "MoneyBag039"}, {"banco", "MoneyBag069"}, {"ahorro", "MoneyBag069"}, {"bayas", "MoneyBag039"}, {"millas", "Coin"},
+        {"poki", "Coin"}, {"billete", "RollanTicket"}, {"perfil", "BdayCupcake"}, {"cumpleanos", "BdayCupcake"}, {"nombre", "Haniwa"},
+        {"jugador", "Onepiece"}, {"isla", "PltPalm"}, {"clima", "Syabon"}, {"comprobar", "Timer"}, {"memoria", "ToolChangeStick"},
+        {"bruto", "ToolChangeStick"}, {"hueco", "Bag"}, {"bolsillo", "Bag"}, {"almacen", "Cardboard"}, {"papelera", "Can"},
+        {"mapa", "Fence"}, {"acampada", "Tent"}, {"campista", "Tent"}, {"color", "Syabon"}, {"tela", "Onepiece"}, {"vecino", "Leaf"},
+        {"cambiar por otro", "Leaf"}, {"fosiles", "Fossil"},
+    };
+    std::string n = acnh::normalizar(t);
+    for (const auto& p : PALABRAS)
+    {
+        const size_t i = n.find(p.first);
+        // At the start of a word.
+        if (i != std::string::npos && (i == 0 || !isalnum((unsigned char)n[i - 1])))
+            return dibujos::menu(p.second);
+    }
+    return nullptr;
+}
+
+int panel(const SDL_Rect& r, const std::string& titulo, const char* icono, const std::string& explicacion)
+{
+    redondo(r, 14, {0xD1, 0xD1, 0xD6, 255});
+    redondo({r.x + 2, r.y + 2, r.w - 4, r.h - 4}, 12, BLANCO);
+    int x = r.x + 24;
+    if (SDL_Texture* t = icono ? dibujos::menu(icono) : nullptr)
+    {
+        SDL_Rect d = {r.x + 20, r.y + 18, 52, 52};
+        SDL_RenderCopy(g_r, t, nullptr, &d);
+        x += 64;
+    }
+    int y = r.y + 16;
+    y += texto(encajar(titulo, r.x + r.w - x - 20, g_negrita), x, y, MARRON, g_negrita) - 4;
+    if (!explicacion.empty())
+        y += texto(explicacion, x, y, MARRON_SUAVE, g_pequena, Izquierda, r.x + r.w - x - 20);
+    return std::max(y, icono ? r.y + 78 : y) + 10;
+}
+
+
+// ------------------------------------------------------------------------------------------ buscador en tiempo real
+Pantalla buscador(Buscador bu)
+{
+    struct Estado {
+        std::string texto;
+        std::string filtrado = "\x01"; // the text of the last search (none yet)
+        int total = 0;
+        int pagina = 0;
+    };
+    auto e = std::make_shared<Estado>();
+    e->texto = bu.texto;
+    return [bu, e](Vista& v) {
+        if (e->filtrado != e->texto)
+        {
+            e->total = bu.filtrar(e->texto);
+            e->filtrado = e->texto;
+            e->pagina = 0;
+        }
+        constexpr int COLS = 2, FILAS = 4, POR_PAGINA = COLS * FILAS;
+        const int paginas = std::max(1, (e->total + POR_PAGINA - 1) / POR_PAGINA);
+        e->pagina = std::clamp(e->pagina, 0, paginas - 1);
+        v.titulo = bu.titulo;
+        v.explicacion = bu.explicacion;
+        // What is written, and how many there are.
+        const std::string escrito = e->texto;
+        const std::string cuantos = e->texto.empty() ? "Escribe para buscar" : e->total == 0 ? "Nada" : numero((uint32_t)e->total) + (e->total == 1 ? " resultado" : " resultados") +
+            (paginas > 1 ? " · página " + std::to_string(e->pagina + 1) + " de " + std::to_string(paginas) : "");
+        v.dibujo = [escrito, cuantos] {
+            redondo({60, 108, W - 120, 52}, 12, AZUL);
+            redondo({62, 110, W - 124, 48}, 10, BLANCO);
+            const int ancho = anchoTexto(escrito);
+            texto(escrito, 80, 134 - TTF_FontHeight(g_fuente) / 2, MARRON);
+            // The cursor blinks.
+            if ((SDL_GetTicks() / 500) % 2 == 0)
+                rect({80 + ancho + 2, 118, 3, 32}, AZUL);
+            texto(cuantos, W - 80, 134 - TTF_FontHeight(g_pequena) / 2, MARRON_SUAVE, g_pequena, Derecha);
+        };
+        // The results.
+        for (int k = 0; k < POR_PAGINA && e->pagina * POR_PAGINA + k < e->total; k++)
+        {
+            Fila f = bu.fila(e->pagina * POR_PAGINA + k);
+            Boton b{{60 + (k % COLS) * 590, 172 + (k / COLS) * 52, 570, 46}, f.texto, f.accion, f.activo, f.marcado, f.detalle};
+            b.imagen = f.imagen;
+            b.color = f.color;
+            v.b.push_back(b);
+        }
+        // The keyboard.
+        static const char* const FILAS_TECLADO[4] = {"1234567890", "qwertyuiop", "asdfghjklñ", "zxcvbnm,.-"};
+        const int arriba = 172 + FILAS * 52 + 10;
+        for (int f = 0; f < 4; f++)
+        {
+            const std::string fila = FILAS_TECLADO[f];
+            int col = 0;
+            for (size_t i = 0; i < fila.size(); col++)
+            {
+                // One letter (UTF-8: the ñ is two bytes).
+                const size_t n = ((unsigned char)fila[i] & 0xE0) == 0xC0 ? 2 : 1;
+                const std::string letra = fila.substr(i, n);
+                i += n;
+                Boton b{{60 + col * 117, arriba + f * 50, 109, 44}, letra, [e, letra] { e->texto += letra; }};
+                v.b.push_back(b);
+            }
+        }
+        auto borrar = [e] {
+            if (e->texto.empty())
+                return;
+            size_t i = e->texto.size() - 1;
+            while (i > 0 && ((unsigned char)e->texto[i] & 0xC0) == 0x80)
+                i--;
+            e->texto.erase(i);
+        };
+        const int y = arriba + 4 * 50;
+        v.b.push_back({{60, y, 226, 44}, "Borrar", borrar, !e->texto.empty()});
+        v.b.push_back({{294, y, 460, 44}, "Espacio", [e] { e->texto += " "; }});
+        v.b.push_back({{762, y, 226, 44}, "Teclado…", [e] {
+            std::string t = e->texto;
+            if (pedirTexto("Buscar", "Escribe parte del nombre", t))
+                e->texto = t;
+        }});
+        v.b.push_back({{996, y, 224, 44}, "Volver", [bu, e] {
+            volver();
+            if (bu.alSalir)
+                bu.alSalir(e->texto);
+        }});
+        v.atras = [bu, e] {
+            volver();
+            if (bu.alSalir)
+                bu.alSalir(e->texto);
+        };
+        v.x = borrar;
+        v.y = [e] { e->texto += " "; };
+        if (paginas > 1)
+            v.paginar = [e, paginas](int d) { e->pagina = std::clamp(e->pagina + d, 0, paginas - 1); };
+        v.teclas = {{"A", "Escribir"}, {"X", "Borrar"}, {"Y", "Espacio"}};
+        if (paginas > 1)
+            v.teclas.push_back({"L R", "Más resultados"});
+        v.teclas.push_back({"B", "Volver"});
+    };
+}
+
 // ------------------------------------------------------------------------------------------- pantallas que se repiten
 Pantalla lista(Lista l)
 {
@@ -689,10 +848,11 @@ Pantalla lista(Lista l)
         {
             const int w = (int)(anchos[i] * k);
             const int xi = i == n - 1 ? W - 60 - w : x;
-            v.b.push_back({{xi, ABAJO - 66, w, 56}, abajo[i].texto, abajo[i].accion, abajo[i].activo, abajo[i].marcado});
+            Boton b{{xi, ABAJO - 66, w, 56}, abajo[i].texto, abajo[i].accion, abajo[i].activo, abajo[i].marcado};
+            b.pequena = letra == g_pequena;
+            v.b.push_back(b);
             x += w + 14;
         }
-        (void)letra;
         if (paginas > 1)
             v.paginar = [pagina, paginas](int d) { *pagina = std::clamp(*pagina + d, 0, paginas - 1); };
         if (l.extra)
@@ -772,12 +932,34 @@ Pantalla marcas(Marcas m)
         }
     };
     filtrar();
-    auto buscar = [e, filtrar] {
-        std::string q = e->busqueda;
-        if (!pedirTexto("Buscar", "Escribe parte del nombre (vacío: todas)", q))
-            return;
-        e->busqueda = q;
-        filtrar();
+    auto buscar = [m, e, filtrar] {
+        // While writing, the ones that match (they can be marked there); on going back, the list stays with them.
+        auto vistas = std::make_shared<std::vector<int>>();
+        Buscador bu;
+        bu.titulo = "Buscar en " + m.titulo;
+        bu.explicacion = "Toca una para marcarla o desmarcarla.";
+        bu.texto = e->busqueda;
+        bu.filtrar = [m, vistas](const std::string& t) {
+            vistas->clear();
+            const std::string q = acnh::normalizar(t);
+            for (int i = 0; i < m.total; i++)
+                if (q.empty() || (m.clave ? m.clave(i) : acnh::normalizar(m.nombre(i))).find(q) != std::string::npos)
+                    vistas->push_back(i);
+            return (int)vistas->size();
+        };
+        bu.fila = [m, vistas](int k) {
+            const int i = (*vistas)[k];
+            const bool si = m.marcada(i);
+            Fila f{(si ? "● " : "") + m.nombre(i), [m, i, si] { m.marcar(i, !si); }, true, si};
+            if (m.imagen)
+                f.imagen = m.imagen(i);
+            return f;
+        };
+        bu.alSalir = [e, filtrar](const std::string& t) {
+            e->busqueda = t;
+            filtrar();
+        };
+        abrir(buscador(bu), 11);
     };
     Lista l;
     l.titulo = m.titulo;
@@ -792,7 +974,10 @@ Pantalla marcas(Marcas m)
     l.fila = [m, e](int k) {
         const int i = e->vistas[k];
         const bool si = m.marcada(i);
-        return Fila{(si ? "● " : "") + m.nombre(i), [m, i, si] { m.marcar(i, !si); }, true, si};
+        Fila f{(si ? "● " : "") + m.nombre(i), [m, i, si] { m.marcar(i, !si); }, true, si};
+        if (m.imagen)
+            f.imagen = m.imagen(i);
+        return f;
     };
     l.abajo.push_back([buscar] { return Fila{"Buscar…", buscar}; });
     l.abajo.push_back([m, e] {
@@ -861,6 +1046,11 @@ void bucle(Pantalla inicio)
         Vista v;
         Entrada actual = g_pila.back();
         actual.p(v);
+        // The menus get the icon that goes with their text, as the Mac (only buttons with two lines or cards, without
+        // their own picture).
+        for (auto& b : v.b)
+            if (!b.imagen && b.color.a == 0 && !b.casilla && !b.vertical && b.valor.empty() && (b.grande || !b.detalle.empty()) && b.r.w >= 260 && b.r.h >= 50)
+                b.imagen = iconoPara(b.texto);
         // The side bar is part of every screen: its entries go after the buttons of the screen, at their place in
         // the coordinates of the screens (to the left of 0), so the D-pad reaches them from the left.
         const int propios = (int)v.b.size();

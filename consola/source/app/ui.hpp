@@ -62,6 +62,7 @@ struct Boton {
     bool casilla = false;           // a square of items, as the Mac: «color» is its background, «imagen» in the middle,
                                     // «detalle» (how many) at the bottom right
     bool vertical = false;          // a card with the picture big on top and the text below (villagers, as the Mac)
+    bool pequena = false;           // small letters (all the buttons of a row the same)
     std::string valor;              // with «grande»: a number card, as the money of the Mac («texto» small on top,
                                     // «valor» big, «detalle» below)
 };
@@ -150,6 +151,7 @@ struct Marcas {
     std::function<bool(int)> marcada;
     std::function<void(int, bool)> marcar;   // marks it in the save (and says it changed)
     std::string queEs = "cosas";              // «recetas», «objetos»...
+    std::function<SDL_Texture*(int)> imagen;  // a picture for each one (the items of the catalog...), if there is
 };
 Pantalla marcas(Marcas m);
 
@@ -188,6 +190,27 @@ void ponerLateral(std::function<Lateral()> f);
 // La pila de pantallas pasa a ser solo esta (al elegir una sección en la barra).
 void raiz(Pantalla p);
 int profundidad(); // 1 = the screen at the bottom of the stack
+
+// Un recuadro como las tarjetas de NHSE para Mac: blanco con borde, y arriba un icono (de menú, «Kabu»...), un título
+// en negrita y una explicación en gris. Devuelve dónde empieza lo de dentro (y).
+int panel(const SDL_Rect& r, const std::string& titulo, const char* icono = nullptr, const std::string& explicacion = "");
+
+// El icono de menú que va con un texto (por sus palabras: «Recetas…» → el libro de recetas), o nullptr. La app se lo
+// pone sola a los botones de los menús que no tienen dibujo; las pantallas también lo pueden usar.
+SDL_Texture* iconoPara(const std::string& texto);
+
+// Un buscador en tiempo real, con su propio teclado en pantalla (el de la consola no deja ver los resultados mientras
+// se escribe): arriba lo encontrado, abajo las letras. «filtrar» se llama al cambiar el texto y devuelve cuántos hay;
+// «fila» da el resultado i. «alSalir» (si hay) recibe el texto al volver.
+struct Buscador {
+    std::string titulo;
+    std::string explicacion;
+    std::string texto;                                     // what is written at the start
+    std::function<int(const std::string&)> filtrar;
+    std::function<Fila(int)> fila;
+    std::function<void(const std::string&)> alSalir;
+};
+Pantalla buscador(Buscador b);
 
 // Cuántos fotogramas se han dibujado (para saber qué se ha usado en este).
 uint64_t fotograma();
