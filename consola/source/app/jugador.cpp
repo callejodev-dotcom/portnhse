@@ -1,5 +1,6 @@
 // Sección «Jugador»: dinero, bolsillos, almacén, papelera y aprender todo (recetas, catálogo, reacciones). Las demás
 // tarjetas de la sección están en jugador_*.cpp (colecciones, récords, correo, perfil).
+#include <algorithm>
 #include "../core/jugador.hpp"
 #include <cstring>
 #include <functional>

@@ -1,5 +1,6 @@
 // Sección «Jugador»: el perfil del pasaporte, como ProfileWindow de NHSE para Mac: cumpleaños, fruta, fecha de
 // registro y si fundó la isla.
+#include <algorithm>
 #include "../core/jugador.hpp"
 #include "../core/jugador_listas.hpp"
 #include "dibujos.hpp"

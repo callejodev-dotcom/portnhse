@@ -3,6 +3,7 @@
 // «Donar todos» y «Donar todo…» (lo que falta en todas).
 // En «Fechas y más…», lo del editor clásico del Mac: cambiar el día, quién donó y la pieza de cada donación, ordenar
 // la lista por fecha, y guardar el museo en la SD o traerlo (el mismo .nhm que NHSE).
+#include <algorithm>
 #include <cstring>
 #include <ctime>
 #include <memory>
