@@ -821,7 +821,9 @@ void Lienzo::dibujar(std::vector<uint8_t>& main, const SDL_Rect& d, double x0, d
         const int tx = t % TROZOS_W, ty = t / TROZOS_W;
         const int a = sx(tx * CASILLAS_TROZO), b = sx((tx + 1) * CASILLAS_TROZO);
         const int c = sy(ty * CASILLAS_TROZO), e = sy((ty + 1) * CASILLAS_TROZO);
-        const SDL_Rect dst = {a, c, b - a, e - c};
+        // Un punto más hacia la derecha y hacia abajo: las pantallas se dibujan escaladas, y al redondear quedarían
+        // rayas finas entre trozos.
+        const SDL_Rect dst = {a, c, b - a + 1, e - c + 1};
         Trozo& tr = *trozos[t];
         if (fotos && tr.foto && !tr.fotoSucia)
         {

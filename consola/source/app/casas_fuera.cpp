@@ -159,7 +159,7 @@ const Frente* frente(const std::string& pared, const std::string& techo)
     auto it = hechos.find(clave);
     if (it != hechos.end())
         return it->second.t ? &it->second : nullptr;
-    if (hechos.size() > 12)
+    if (hechos.size() > 24)
     {
         for (auto& x : hechos)
             if (x.second.t)
@@ -424,6 +424,35 @@ SDL_Texture* dibujo(Parte p, uint16_t v)
             t = textura(px, e->w, e->h);
     }
     return g.poner(n, t);
+}
+
+SDL_Texture* foto(uint16_t tejado, uint16_t fachada, uint16_t puertaV)
+{
+    static std::map<uint64_t, SDL_Texture*> hechas;
+    const uint64_t clave = ((uint64_t)tejado << 32) | ((uint64_t)fachada << 16) | puertaV;
+    auto it = hechas.find(clave);
+    if (it != hechas.end())
+        return it->second;
+    if (hechas.size() > 40)
+    {
+        for (auto& h : hechas)
+            if (h.second)
+                SDL_DestroyTexture(h.second);
+        hechas.clear();
+    }
+    constexpr int LADO = 220;
+    SDL_Renderer* g = ui::g_r;
+    SDL_Texture* t = SDL_CreateTexture(g, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, LADO, LADO);
+    if (t)
+    {
+        SDL_Texture* antes = SDL_GetRenderTarget(g);
+        SDL_SetRenderTarget(g, t);
+        SDL_SetRenderDrawColor(g, 255, 255, 255, 255);
+        SDL_RenderClear(g);
+        dibujar({0, 0, LADO, LADO}, tejado, fachada, puertaV);
+        SDL_SetRenderTarget(g, antes);
+    }
+    return hechas[clave] = t;
 }
 
 void dibujar(const SDL_Rect& r, uint16_t tejado, uint16_t fachada, uint16_t puertaV)
