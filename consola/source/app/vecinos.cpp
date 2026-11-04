@@ -1,14 +1,16 @@
-// Sección «Vecinos»: los vecinos de la isla y la ficha de cada uno (cambiarlo por otro, personalidad, muletilla,
-// amistad, paredes y suelo, ropa, muebles, casa, mudanza, bricolaje, y pasarlo a la tarjeta SD o traerlo de ella), como
-// la página de vecinos de NHSE para Mac, con la cara de cada uno; y lo del editor clásico: recuerdos, marcas sueltas y su
-// diseño. También: amistad de cada jugador, mejores amigos de todos, que se muden todos y guardar todos en la tarjeta SD.
-#include <cctype>
+// Sección «Vecinos»: los vecinos de la isla, como la página de vecinos de NHSE para Mac: arriba la cuadrícula con la cara
+// de cada uno y debajo la ficha del elegido (personalidad, muletilla, amistad con sus corazones, paredes y suelo,
+// bricolaje, mudanza, cambiarlo por otro, ropa, muebles, casa, y pasarlo a la tarjeta SD o traerlo de ella); y lo del
+// editor clásico: recuerdos, marcas sueltas y su diseño. También: amistad de cada jugador, mejores amigos de todos, que
+// se muden todos y guardar todos en la tarjeta SD.
+#include <algorithm>
 #include <cstring>
 #include <map>
 #include <memory>
 #include "../core/objetos.hpp"
 #include "../core/vecino.hpp"
 #include "../core/vecinos.hpp"
+#include "dibujos.hpp"
 #include "objetos_ui.hpp"
 #include "partida.hpp"
 #include "retratos.hpp"
@@ -46,6 +48,10 @@ using namespace vecinos;
 namespace {
 
 constexpr int NUM_LISTA = sizeof(LISTA_VECINOS) / sizeof(LISTA_VECINOS[0]);
+constexpr int NUM_OBJETOS = sizeof(OBJETOS) / sizeof(OBJETOS[0]);
+
+// El vecino que se ve en la ficha (se recuerda al volver a la página).
+int g_elegido = -1;
 
 const std::vector<uint8_t>& datosVecinos()
 {
@@ -65,68 +71,135 @@ const std::vector<uint8_t>& datosVecinos()
     return datos;
 }
 
-char inicial(const char* nombre)
-{
-    const std::string n = normalizar(std::string(nombre, strnlen(nombre, 4)));
-    return (char)toupper((unsigned char)n[0]);
-}
-
 void cambio(const std::string& que = "Cambiado")
 {
     partida::cambiaPrincipal();
     cambiado(que);
 }
 
-// ¿Quién viene en lugar del vecino del hueco? Por letras (abajo, o con L y R).
+bool vive(int hueco) { return !vecinoEn(partida::principal(), hueco).empty(); }
+
+// ------------------------------------------------------------------------------------------- elegir vecino nuevo
+// Como VillagerPicker del Mac: las caras de todos, y arriba un buscador que filtra mientras se escribe (con su propio
+// teclado en pantalla).
 Pantalla elegirVecino(int hueco)
 {
     struct Estado {
-        char letra = 'A';
+        std::string texto;
+        std::string filtrado = "\x01"; // the text of the last search (none yet)
+        std::vector<int> vistas;
         int pagina = 0;
-        int focoLetra = -1;
+        bool primera = true;
     };
+    static const std::vector<std::string> claves = [] {
+        std::vector<std::string> c;
+        for (const auto& v : LISTA_VECINOS)
+            c.push_back(normalizar(v.nombre));
+        return c;
+    }();
+    constexpr int COLS = 7, FILAS = 2, POR_PAGINA = COLS * FILAS;
     auto e = std::make_shared<Estado>();
     return [hueco, e](Vista& v) {
-        std::vector<int> deLetra;
-        for (int i = 0; i < NUM_LISTA; i++)
-            if (inicial(LISTA_VECINOS[i].nombre) == e->letra)
-                deLetra.push_back(i);
-        const int paginas = std::max<int>(1, (deLetra.size() + 17) / 18);
-        e->pagina = std::min(e->pagina, paginas - 1);
-        v.titulo = "¿Quién viene en lugar de " + nombre(hueco) + "?";
-        v.explicacion = "Elige la letra abajo (o con L y R). El nuevo vecino se queda con la misma casa.";
-        for (int k = 0; k < 18 && e->pagina * 18 + k < (int)deLetra.size(); k++)
+        const auto& m = partida::principal();
+        const std::string actual = vecinoEn(m, hueco);
+        if (e->filtrado != e->texto)
         {
-            const auto& vv = LISTA_VECINOS[deLetra[e->pagina * 18 + k]];
+            e->vistas.clear();
+            const std::string q = normalizar(e->texto);
+            for (int i = 0; i < NUM_LISTA; i++)
+                if (q.empty() || claves[i].find(q) != std::string::npos)
+                    e->vistas.push_back(i);
+            e->filtrado = e->texto;
+            e->pagina = 0;
+            // The first time, on the page of the one there is now (as the Mac, that shows it chosen).
+            if (e->primera)
+                for (int k = 0; k < (int)e->vistas.size(); k++)
+                    if (actual == LISTA_VECINOS[e->vistas[k]].interno)
+                        e->pagina = k / POR_PAGINA;
+            e->primera = false;
+        }
+        const int total = (int)e->vistas.size();
+        const int paginas = std::max(1, (total + POR_PAGINA - 1) / POR_PAGINA);
+        e->pagina = std::clamp(e->pagina, 0, paginas - 1);
+        v.titulo = "¿Quién viene en lugar de " + nombre(hueco) + "?";
+        v.explicacion = "Escribe parte del nombre y elige su cara. El nuevo vecino se queda con la misma casa.";
+
+        const std::string escrito = e->texto;
+        const std::string cuantos = total == 0 ? "Nadie se llama así"
+            : numero((uint32_t)total) + (total == 1 ? " vecino" : " vecinos") +
+                (paginas > 1 ? " · página " + std::to_string(e->pagina + 1) + " de " + std::to_string(paginas) : "");
+        v.dibujo = [escrito, cuantos] {
+            redondo({60, 112, W - 120, 50}, 12, AZUL);
+            redondo({62, 114, W - 124, 46}, 10, BLANCO);
+            const int y = 137 - TTF_FontHeight(g_fuente) / 2;
+            if (escrito.empty())
+                texto("Buscar por nombre", 80, y, MARRON_SUAVE);
+            else
+                texto(escrito, 80, y, MARRON);
+            if ((SDL_GetTicks() / 500) % 2 == 0)
+                rect({80 + (escrito.empty() ? 0 : anchoTexto(escrito)) + 2, 121, 3, 32}, AZUL);
+            texto(cuantos, W - 80, 137 - TTF_FontHeight(g_pequena) / 2, MARRON_SUAVE, g_pequena, Derecha);
+        };
+
+        // The faces.
+        constexpr int ANCHO = 159, ALTO = 118, HUECO = 7;
+        for (int k = 0; k < POR_PAGINA && e->pagina * POR_PAGINA + k < total; k++)
+        {
+            const auto& vv = LISTA_VECINOS[e->vistas[e->pagina * POR_PAGINA + k]];
             bool yaEsta = false;
             for (int j = 0; j < NUM_VECINOS; j++)
-                yaEsta |= vecinoEn(partida::principal(), j) == vv.interno;
-            Boton b{{60 + (k / 6) * 390, 140 + (k % 6) * 62, 370, 54}, vv.nombre, [hueco, interno = std::string(vv.interno), nombre = std::string(vv.nombre)] {
-                const std::string antes = vecinos::nombre(hueco);
-                const std::string mal = cambiarVecino(partida::principal(), hueco, interno, datosVecinos());
-                if (mal.empty())
-                    partida::cambiaPrincipal();
-                volver();
-                avisar(mal.empty() ? antes + " se va y llega " + nombre + ". Falta guardar." : mal, !mal.empty());
-            }, !yaEsta};
+                yaEsta |= vecinoEn(m, j) == vv.interno;
+            Boton b{{60 + (k % COLS) * (ANCHO + HUECO), 172 + (k / COLS) * (ALTO + HUECO), ANCHO, ALTO}, vv.nombre,
+                [hueco, interno = std::string(vv.interno), nombre = std::string(vv.nombre)] {
+                    const std::string antes = vecinos::nombre(hueco);
+                    const std::string mal = cambiarVecino(partida::principal(), hueco, interno, datosVecinos());
+                    if (mal.empty())
+                        partida::cambiaPrincipal();
+                    volver();
+                    avisar(mal.empty() ? antes + " se va y llega " + nombre + ". Falta guardar." : mal, !mal.empty());
+                }, !yaEsta, actual == vv.interno};
+            b.vertical = true;
             b.imagen = retratos::de(vv.interno);
             v.b.push_back(b);
         }
-        const int primeraLetra = (int)v.b.size();
-        for (int l = 0; l < 26; l++)
-            v.b.push_back({{40 + l * 46, 525, 42, 50}, std::string(1, (char)('A' + l)), [e, l] {
-                e->letra = (char)('A' + l), e->pagina = 0, e->focoLetra = l;
-            }, true, 'A' + l == e->letra});
-        if (e->focoLetra >= 0)
+
+        // The keyboard: the letters of the names.
+        static const char* const TECLAS[3] = {"qwertyuiop", "asdfghjklñ", "zxcvbnm"};
+        const int arriba = 172 + FILAS * (ALTO + HUECO) + 4;
+        for (int f = 0; f < 3; f++)
         {
-            enfocar(primeraLetra + e->focoLetra);
-            e->focoLetra = -1;
+            const std::string fila = TECLAS[f];
+            int col = 0;
+            for (size_t i = 0; i < fila.size(); col++)
+            {
+                const size_t n = ((unsigned char)fila[i] & 0xE0) == 0xC0 ? 2 : 1;
+                const std::string letra = fila.substr(i, n);
+                i += n;
+                v.b.push_back({{60 + col * 117, arriba + f * 50, 109, 44}, letra, [e, letra] { e->texto += letra; }});
+            }
         }
-        v.b.push_back({{60, 600, 260, 60}, "Anteriores", [e] { e->pagina--; }, e->pagina > 0});
-        v.b.push_back({{340, 600, 260, 60}, "Siguientes", [e] { e->pagina++; }, e->pagina + 1 < paginas});
-        v.b.push_back({{960, 600, 260, 60}, "Volver", [] { volver(); }});
-        v.paginar = [e](int d) { e->letra = (char)('A' + ((e->letra - 'A' + 26 + d % 26) % 26)), e->pagina = 0; };
-        v.teclas = {{"A", "Elegir"}, {"L R", "Otra letra"}, {"B", "Volver"}};
+        auto borrar = [e] {
+            if (e->texto.empty())
+                return;
+            size_t i = e->texto.size() - 1;
+            while (i > 0 && ((unsigned char)e->texto[i] & 0xC0) == 0x80)
+                i--;
+            e->texto.erase(i);
+        };
+        v.b.push_back({{60 + 7 * 117, arriba + 100, 226, 44}, "Borrar", borrar, !e->texto.empty()});
+        v.b.push_back({{60 + 9 * 117, arriba + 100, 109, 44}, "Espacio", [e] { e->texto += " "; }});
+        const int y = arriba + 150 + 6;
+        v.b.push_back({{60, y, 220, 52}, "Anteriores", [e] { e->pagina--; }, e->pagina > 0});
+        v.b.push_back({{292, y, 220, 52}, "Siguientes", [e] { e->pagina++; }, e->pagina + 1 < paginas});
+        v.b.push_back({{524, y, 260, 52}, "Teclado…", [e] {
+            std::string t = e->texto;
+            if (pedirTexto("Buscar vecino", "Escribe parte del nombre", t, 20))
+                e->texto = t;
+        }});
+        v.b.push_back({{1000, y, 220, 52}, "Volver", [] { volver(); }});
+        v.x = borrar;
+        v.paginar = [e, paginas](int d) { e->pagina = std::clamp(e->pagina + (d > 0 ? 1 : -1), 0, paginas - 1); };
+        v.teclas = {{"A", "Elegir"}, {"X", "Borrar"}, {"L R", "Página"}, {"B", "Volver"}};
     };
 }
 
@@ -144,32 +217,74 @@ objetos::Huecos guardado(int hueco, int lista)
     return h;
 }
 
-int usados(int hueco, int lista)
+// ------------------------------------------------------------------------------------------- bricolaje
+// Las recetas: su número (los objetos «Receta: …» lo llevan en la cantidad), su nombre y el objeto que sale.
+struct Receta {
+    uint16_t numero;
+    std::string nombre, clave;
+    int objeto; // index in OBJETOS of what is made, or -1
+    int papel;  // index in OBJETOS of the recipe
+};
+
+const std::vector<Receta>& recetas()
 {
-    int n = 0;
-    for (int i = 0; i < (lista == 0 ? NUM_ROPA : NUM_MUEBLES); i++)
-        n += !objetoVecino(partida::principal(), hueco, lista, i).vacio();
-    return n;
+    static const std::vector<Receta> r = [] {
+        std::map<std::string, int> porClave;
+        for (int i = 0; i < NUM_OBJETOS; i++)
+            if (OBJETOS[i].tipo == 0)
+                porClave.emplace(OBJETOS[i].clave, i);
+        std::vector<Receta> v;
+        for (int i = 0; i < NUM_OBJETOS; i++)
+            if (OBJETOS[i].tipo == 1)
+            {
+                std::string n = OBJETOS[i].nombre, c = OBJETOS[i].clave;
+                if (n.rfind("Receta: ", 0) == 0)
+                    n = n.substr(8), c = c.substr(std::min<size_t>(8, c.size()));
+                // «(Sin variaciones)» says nothing to Carla.
+                for (const char* sin : {" (Sin variaciones)", " (sin variaciones)"})
+                    if (n.size() > strlen(sin) && n.compare(n.size() - strlen(sin), std::string::npos, sin) == 0)
+                        n.erase(n.size() - strlen(sin));
+                // «abrigo de paja (Sin variaciones)»: the object is «abrigo de paja».
+                auto it = porClave.find(c);
+                if (it == porClave.end() && c.find(" (") != std::string::npos)
+                    it = porClave.find(c.substr(0, c.find(" (")));
+                v.push_back({OBJETOS[i].cuenta, n, c, it == porClave.end() ? -1 : it->second, i});
+            }
+        return v;
+    }();
+    return r;
 }
 
-// ------------------------------------------------------------------------------------------- bricolaje
-// El nombre de una receta por su número (los objetos «Receta: …» llevan el número en la cantidad).
-std::string nombreReceta(uint16_t receta)
+const Receta* receta(uint16_t numero)
 {
-    if (receta == 0xFFFF)
-        return "Nada";
     static const std::map<uint16_t, int> indice = [] {
         std::map<uint16_t, int> m;
-        for (int i = 0; i < (int)(sizeof(OBJETOS) / sizeof(OBJETOS[0])); i++)
-            if (OBJETOS[i].tipo == 1)
-                m[OBJETOS[i].cuenta] = i;
+        for (int i = 0; i < (int)recetas().size(); i++)
+            m.emplace(recetas()[i].numero, i);
         return m;
     }();
-    auto it = indice.find(receta);
-    if (it == indice.end())
-        return "Receta nº " + std::to_string(receta);
-    std::string n = OBJETOS[it->second].nombre;
-    return n.rfind("Receta: ", 0) == 0 ? n.substr(8) : n;
+    auto it = indice.find(numero);
+    return it == indice.end() ? nullptr : &recetas()[it->second];
+}
+
+std::string nombreReceta(uint16_t numero)
+{
+    if (numero == 0xFFFF)
+        return "Nada";
+    const Receta* r = receta(numero);
+    return r ? r->nombre : "Receta nº " + std::to_string(numero);
+}
+
+// El dibujo de lo que sale de la receta (o el de la receta, si no se sabe).
+SDL_Texture* dibujoReceta(uint16_t numero)
+{
+    const Receta* r = receta(numero);
+    if (!r)
+        return dibujos::menu("DIYWoodNormal");
+    if (r->objeto >= 0)
+        if (SDL_Texture* t = dibujos::de(OBJETOS[r->objeto].id))
+            return t;
+    return dibujos::de(OBJETOS[r->papel].id);
 }
 
 std::string dosCifras(int n) { return (n < 10 ? "0" : "") + std::to_string(n); }
@@ -179,73 +294,97 @@ std::string resumenBricolaje(int hueco)
     const Bricolaje b = bricolaje(partida::principal(), hueco);
     if (!b.haciendo() || b.receta == 0xFFFF)
         return "No está haciendo nada";
-    return "Hace " + nombreReceta(b.receta) + " hasta las " + dosCifras(b.hora) + ":" + dosCifras(b.minuto);
+    return "Hace " + nombreReceta(b.receta) + ". Termina a las " + dosCifras(b.hora) + ":" + dosCifras(b.minuto) + ".";
+}
+
+void ponerBricolajeCon(int hueco, std::function<void(Bricolaje&)> f, const std::string& que)
+{
+    Bricolaje n = bricolaje(partida::principal(), hueco);
+    f(n);
+    ponerBricolaje(partida::principal(), hueco, n);
+    cambio(que);
 }
 
 void buscarReceta(int hueco)
 {
-    std::string q;
-    if (!pedirTexto("Buscar receta", "Escribe parte del nombre (por ejemplo, «escalera»)", q) || q.empty())
-        return;
-    std::vector<Opcion> op;
-    std::vector<uint16_t> numeros;
-    for (int i : buscarObjetos(q))
-        if (OBJETOS[i].tipo == 1)
-        {
-            op.push_back({nombreReceta(OBJETOS[i].cuenta), ""});
-            numeros.push_back(OBJETOS[i].cuenta);
-        }
-    if (op.empty())
-    {
-        avisar("No hay ninguna receta que se llame «" + q + "».", true);
-        return;
-    }
-    elegirLargo("Recetas con «" + q + "»", "Elige lo que está haciendo " + nombre(hueco) + ".", op, -1, [hueco, numeros](int k) {
-        Bricolaje b = bricolaje(partida::principal(), hueco);
-        b.receta = numeros[k];
-        ponerBricolaje(partida::principal(), hueco, b);
-        cambio("Ahora hace " + nombreReceta(numeros[k]));
-    });
+    auto vistas = std::make_shared<std::vector<int>>();
+    Buscador b;
+    b.titulo = "¿Qué está haciendo " + nombre(hueco) + "?";
+    b.explicacion = "Escribe parte del nombre de la receta (por ejemplo, «escalera») y elígela.";
+    b.filtrar = [vistas](const std::string& t) {
+        vistas->clear();
+        const std::string q = normalizar(t);
+        for (int i = 0; i < (int)recetas().size(); i++)
+            if (recetas()[i].clave.find(q) != std::string::npos)
+                vistas->push_back(i);
+        return (int)vistas->size();
+    };
+    b.fila = [vistas, hueco](int k) {
+        const Receta& r = recetas()[(*vistas)[k]];
+        const uint16_t n = r.numero;
+        Fila f{r.nombre, [hueco, n] {
+            volver();
+            ponerBricolajeCon(hueco, [n](Bricolaje& x) { x.receta = n; }, "Ahora hace " + nombreReceta(n));
+        }};
+        f.marcado = bricolaje(partida::principal(), hueco).receta == n;
+        f.imagen = dibujoReceta(n);
+        return f;
+    };
+    abrir(buscador(b));
 }
 
+// Como el editor de bricolaje del Mac (¿está haciendo algo?, hasta qué hora y qué receta), en una tarjeta.
 void pantallaBricolaje(Vista& v, int hueco)
 {
     const Bricolaje b = bricolaje(partida::principal(), hueco);
+    const bool haciendo = b.haciendo();
     v.titulo = "Bricolaje de " + nombre(hueco);
     v.explicacion = "A veces los vecinos están en casa haciendo algo de bricolaje: qué hacen y a qué hora terminan.";
-    auto cambiar = [hueco](std::function<void(Bricolaje&)> f, const std::string& que) {
-        Bricolaje n = bricolaje(partida::principal(), hueco);
-        f(n);
-        ponerBricolaje(partida::principal(), hueco, n);
-        cambio(que);
+    SDL_Texture* cara = retratos::deHueco(hueco);
+    const std::string resumen = resumenBricolaje(hueco);
+    v.dibujo = [cara, resumen] {
+        const SDL_Rect r = {60, 112, 1160, 476};
+        panel(r, "¿Qué está haciendo?", "DIYWoodNormal", resumen);
+        if (cara)
+        {
+            const SDL_Rect d = {1220 - 24 - 130, 112 + 16, 130, 130};
+            SDL_RenderCopy(g_r, cara, nullptr, &d);
+        }
+        texto("Termina a las", 84, 432, MARRON_SUAVE, g_pequena);
     };
-    Boton haciendo{{60, 160, 570, 100}, "Haciendo algo", [b, cambiar] {
+    Boton si{{84, 206, 420, 70}, "Está haciendo algo", [hueco, haciendo] {
         // Como el editor clásico: sin hacer nada, la hora es 255:255; al empezar, las 00:00:00.
-        if (b.haciendo())
-            cambiar([](Bricolaje& n) { n.hora = n.minuto = 255; }, "Ya no está haciendo nada");
+        if (haciendo)
+            ponerBricolajeCon(hueco, [](Bricolaje& n) { n.hora = n.minuto = 255; }, "Ya no está haciendo nada");
         else
-            cambiar([](Bricolaje& n) { n.hora = n.minuto = n.segundo = 0; }, "Está haciendo algo");
-    }, true, b.haciendo()};
-    haciendo.detalle = b.haciendo() ? "Sí (pulsa para que no)" : "No (pulsa para que sí)";
-    v.b.push_back(haciendo);
-    Boton receta{{650, 160, 570, 100}, "Qué hace", [hueco] { buscarReceta(hueco); }};
-    receta.detalle = nombreReceta(b.receta);
-    v.b.push_back(receta);
-    Boton hora{{60, 290, 570, 100}, "Hora a la que termina", [b, cambiar] {
-        uint32_t h = b.hora;
+            ponerBricolajeCon(hueco, [](Bricolaje& n) { n.hora = n.minuto = n.segundo = 0; }, "Está haciendo algo");
+    }, true, haciendo};
+    si.detalle = haciendo ? "Sí (pulsa para que no)" : "No (pulsa para que sí)";
+    v.b.push_back(si);
+    Boton rec{{84, 290, 1112, 120}, nombreReceta(b.receta), [hueco] { buscarReceta(hueco); }};
+    rec.grande = true;
+    rec.imagen = b.receta == 0xFFFF ? dibujos::menu("DIYWoodNormal") : dibujoReceta(b.receta);
+    rec.detalle = "La receta que está haciendo · pulsa para elegir otra";
+    v.b.push_back(rec);
+    Boton hora{{84, 462, 300, 104}, "Hora", [hueco, b] {
+        uint32_t h = b.hora < 24 ? b.hora : 0;
         if (pedirNumero("¿A qué hora termina? (de 0 a 23)", h, 23))
-            cambiar([h](Bricolaje& n) { n.hora = (uint8_t)h; }, "Termina a las " + dosCifras(h) + ":" + dosCifras(b.minuto));
-    }, b.haciendo()};
-    hora.detalle = b.haciendo() ? dosCifras(b.hora) + ":" + dosCifras(b.minuto) : "—";
+            ponerBricolajeCon(hueco, [h](Bricolaje& n) { n.hora = (uint8_t)h; }, "Termina a las " + dosCifras(h) + ":" + dosCifras(b.minuto));
+    }, haciendo};
+    hora.grande = true;
+    hora.valor = haciendo ? dosCifras(b.hora) : "—";
+    hora.detalle = "de 0 a 23";
     v.b.push_back(hora);
-    Boton minuto{{650, 290, 570, 100}, "Minuto en que termina", [b, cambiar] {
-        uint32_t m = b.minuto;
+    Boton minuto{{400, 462, 300, 104}, "Minuto", [hueco, b] {
+        uint32_t m = b.minuto < 60 ? b.minuto : 0;
         if (pedirNumero("¿En qué minuto termina? (de 0 a 59)", m, 59))
-            cambiar([m](Bricolaje& n) { n.minuto = (uint8_t)m; }, "Termina a las " + dosCifras(b.hora) + ":" + dosCifras(m));
-    }, b.haciendo()};
-    minuto.detalle = hora.detalle;
+            ponerBricolajeCon(hueco, [m](Bricolaje& n) { n.minuto = (uint8_t)m; }, "Termina a las " + dosCifras(b.hora) + ":" + dosCifras(m));
+    }, haciendo};
+    minuto.grande = true;
+    minuto.valor = haciendo ? dosCifras(b.minuto) : "—";
+    minuto.detalle = "de 0 a 59";
     v.b.push_back(minuto);
-    v.b.push_back({{W / 2 - 200, ABAJO - 76, 400, 64}, "Volver", [] { volver(); }});
+    v.b.push_back({{960, ABAJO - 64, 260, 56}, "Volver", [] { volver(); }});
 }
 
 // ------------------------------------------------------------------------------------------- archivos
@@ -316,36 +455,165 @@ void importar(int hueco)
         });
 }
 
-// ------------------------------------------------------------------------------------------- la ficha
-void ficha(Vista& v, int hueco)
+// ------------------------------------------------------------------------------------------- la página
+// Como VillagersPage del Mac: arriba los diez huecos con la cara de cada vecino; debajo, la ficha del elegido (el que
+// tiene el cursor, o el último que se tocó), con cada dato a la izquierda y lo que lo cambia a la derecha.
+constexpr int CUADRO_Y = 112, CUADRO_W = 220, CUADRO_H = 128, CUADRO_PASO_X = 235, CUADRO_PASO_Y = 136;
+constexpr int FICHA_Y = CUADRO_Y + 2 * CUADRO_PASO_Y, FICHA_H = 214; // 384 .. 598
+constexpr int ETIQUETA_X = 228, VALOR_X = 384, FIN_X = 1010, EDITAR_W = 104, DERECHA_X = 1024, DERECHA_W = 180;
+constexpr int FILA_Y = FICHA_Y + 10, FILA_PASO = 50, FILA_H = 44;
+
+int filaY(int f) { return FILA_Y + f * FILA_PASO; }
+
+// «Pared cerámica amarilla» → «cerámica amarilla» (en la ficha ya lo dicen la etiqueta y el dibujo).
+std::string sinPrefijo(const std::string& n)
+{
+    for (const char* p : {"Pared ", "Suelo "})
+        if (n.rfind(p, 0) == 0 && n.size() > strlen(p))
+            return n.substr(strlen(p));
+    return n;
+}
+
+void pagina(Vista& v)
 {
     auto& m = partida::principal();
-    if (vecinoEn(m, hueco).empty())
+    v.titulo = "Tus vecinos";
+    v.explicacion = "Elige un vecino para ver y cambiar todo lo suyo. L y R: el anterior o el siguiente.";
+    // Which one the ficha shows: the one with the cursor, if it is on a face; if not, the last one chosen.
+    const int f = foco();
+    if (f >= 0 && f < NUM_VECINOS && vive(f))
+        g_elegido = f;
+    if (g_elegido < 0 || g_elegido >= NUM_VECINOS || !vive(g_elegido))
     {
-        volver();
+        g_elegido = -1;
+        for (int i = 0; i < NUM_VECINOS && g_elegido < 0; i++)
+            if (vive(i))
+                g_elegido = i;
+    }
+    const int hueco = g_elegido;
+    for (int i = 0; i < NUM_VECINOS; i++)
+    {
+        const bool vacio = !vive(i);
+        Boton b{{60 + (i % 5) * CUADRO_PASO_X, CUADRO_Y + (i / 5) * CUADRO_PASO_Y, CUADRO_W, CUADRO_H}, nombre(i), [i] {
+            g_elegido = i;
+            enfocar(NUM_VECINOS);
+        }, !vacio, i == hueco};
+        b.vertical = true;
+        if (!vacio)
+            b.imagen = retratos::deHueco(i);
+        v.b.push_back(b);
+    }
+    v.paginar = [](int d) {
+        for (int k = 1; k <= NUM_VECINOS; k++)
+        {
+            const int otro = ((g_elegido + d * k) % NUM_VECINOS + NUM_VECINOS * 10) % NUM_VECINOS;
+            if (vive(otro))
+            {
+                // With the cursor on a face, it goes with it.
+                if (foco() >= 0 && foco() < NUM_VECINOS)
+                    enfocar(otro);
+                g_elegido = otro;
+                return;
+            }
+        }
+    };
+    v.teclas = {{"A", "Elegir"}, {"L R", "Otro vecino"}, {"B", "Volver"}};
+    if (hueco < 0)
+    {
+        v.dibujo = [] {
+            panel({60, FICHA_Y, 1160, FICHA_H}, "No vive nadie en la isla", "Leaf", "Cuando llegue alguien, aparecerá aquí.");
+        };
+        v.b.push_back({{1000, ABAJO - 60, 220, 52}, "Volver", [] { volver(); }});
         return;
     }
+
+    // ---- the ficha
     const std::string n = nombre(hueco);
     const std::string interno = vecinoEn(m, hueco);
     const int p = personalidad(m, hueco);
     const std::string fr = frase(m, hueco), original = fraseOriginal(interno);
-    v.titulo = n;
-    v.explicacion = seMuda(m, hueco) ? n + " se va a mudar: hará las maletas y se irá de la isla." : "Elige qué cambiar de " + n + ".";
-
-    std::vector<Boton> b;
-    auto boton = [&](const std::string& t, const std::string& d, std::function<void()> f, bool activo = true, bool marcado = false) {
-        Boton x{{}, t, std::move(f), activo, marcado};
-        x.detalle = d;
-        b.push_back(x);
+    const bool muda = seMuda(m, hueco);
+    const int r = recuerdoDe(m, hueco, partida::personal());
+    const int nivel = r >= 0 ? nivelAmistad(recuerdo(m, hueco, r).amistad) : 0;
+    const std::string amistadTexto = r >= 0 ? NIVELES[nivel] : "Todavía no te conoce";
+    const std::string conQuien = r >= 0 ? "con " + partida::jugador().nombre : "";
+    const uint16_t pared = parteCuarto(m, hueco, CuartoPared), suelo = parteCuarto(m, hueco, CuartoSuelo);
+    const Bricolaje bri = bricolaje(m, hueco);
+    const bool haciendo = bri.haciendo() && bri.receta != 0xFFFF;
+    struct Ficha {
+        SDL_Texture *cara, *pared, *suelo, *receta;
+        std::string nombre, personalidad, amistad, conQuien, pared_t, suelo_t, bricolaje;
+        int nivel;
+        bool conoce, muda;
     };
-    boton("Cambiar por otro", "Otro vecino en su casa", [hueco] { abrir(elegirVecino(hueco)); }, !datosVecinos().empty());
-    boton("Personalidad", p < 8 ? PERSONALIDADES[p] : "?", [hueco, p] {
+    const Ficha fi{retratos::de(interno), dibujos::de(pared), dibujos::de(suelo), haciendo ? dibujoReceta(bri.receta) : dibujos::menu("DIYWoodNormal"),
+        n, p < 8 ? PERSONALIDADES[p] : "", amistadTexto, conQuien, sinPrefijo(nombreParte(pared)), sinPrefijo(nombreParte(suelo)),
+        haciendo ? nombreReceta(bri.receta) + ", hasta las " + dosCifras(bri.hora) + ":" + dosCifras(bri.minuto) : "No está haciendo nada",
+        nivel, r >= 0, muda};
+    v.dibujo = [fi] {
+        panel({60, FICHA_Y, 1160, FICHA_H}, "");
+        // On the left, the face big and the name.
+        if (fi.cara)
+        {
+            const SDL_Rect d = {73, FICHA_Y + 10, 130, 130};
+            SDL_RenderCopy(g_r, fi.cara, nullptr, &d);
+        }
+        texto(encajar(fi.nombre, 150, g_negrita), 138, FICHA_Y + 160, MARRON, g_negrita, Centro);
+        if (fi.muda)
+            texto("Se va a mudar", 138, FICHA_Y + 190, ROJO, g_pequena, Centro);
+        // The labels, as the Mac.
+        const char* const ETIQUETAS[4] = {"Personalidad", "Amistad", "Paredes y suelo", "Bricolaje"};
+        for (int k = 0; k < 4; k++)
+            texto(ETIQUETAS[k], ETIQUETA_X, filaY(k) + FILA_H / 2 - TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena);
+        texto("Muletilla", 598, filaY(0) + FILA_H / 2 - TTF_FontHeight(g_pequena) / 2, MARRON, g_pequena);
+        const int ch = TTF_FontHeight(g_pequena) / 2;
+        // Friendship: the hearts, the level and with whom.
+        int y = filaY(1) + FILA_H / 2;
+        int x = VALOR_X;
+        if (fi.conoce)
+        {
+            filaCorazones(x, y - 13, 26, 29, fi.nivel);
+            x += 7 * 29 + 8;
+        }
+        texto(fi.amistad, x, y - TTF_FontHeight(g_negrita) / 2, MARRON, g_negrita);
+        x += anchoTexto(fi.amistad, g_negrita) + 10;
+        if (!fi.conQuien.empty())
+            if (anchoTexto(fi.conQuien, g_pequena) <= FIN_X - EDITAR_W - 10 - x)
+                texto(fi.conQuien, x, y - ch, MARRON_SUAVE, g_pequena);
+        // Walls and floor, each with its picture.
+        y = filaY(2) + FILA_H / 2;
+        auto conDibujo = [&](SDL_Texture* t, const std::string& s, int x0, int ancho) {
+            if (t)
+            {
+                const SDL_Rect d = {x0, y - 18, 36, 36};
+                SDL_RenderCopy(g_r, t, nullptr, &d);
+            }
+            texto(encajar(s, ancho - 46, g_pequena), x0 + 42, y - ch, MARRON, g_pequena);
+        };
+        // The room each one needs (the rest, shared), so both names fit if they can.
+        const int libre = FIN_X - EDITAR_W - 10 - VALOR_X;
+        const int a1 = anchoTexto(fi.pared_t, g_pequena) + 50, a2 = anchoTexto(fi.suelo_t, g_pequena) + 50;
+        const int primero = a1 + a2 <= libre ? a1 + std::min(24, libre - a1 - a2) : std::max(libre / 3, libre * a1 / (a1 + a2));
+        conDibujo(fi.pared, fi.pared_t, VALOR_X, primero);
+        conDibujo(fi.suelo, fi.suelo_t, VALOR_X + primero, libre - primero);
+        // DIY.
+        y = filaY(3) + FILA_H / 2;
+        conDibujo(fi.receta, fi.bricolaje, VALOR_X, FIN_X - EDITAR_W - 10 - VALOR_X);
+    };
+
+    auto boton = [&](SDL_Rect rr, const std::string& t, std::function<void()> f, bool activo = true, bool marcado = false) {
+        Boton b{rr, t, std::move(f), activo, marcado};
+        v.b.push_back(b);
+        return (int)v.b.size() - 1;
+    };
+    // Row 1: personality and catchphrase.
+    boton({VALOR_X, filaY(0), 200, FILA_H}, p < 8 ? PERSONALIDADES[p] : "?", [hueco, p] {
         elegir("Personalidad de " + nombre(hueco), "Cambia cómo habla y cómo se porta.", std::vector<std::string>(PERSONALIDADES, PERSONALIDADES + 8), p, [hueco](int k) {
             ponerPersonalidad(partida::principal(), hueco, k);
             cambio(std::string("Ahora es ") + PERSONALIDADES[k]);
         });
     });
-    boton("Muletilla", fr.empty() ? "La suya: «" + original + "»" : "«" + fr + "»", [hueco, fr] {
+    boton({690, filaY(0), 180, FILA_H}, fr.empty() ? original : fr, [hueco, fr] {
         std::string t = fr;
         if (pedirTexto("Muletilla de " + nombre(hueco), "Lo que dice al final de las frases", t, LARGO_FRASE))
         {
@@ -353,84 +621,34 @@ void ficha(Vista& v, int hueco)
             cambio("Ahora dice «" + t + "»");
         }
     });
-    boton("Muletilla original", "«" + original + "»", [hueco, original] {
+    boton({878, filaY(0), FIN_X - 878, FILA_H}, "Original", [hueco, original] {
         ponerFrase(partida::principal(), hueco, original);
         cambio("Vuelve a decir «" + original + "»");
     }, !original.empty() && fr != original);
-    boton("Amistad", resumenAmistad(hueco, partida::yo), [hueco] { amistad(hueco); });
-    boton("Paredes y suelo", resumenCuarto(hueco), [hueco] { cuarto(hueco); });
-    boton("Ropa", std::to_string(usados(hueco, 0)) + " de " + std::to_string(NUM_ROPA) + " prendas guardadas", [hueco] { abrir(objetos::todos(guardado(hueco, 0), 8)); });
-    boton("Muebles", std::to_string(usados(hueco, 1)) + " de " + std::to_string(NUM_MUEBLES) + " muebles guardados", [hueco] { abrir(objetos::todos(guardado(hueco, 1), 8)); });
-    boton("Casa", resumenCasa(hueco), [hueco] { casa(hueco); }, casaDe(m, hueco) >= 0);
-    const bool muda = seMuda(m, hueco);
-    boton("Se va a mudar", muda ? "Sí: hará las maletas" : "No", [hueco, muda] {
+    // Rows 2 to 4: friendship, walls and floor, DIY; each with «Editar».
+    boton({FIN_X - EDITAR_W, filaY(1), EDITAR_W, FILA_H}, "Editar", [hueco] { amistad(hueco); });
+    boton({FIN_X - EDITAR_W, filaY(2), EDITAR_W, FILA_H}, "Editar", [hueco] { cuarto(hueco); });
+    boton({FIN_X - EDITAR_W, filaY(3), EDITAR_W, FILA_H}, "Editar", [hueco] { abrir([hueco](Vista& vi) { pantallaBricolaje(vi, hueco); }); });
+    // On the right: what the classic editor has, and moving out.
+    boton({DERECHA_X, filaY(0), DERECHA_W, FILA_H}, "Recuerdos", [hueco] { recuerdos(hueco); });
+    boton({DERECHA_X, filaY(1), DERECHA_W, FILA_H}, "Marcas", [hueco] { marcas(hueco); });
+    boton({DERECHA_X, filaY(2), DERECHA_W, FILA_H}, "Su diseño", [hueco] { diseno(hueco); });
+    boton({DERECHA_X, filaY(3), DERECHA_W, FILA_H}, "Se va a mudar", [hueco, muda] {
         ponerMudanza(partida::principal(), hueco, !muda);
-        cambio(!muda ? nombre(hueco) + " se va a mudar" : nombre(hueco) + " se queda");
+        cambio(!muda ? nombre(hueco) + " se va a mudar: hará las maletas" : nombre(hueco) + " se queda");
     }, true, muda);
-    boton("Bricolaje", resumenBricolaje(hueco), [hueco] { abrir([hueco](Vista& vi) { pantallaBricolaje(vi, hueco); }); });
-    boton("Recuerdos", resumenRecuerdos(hueco), [hueco] { recuerdos(hueco); });
-    boton("Marcas", resumenMarcas(hueco), [hueco] { marcas(hueco); });
-    boton("Su diseño", resumenDiseno(hueco), [hueco] { diseno(hueco); });
-    boton("Exportar a la SD", "Para llevarlo a otra isla", [hueco] { exportar(hueco); });
-    for (int i = 0; i < (int)b.size(); i++)
-    {
-        // Two columns, so what each one has fits.
-        b[i].r = {266 + (i % 2) * 482, 124 + (i / 2) * 60, 472, 54};
-        v.b.push_back(b[i]);
-    }
-    // A la izquierda, su cara, su nombre y su personalidad.
-    SDL_Texture* cara = retratos::de(interno);
-    const std::string especie = p < 8 ? PERSONALIDADES[p] : "";
-    v.dibujo = [cara, n, especie, muda] {
-        const SDL_Rect tarjeta = {60, 124, 190, 470};
-        redondo({tarjeta.x, tarjeta.y + 4, tarjeta.w, tarjeta.h}, 14, CREMA_OSCURA);
-        redondo(tarjeta, 14, BLANCO);
-        if (cara)
-        {
-            const SDL_Rect r = {70, 150, 170, 170};
-            SDL_RenderCopy(g_r, cara, nullptr, &r);
-        }
-        texto(encajar(n, 170, g_grande), 155, 360, MARRON, g_grande, Centro);
-        texto(encajar(especie, 170, g_pequena), 155, 404, MARRON_SUAVE, g_pequena, Centro);
-        if (muda)
-            texto("Se va a mudar", 155, 440, ROJO, g_pequena, Centro);
-    };
-    v.b.push_back({{60, ABAJO - 62, 380, 54}, "Importar de la SD…", [hueco] { importar(hueco); }});
-    v.b.push_back({{840, ABAJO - 62, 380, 54}, "Volver", [] { volver(); }});
-    v.paginar = [hueco](int d) {
-        // L y R: el vecino anterior o el siguiente.
-        for (int k = 1; k < NUM_VECINOS; k++)
-        {
-            const int otro = (hueco + d * k + NUM_VECINOS * 10) % NUM_VECINOS;
-            if (!vecinoEn(partida::principal(), otro).empty())
-            {
-                reemplazar([otro](Vista& vi) { ficha(vi, otro); }, foco());
-                return;
-            }
-        }
-    };
-    v.teclas = {{"A", "Elegir"}, {"L R", "Otro vecino"}, {"B", "Volver"}};
-}
 
-void lista(Vista& v)
-{
-    v.titulo = "Tus vecinos";
-    v.explicacion = "Elige un vecino para ver y cambiar todo lo suyo.";
-    for (int i = 0; i < NUM_VECINOS; i++)
-    {
-        const bool vacio = vecinoEn(partida::principal(), i).empty();
-        // Como NHSE para Mac: tarjetas con la cara grande, 5 por fila.
-        Boton b{{60 + (i % 5) * 236, 136 + (i / 5) * 222, 220, 206}, nombre(i), [i] { abrir([i](Vista& vi) { ficha(vi, i); }); }, !vacio};
-        b.vertical = true;
-        if (!vacio)
-        {
-            b.imagen = retratos::deHueco(i);
-            const int p = personalidad(partida::principal(), i);
-            b.detalle = seMuda(partida::principal(), i) ? std::string("Se va a mudar") : std::string(p < 8 ? PERSONALIDADES[p] : "?");
-        }
-        v.b.push_back(b);
-    }
-    v.b.push_back({{W / 2 - 200, ABAJO - 76, 400, 64}, "Volver", [] { volver(); }});
+    // Below, as the buttons of the Mac: change it for another one (blue), clothes, furniture, house, files.
+    const int y = FICHA_Y + FICHA_H + 12, h = 52;
+    Boton cambiar{{60, y, 290, h}, "Cambiar por otro vecino…", [hueco] { abrir(elegirVecino(hueco)); }, !datosVecinos().empty()};
+    cambiar.principal = true;
+    v.b.push_back(cambiar);
+    boton({362, y, 124, h}, "Ropa", [hueco] { abrir(objetos::todos(guardado(hueco, 0), 8)); });
+    boton({496, y, 140, h}, "Muebles", [hueco] { abrir(objetos::todos(guardado(hueco, 1), 8)); });
+    boton({646, y, 116, h}, "Casa", [hueco] { casa(hueco); }, casaDe(m, hueco) >= 0);
+    boton({772, y, 144, h}, "Exportar…", [hueco] { exportar(hueco); });
+    boton({926, y, 144, h}, "Importar…", [hueco] { importar(hueco); });
+    boton({1080, y, 140, h}, "Volver", [] { volver(); });
 }
 
 int cuantos()
@@ -443,7 +661,7 @@ int cuantos()
 
 Registro r1({SeccionVecinos, 10, [] { return std::string("Tus vecinos"); },
     [] { return std::to_string(cuantos()) + " viven en la isla"; },
-    [] { abrir(lista); }});
+    [] { abrir(pagina); }});
 
 Registro r2({SeccionVecinos, 20, [] { return std::string("Mejores amigos de todos"); },
     [] { return std::string("Amistad al máximo con todos"); },

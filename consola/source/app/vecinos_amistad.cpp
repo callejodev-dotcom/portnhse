@@ -4,6 +4,7 @@
 #include <cmath>
 #include <map>
 #include "../core/vecino.hpp"
+#include "dibujos.hpp"
 #include "partida.hpp"
 #include "retratos.hpp"
 #include "vecinos_ui.hpp"
@@ -31,9 +32,9 @@ std::string deDonde(int hueco, int r)
 }
 
 // Dónde va cada corazón y la barra en la pantalla de los corazones.
-constexpr int TAM = 96, PASO = 112, ARRIBA = 160;
+constexpr int TAM = 84, PASO = 100, ARRIBA = 196;
 int xCorazon(int k) { return W / 2 - (7 * PASO - (PASO - TAM)) / 2 + k * PASO; }
-constexpr SDL_Rect BARRA = {140, 360, 1000, 28};
+constexpr SDL_Rect BARRA = {140, 368, 1000, 24};
 } // namespace
 
 void corazon(int x, int y, int tam, SDL_Color c)
@@ -75,6 +76,24 @@ void corazon(int x, int y, int tam, SDL_Color c)
                 rect({x + t.a, y + fy, t.b - t.a, 1}, c);
 }
 
+void filaCorazones(int x, int y, int tam, int paso, int nivel)
+{
+    SDL_Texture* t = dibujos::menu("Love");
+    for (int k = 0; k < 7; k++)
+    {
+        if (!t)
+        {
+            corazon(x + k * paso, y, tam, k < nivel ? CORAZON : CREMA_OSCURA);
+            continue;
+        }
+        const SDL_Rect d = {x + k * paso, y, tam, tam};
+        SDL_SetTextureAlphaMod(t, k < nivel ? 255 : 60);
+        SDL_RenderCopy(g_r, t, nullptr, &d);
+    }
+    if (t)
+        SDL_SetTextureAlphaMod(t, 255);
+}
+
 std::string resumenAmistad(int hueco, int jugador)
 {
     const int r = recuerdoDe(partida::principal(), hueco, partida::personal(jugador));
@@ -97,16 +116,27 @@ void corazones(int hueco, int r)
             cambio(std::string(NIVELES[nivelAmistad((uint8_t)puntos)]) + " (" + std::to_string(puntos) + " puntos)");
         };
         v.titulo = nombre(hueco) + " y " + x.jugador;
-        v.explicacion = "Toca un corazón, o sube y baja los puntos con L y R (ZL y ZR, de 10 en 10). " + deDonde(hueco, r) + ".";
-        v.dibujo = [x, nivel] {
-            for (int k = 0; k < 7; k++)
-                corazon(xCorazon(k), ARRIBA, TAM, k < nivel ? CORAZON : CREMA_OSCURA);
-            texto(NIVELES[nivel], W / 2, ARRIBA + TAM + 34, MARRON, g_grande, Centro);
+        v.explicacion = "Toca un corazón o la barra, o sube y baja los puntos con L y R (ZL y ZR, de 10 en 10).";
+        const std::string donde = deDonde(hueco, r);
+        SDL_Texture* cara = retratos::deHueco(hueco);
+        v.dibujo = [x, nivel, donde, cara] {
+            panel({60, 112, 1160, 482}, x.jugador, nullptr, donde);
+            if (cara)
+            {
+                const SDL_Rect d = {1220 - 20 - 96, 124, 96, 96};
+                SDL_RenderCopy(g_r, cara, nullptr, &d);
+            }
+            filaCorazones(xCorazon(0), ARRIBA, TAM, PASO, nivel);
+            texto(NIVELES[nivel], W / 2, ARRIBA + TAM + 30, MARRON, g_titulo, Centro);
             redondo(BARRA, BARRA.h / 2, CREMA_OSCURA);
             const int lleno = BARRA.w * x.amistad / 255;
             if (lleno > 0)
-                redondo({BARRA.x, BARRA.y, std::max(lleno, BARRA.h), BARRA.h}, BARRA.h / 2, CORAZON);
-            texto(std::to_string(x.amistad) + " de 255 puntos", W / 2, BARRA.y + BARRA.h + 24, MARRON_SUAVE, g_pequena, Centro);
+                redondo({BARRA.x, BARRA.y, std::max(lleno, BARRA.h), BARRA.h}, BARRA.h / 2, AZUL);
+            // The knob, as the slider of the Mac.
+            const int cx = BARRA.x + lleno;
+            redondo({cx - 16, BARRA.y + BARRA.h / 2 - 16, 32, 32}, 16, AZUL);
+            redondo({cx - 10, BARRA.y + BARRA.h / 2 - 10, 20, 20}, 10, BLANCO);
+            texto(std::to_string(x.amistad) + " de 255 puntos", W / 2, BARRA.y + BARRA.h + 28, MARRON_SUAVE, g_pequena, Centro);
         };
         v.entrada = [poner](u64, u64, int tx, int ty) {
             if (tx < 0)
@@ -117,7 +147,7 @@ void corazones(int hueco, int r)
                     poner(puntosDeNivel(k + 1));
                     return true;
                 }
-            if (tx >= BARRA.x - 10 && tx <= BARRA.x + BARRA.w + 10 && ty >= BARRA.y - 16 && ty <= BARRA.y + BARRA.h + 16)
+            if (tx >= BARRA.x - 10 && tx <= BARRA.x + BARRA.w + 10 && ty >= BARRA.y - 18 && ty <= BARRA.y + BARRA.h + 18)
             {
                 poner((int)std::lround(255.0 * (tx - BARRA.x) / BARRA.w));
                 return true;
@@ -125,17 +155,17 @@ void corazones(int hueco, int r)
             return false;
         };
         v.paginar = [poner, hueco, r](int d) { poner(recuerdo(partida::principal(), hueco, r).amistad + d); };
-        // Debajo de los corazones: más y menos, los puntos, el apodo y el máximo.
-        const int y = 440;
-        v.b.push_back({{60, y, 270, 80}, "Un corazón menos", [poner, nivel] { poner(puntosDeNivel(nivel - 1)); }, nivel > 0});
-        v.b.push_back({{350, y, 270, 80}, "Un corazón más", [poner, nivel] { poner(puntosDeNivel(nivel + 1)); }, nivel < 7});
-        v.b.push_back({{640, y, 270, 80}, "Escribir los puntos", [poner, x] {
+        // Under the hearts: more and less, the points, the nickname and the maximum.
+        const int y = 452;
+        v.b.push_back({{84, y, 260, 56}, "Un corazón menos", [poner, nivel] { poner(puntosDeNivel(nivel - 1)); }, nivel > 0});
+        v.b.push_back({{356, y, 260, 56}, "Un corazón más", [poner, nivel] { poner(puntosDeNivel(nivel + 1)); }, nivel < 7});
+        v.b.push_back({{628, y, 280, 56}, "Escribir los puntos", [poner, x] {
             uint32_t p = x.amistad;
             if (pedirNumero("Puntos de amistad (de 0 a 255)", p, 255))
                 poner((int)p);
         }});
-        v.b.push_back({{930, y, 290, 80}, "Mejores amigos", [poner] { poner(255); }, x.amistad < 255});
-        Boton apodo{{60, y + 96, 560, 80}, "Te llama: " + (x.apodo.empty() ? x.jugador : x.apodo), [hueco, r, x] {
+        v.b.push_back({{920, y, 276, 56}, "Mejores amigos", [poner] { poner(255); }, x.amistad < 255});
+        Boton apodo{{84, y + 68, 560, 56}, "Te llama: " + (x.apodo.empty() ? x.jugador : x.apodo), [hueco, r, x] {
             std::string t = x.apodo;
             if (pedirTexto("Cómo llama a " + x.jugador, "Si lo dejas vacío, usará tu nombre.", t, 10))
             {
@@ -143,68 +173,174 @@ void corazones(int hueco, int r)
                 cambio(t.empty() ? "Te llamará por tu nombre" : "Te llamará «" + t + "»");
             }
         }};
-        apodo.detalle = x.apodo.empty() ? "Tu nombre (no tiene apodo)" : "Un apodo";
         v.b.push_back(apodo);
-        v.b.push_back({{850, ABAJO - 76, 370, 64}, "Volver", [] { volver(); }});
+        v.dibujo = [d = v.dibujo, x] {
+            d();
+            texto(x.apodo.empty() ? "Si no tiene apodo, usa el nombre." : "Un apodo que le ha puesto.", 660, 452 + 68 + 28 - TTF_FontHeight(g_pequena) / 2,
+                MARRON_SUAVE, g_pequena);
+        };
+        v.b.push_back({{960, ABAJO - 60, 260, 52}, "Volver", [] { volver(); }});
         v.teclas = {{"A", "Elegir"}, {"L R", "Puntos"}, {"B", "Volver"}};
     }, 1);
 }
 
+// Como FriendshipWindow del Mac: arriba cómo funciona, y una tarjeta por jugador con sus corazones (se tocan), el nivel,
+// los puntos y cómo le llama.
 void amistad(int hueco)
 {
-    abrir([hueco](Vista& v) {
+    auto pagina = std::make_shared<int>(0);
+    abrir([hueco, pagina](Vista& v) {
+        constexpr int POR_PAGINA = 2, TARJETA_Y = 238, TARJETA_H = 172, TARJETA_PASO = 184;
+        constexpr int CTAM = 50, CPASO = 58; // the hearts
         v.titulo = "Amistad con " + nombre(hueco);
-        v.explicacion = "Cada vecino tiene de 0 a 255 puntos de amistad con cada jugador (7 corazones). Sube al hablar con él "
-                        "cada día y con regalos; baja si le pegas con la red.";
+        v.explicacion = "Cómo se lleva " + nombre(hueco) + " con cada jugador. Toca un corazón o usa − y +.";
         std::vector<int> usados;
         for (int r = 0; r < NUM_RECUERDOS; r++)
             if (recuerdoUsado(partida::principal(), hueco, r))
                 usados.push_back(r);
-        for (int k = 0; k < (int)usados.size(); k++)
+        const int paginas = std::max(1, ((int)usados.size() + POR_PAGINA - 1) / POR_PAGINA);
+        *pagina = std::clamp(*pagina, 0, paginas - 1);
+        struct Tarjeta {
+            SDL_Rect r;
+            std::string jugador, donde, nivel, puntos;
+            int corazones;
+        };
+        std::vector<Tarjeta> tarjetas;
+        std::vector<std::pair<int, SDL_Rect>> zonas; // memory, hearts
+        for (int k = 0; k < POR_PAGINA && *pagina * POR_PAGINA + k < (int)usados.size(); k++)
         {
-            const int r = usados[k];
+            const int r = usados[*pagina * POR_PAGINA + k];
             const Recuerdo x = recuerdo(partida::principal(), hueco, r);
-            Boton b{{60 + (k % 2) * 590, 170 + (k / 2) * 100, 570, 88}, x.jugador + ": " + NIVELES[nivelAmistad(x.amistad)], [hueco, r] { corazones(hueco, r); }};
-            b.detalle = std::to_string(x.amistad) + " de 255 puntos · " + deDonde(hueco, r) + (x.apodo.empty() ? "" : " · Le llama «" + x.apodo + "»");
-            v.b.push_back(b);
+            const int nivel = nivelAmistad(x.amistad);
+            const SDL_Rect rr = {60, TARJETA_Y + k * TARJETA_PASO, 1160, TARJETA_H};
+            tarjetas.push_back({rr, x.jugador, deDonde(hueco, r), NIVELES[nivel], std::to_string(x.amistad) + " de 255 puntos", nivel});
+            zonas.push_back({r, {rr.x + 24, rr.y + 92, 7 * CPASO, CTAM}});
+            auto poner = [hueco, r](int puntos) {
+                puntos = std::clamp(puntos, 0, 255);
+                ponerAmistad(partida::principal(), hueco, r, (uint8_t)puntos);
+                cambio(std::string(NIVELES[nivelAmistad((uint8_t)puntos)]) + " (" + std::to_string(puntos) + " puntos)");
+            };
+            Boton apodo{{rr.x + rr.w - 24 - 330, rr.y + 18, 330, 52}, "Te llama: " + (x.apodo.empty() ? x.jugador : x.apodo), [hueco, r, x] {
+                std::string t = x.apodo;
+                if (pedirTexto("Cómo llama a " + x.jugador, "Si lo dejas vacío, usará tu nombre.", t, 10))
+                {
+                    ponerApodo(partida::principal(), hueco, r, t);
+                    cambio(t.empty() ? "Le llamará por su nombre" : "Le llamará «" + t + "»");
+                }
+            }};
+            v.b.push_back(apodo);
+            const int by = rr.y + 92, bx = rr.x + rr.w - 24 - 330;
+            v.b.push_back({{bx, by, 96, 56}, "−", [poner, nivel] { poner(puntosDeNivel(nivel - 1)); }, nivel > 0});
+            v.b.push_back({{bx + 106, by, 96, 56}, "+", [poner, nivel] { poner(puntosDeNivel(nivel + 1)); }, nivel < 7});
+            v.b.push_back({{bx + 212, by, 118, 56}, "Más…", [hueco, r] { corazones(hueco, r); }});
         }
-        if (usados.empty())
-            v.explicacion = nombre(hueco) + " todavía no conoce a ningún jugador.";
+        const bool hayPaginas = paginas > 1;
+        if (hayPaginas)
+            v.explicacion = "Cómo se lleva " + nombre(hueco) + " con cada jugador (página " + std::to_string(*pagina + 1) + " de " +
+                std::to_string(paginas) + ", L y R).";
+        v.dibujo = [tarjetas] {
+            panel({60, 112, 1160, 114}, "Cómo funciona la amistad", "Love",
+                "De 0 a 255 puntos con cada jugador, que se ven como 7 corazones. Suben al hablar con él cada día y con regalos; "
+                "bajan si le pegas con la red.");
+            for (const auto& t : tarjetas)
+            {
+                panel(t.r, t.jugador, nullptr, t.donde);
+                filaCorazones(t.r.x + 24, t.r.y + 92, CTAM, CPASO, t.corazones);
+                const int x = t.r.x + 24 + 7 * CPASO + 16;
+                texto(t.nivel, x, t.r.y + 86, MARRON, g_negrita);
+                texto(t.puntos, x, t.r.y + 120, MARRON_SUAVE, g_pequena);
+            }
+            if (tarjetas.empty())
+                texto("Todavía no conoce a ningún jugador.", W / 2, 360, MARRON_SUAVE, nullptr, Centro);
+        };
+        v.entrada = [hueco, zonas](u64, u64, int tx, int ty) {
+            if (tx < 0)
+                return false;
+            for (const auto& z : zonas)
+                if (tx >= z.second.x && tx < z.second.x + z.second.w && ty >= z.second.y && ty < z.second.y + z.second.h)
+                {
+                    const int k = (tx - z.second.x) / CPASO;
+                    ponerAmistad(partida::principal(), hueco, z.first, puntosDeNivel(k + 1));
+                    cambio(std::string(NIVELES[k + 1]));
+                    return true;
+                }
+            return false;
+        };
         bool falta = false;
         for (int r : usados)
             falta |= recuerdo(partida::principal(), hueco, r).amistad < 255;
-        v.b.push_back({{60, ABAJO - 76, 500, 64}, "Mejores amigos de todos", [hueco, usados] {
+        const int y = ABAJO - 60;
+        v.b.push_back({{60, y, 360, 52}, "Mejores amigos de todos", [hueco, usados] {
             for (int r : usados)
                 ponerAmistad(partida::principal(), hueco, r, 255);
             cambio("Mejores amigos de todos");
         }, falta});
-        v.b.push_back({{850, ABAJO - 76, 370, 64}, "Volver", [] { volver(); }});
+        v.b.push_back({{432, y, 300, 52}, "Recuerdos (expertos)…", [hueco] { recuerdos(hueco); }});
+        v.b.push_back({{960, y, 260, 52}, "Volver", [] { volver(); }});
+        if (hayPaginas)
+        {
+            v.paginar = [pagina, paginas](int d) { *pagina = std::clamp(*pagina + (d > 0 ? 1 : -1), 0, paginas - 1); };
+            v.teclas = {{"A", "Elegir"}, {"L R", "Otros jugadores"}, {"B", "Volver"}};
+        }
     });
 }
 
+// La amistad de cada vecino con un jugador, como una tabla: su cara y su nombre, los corazones, el nivel y − y +.
 void amistadDeJugador(int jugador)
 {
     auto j = std::make_shared<int>(jugador);
     abrir([j](Vista& v) {
         const int yo = *j;
         const std::string quien = partida::jugadores[yo].nombre;
+        constexpr int ARR = 112, PASO_F = 50, ALTO_F = 44, CT = 30, CP = 34;
         v.titulo = "Amistad con " + quien;
         v.explicacion = partida::jugadores.size() > 1 ? "Cómo se lleva cada vecino con " + quien + ". Otro jugador con L y R."
                                                       : "Cómo se lleva cada vecino con " + quien + ".";
+        struct Fila {
+            int y, nivel;
+            bool conoce;
+            std::string texto;
+        };
+        std::vector<Fila> filas;
         for (int i = 0; i < NUM_VECINOS; i++)
         {
             const bool vacio = vecinoEn(partida::principal(), i).empty();
+            const int y = ARR + i * PASO_F;
             const int r = vacio ? -1 : recuerdoDe(partida::principal(), i, partida::personal(yo));
-            Boton b{{60 + (i / 5) * 590, 140 + (i % 5) * 86, 570, 76}, nombre(i), [i, r] { corazones(i, r); }, r >= 0};
+            Boton b{{60, y, 300, ALTO_F}, nombre(i), [i, r] { corazones(i, r); }, r >= 0};
             if (!vacio)
-            {
-                const uint8_t p = r >= 0 ? recuerdo(partida::principal(), i, r).amistad : 0;
-                b.detalle = r >= 0 ? std::string(NIVELES[nivelAmistad(p)]) + " · " + std::to_string(p) + " de 255" : "Todavía no conoce a " + quien;
                 b.imagen = retratos::deHueco(i);
-            }
             v.b.push_back(b);
+            if (vacio)
+                continue;
+            const uint8_t p = r >= 0 ? recuerdo(partida::principal(), i, r).amistad : 0;
+            const int nivel = nivelAmistad(p);
+            filas.push_back({y, nivel, r >= 0,
+                r >= 0 ? std::string(NIVELES[nivel]) + " · " + std::to_string(p) + " de 255" : "Todavía no conoce a " + quien});
+            if (r < 0)
+                continue;
+            auto poner = [i, r](int puntos) {
+                puntos = std::clamp(puntos, 0, 255);
+                ponerAmistad(partida::principal(), i, r, (uint8_t)puntos);
+                cambio(nombre(i) + ": " + NIVELES[nivelAmistad((uint8_t)puntos)]);
+            };
+            v.b.push_back({{1000, y, 100, ALTO_F}, "−", [poner, nivel] { poner(puntosDeNivel(nivel - 1)); }, nivel > 0});
+            v.b.push_back({{1112, y, 108, ALTO_F}, "+", [poner, nivel] { poner(puntosDeNivel(nivel + 1)); }, nivel < 7});
         }
-        v.b.push_back({{W / 2 - 200, ABAJO - 76, 400, 64}, "Volver", [] { volver(); }});
+        v.dibujo = [filas] {
+            for (const auto& f : filas)
+            {
+                const int cy = f.y + ALTO_F / 2;
+                int x = 380;
+                if (f.conoce)
+                {
+                    filaCorazones(x, cy - CT / 2, CT, CP, f.nivel);
+                    x += 7 * CP + 12;
+                }
+                texto(encajar(f.texto, 990 - x, g_pequena), x, cy - TTF_FontHeight(g_pequena) / 2, f.conoce ? MARRON : MARRON_SUAVE, g_pequena);
+            }
+        };
+        v.b.push_back({{1000, ABAJO - 56, 220, 50}, "Volver", [] { volver(); }});
         if (partida::jugadores.size() > 1)
         {
             v.paginar = [j](int d) {

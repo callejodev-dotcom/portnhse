@@ -26,12 +26,16 @@ void corazones(int hueco, int recuerdo);
 std::string resumenAmistad(int hueco, int jugador);
 // Un corazón (tam = ancho) con su esquina de arriba a la izquierda en x, y.
 void corazon(int x, int y, int tam, SDL_Color c);
+// Los 7 corazones de un nivel de amistad, como el Mac: el corazón del juego, los que faltan muy claros. Uno cada «paso».
+void filaCorazones(int x, int y, int tam, int paso, int nivel);
 
 // La habitación (paredes y suelo, con su dibujo) y la casa por fuera.
 void cuarto(int hueco);
 void casa(int hueco);
 std::string resumenCuarto(int hueco);
 std::string resumenCasa(int hueco);
+// El nombre de una pared o un suelo («Pared cerámica amarilla»).
+std::string nombreParte(uint16_t id);
 
 // Lo que recuerda de cada jugador (saludos, apodo, fecha, marcas...), como VillagerMemoryEditor (vecinos_recuerdos.cpp).
 void recuerdos(int hueco);
