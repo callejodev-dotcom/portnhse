@@ -33,6 +33,57 @@ public class ConsolaMapaTests
 
     private static string[] O(params object[] args) => [.. args.Select(z => Convert.ToString(z, System.Globalization.CultureInfo.InvariantCulture)!)];
 
+    /// <summary>
+    /// Bridges and inclines (buildings 26 and 27): put in the first free building, changed, moved and removed as NHSE's
+    /// Building does it.
+    /// </summary>
+    [Fact]
+    public void BridgesAndInclinesLikeNhse()
+    {
+        Many(sav =>
+            {
+                var list = sav.Main.Buildings.ToArray();
+                var free = Array.FindIndex(list, b => b.BuildingType == BuildingType.None);
+                var bridge = list[free];
+                bridge.Clear();
+                bridge.BuildingType = BuildingType.Bridge;
+                bridge.X = 120;
+                bridge.Y = 150;
+                bridge.Angle = 1;
+                bridge.Type = (ushort)BridgeType.BridgeLog05;
+                // Changed to an iron diagonal one turned once more, and moved.
+                bridge.Type = (ushort)BridgeType.BridgeIronDiagonal030;
+                bridge.Angle = 2;
+                bridge.X = 124;
+                bridge.Y = 154;
+                var free2 = Array.FindIndex(list, free + 1, b => b.BuildingType == BuildingType.None);
+                var slope = list[free2];
+                slope.Clear();
+                slope.BuildingType = BuildingType.Incline;
+                slope.X = 90;
+                slope.Y = 60;
+                slope.Angle = 3;
+                slope.Type = (ushort)SlopeType.SlopeNatural;
+                // The first existing bridge goes away.
+                list[Array.FindIndex(list, b => b.BuildingType == BuildingType.Bridge)].Clear();
+                sav.Main.Buildings = list;
+            },
+            O("cruce-poner", 26, (int)BridgeType.BridgeLog05, 120, 150, 1), O("cruce-cambiar", FirstFree(), (int)BridgeType.BridgeIronDiagonal030, 2),
+            O("cruce-mover", FirstFree(), 124, 154), O("cruce-poner", 27, (int)SlopeType.SlopeNatural, 90, 60, 3), O("cruce-quitar", FirstBridge()));
+    }
+
+    private static int FirstFree()
+    {
+        ConsolaTests.Skip();
+        return Array.FindIndex(TestSave.LoadCopy(out _).Main.Buildings.ToArray(), b => b.BuildingType == BuildingType.None);
+    }
+
+    private static int FirstBridge()
+    {
+        ConsolaTests.Skip();
+        return Array.FindIndex(TestSave.LoadCopy(out _).Main.Buildings.ToArray(), b => b.BuildingType == BuildingType.Bridge);
+    }
+
     private static LayerFieldItem Ground(HorizonSave sav) => MapTileManagerUtil.FromSaveFile(sav.Main).FieldItems.Layer0;
 
     /// <summary> A free area of size × size tiles on the ground, away from the edges (layer tiles). </summary>

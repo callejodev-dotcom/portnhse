@@ -142,4 +142,20 @@ struct Edificio {
 // «jugadores»: los nombres de los jugadores (para sus casas).
 std::vector<Edificio> edificios(const std::vector<uint8_t>& main, const std::vector<std::string>& jugadores);
 
+// ------------------------------------------------------------------------------------- puentes y cuestas
+// Son edificios (Building de NHSE: tipo 26 puente, 27 cuesta), con su modelo (BridgeType, SlopeType), el sitio (casillas
+// del mapa entero, como los edificios) y el giro (0 a 3). Se ponen en el primer hueco libre de la lista de edificios.
+constexpr int PUENTE = 26, CUESTA = 27;
+// El hueco donde se ha puesto, o -1 si la lista de edificios está llena.
+int ponerCruce(std::vector<uint8_t>& main, int tipo, uint16_t modelo, int x, int y, int giro);
+// Cambian un puente o una cuesta que ya hay (en el hueco «i»); false si ahí no hay uno.
+bool cambiarCruce(std::vector<uint8_t>& main, int i, uint16_t modelo, int giro);
+bool moverCruce(std::vector<uint8_t>& main, int i, int x, int y);
+bool quitarCruce(std::vector<uint8_t>& main, int i);
+// Cuántos puentes (o cuestas) hay.
+int contarCruces(const std::vector<uint8_t>& main, int tipo);
+// El modelo y el giro del puente o la cuesta del hueco «i».
+uint16_t modeloCruce(const std::vector<uint8_t>& main, int i);
+int giroCruce(const std::vector<uint8_t>& main, int i);
+
 } // namespace mapa

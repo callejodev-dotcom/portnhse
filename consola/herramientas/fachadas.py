@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Los dibujos de las casas por fuera (tejados, fachadas y puertas) para NHSE para Switch.
+"""Los dibujos de las casas por fuera (tejados, fachadas y puertas), y los de los puentes y las cuestas, para NHSE para
+Switch.
 
     python3 fachadas.py CARPETA [SALIDA]
 
@@ -200,7 +201,7 @@ def main():
     salida = sys.argv[2] if len(sys.argv) > 2 else os.path.join(AQUI, "fachadas.bin")
     dibujos = {}
     for nombre in sorted(os.listdir(carpeta)):
-        if nombre.startswith("House") and nombre.endswith(".png"):
+        if nombre.startswith(("House", "Bridge", "Slope")) and nombre.endswith(".png"):
             dibujos[nombre[:-4]] = leer_png(os.path.join(carpeta, nombre))
     # Las máscaras de cada familia de fachadas, con el tamaño que más tienen.
     familias = collections.defaultdict(list)

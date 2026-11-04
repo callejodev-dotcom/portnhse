@@ -36,6 +36,8 @@ public:
     // «zoom» los puntos de pantalla por casilla. Con zoom suficiente (ZOOM_DIBUJOS), con los dibujos de las cosas: en
     // trozos de textura que se hacen una vez (unos pocos por fotograma) y se guardan los vistos hace poco.
     void dibujar(std::vector<uint8_t>& main, const SDL_Rect& destino, double x0, double y0, double zoom);
+    // Vuelve a dibujar todos los trozos (han cambiado los puentes o las cuestas, que van con el suelo).
+    void marcarTodo();
 
 private:
     struct Trozo;

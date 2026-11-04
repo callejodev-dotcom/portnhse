@@ -57,6 +57,19 @@ OrdenPrueba info("mapa-info", [](Contexto& c) {
     return 0;
 });
 
+// cruce-poner <tipo 26|27> <modelo> <x> <y> <giro>, cruce-cambiar <hueco> <modelo> <giro>, cruce-mover <hueco> <x> <y>,
+// cruce-quitar <hueco>: los puentes y las cuestas (coordenadas del mapa entero, como los edificios).
+OrdenPrueba crucePoner("cruce-poner", [](Contexto& c) {
+    const int i = ponerCruce(c.main.datos, num(c.arg(0)), (uint16_t)num(c.arg(1)), num(c.arg(2)), num(c.arg(3)), num(c.arg(4)));
+    printf("hueco %d\n", i);
+    return i < 0;
+});
+OrdenPrueba cruceCambiar("cruce-cambiar", [](Contexto& c) {
+    return cambiarCruce(c.main.datos, num(c.arg(0)), (uint16_t)num(c.arg(1)), num(c.arg(2))) ? 0 : 1;
+});
+OrdenPrueba cruceMover("cruce-mover", [](Contexto& c) { return moverCruce(c.main.datos, num(c.arg(0)), num(c.arg(1)), num(c.arg(2))) ? 0 : 1; });
+OrdenPrueba cruceQuitar("cruce-quitar", [](Contexto& c) { return quitarCruce(c.main.datos, num(c.arg(0))) ? 0 : 1; });
+
 // mapa-ver <capa> <x> <y>: qué hay.
 OrdenPrueba ver("mapa-ver", [](Contexto& c) {
     Rejilla r = capa(c.main.datos, num(c.arg(0)));

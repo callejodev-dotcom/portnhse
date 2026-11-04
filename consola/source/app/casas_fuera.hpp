@@ -19,6 +19,8 @@ SDL_Texture* foto(uint16_t tejado, uint16_t fachada, uint16_t puerta);
 
 // El dibujo de un tejado, una fachada o una puerta (para elegirlos), o nullptr si no está. Se guarda: no liberarlo.
 SDL_Texture* dibujo(Parte parte, uint16_t valor);
+// Un dibujo de fachadas.bin por su nombre interno («BridgeStone», «SlopeNatural»...), o nullptr. No liberarlo.
+SDL_Texture* dibujoNombrado(const std::string& nombre);
 // ¿Están los dibujos (fachadas.bin)?
 bool hayDibujos();
 // Un color para lo que no tiene dibujo: el que dice su nombre («tejado pizarra rojo»), o uno de su clase.

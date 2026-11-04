@@ -426,6 +426,23 @@ SDL_Texture* dibujo(Parte p, uint16_t v)
     return g.poner(n, t);
 }
 
+SDL_Texture* dibujoNombrado(const std::string& n)
+{
+    static CacheTexturas<std::string> g(24);
+    bool hallada;
+    if (SDL_Texture* ya = g.buscar(n, hallada); hallada)
+        return ya;
+    const Entrada* e = paquete().buscar(n);
+    SDL_Texture* t = nullptr;
+    if (e)
+    {
+        const std::vector<uint8_t> px = paquete().puntos(*e);
+        if (!px.empty())
+            t = textura(px, e->w, e->h);
+    }
+    return g.poner(n, t);
+}
+
 SDL_Texture* foto(uint16_t tejado, uint16_t fachada, uint16_t puertaV)
 {
     static std::map<uint64_t, SDL_Texture*> hechas;

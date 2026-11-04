@@ -144,8 +144,10 @@ Pantalla panelSitio(Sitio s)
         // Los de más: «título\ndetalle».
         for (const auto& m : s.mas)
         {
-            const size_t k = m.first.find('\n');
-            tarjeta_(m.first.substr(0, k), k == std::string::npos ? "" : m.first.substr(k + 1), m.first.rfind("Goma", 0) == 0 ? "Duster" : "Can", m.second);
+            const size_t k = m.texto.find('\n');
+            tarjeta_(m.texto.substr(0, k), k == std::string::npos ? "" : m.texto.substr(k + 1), m.texto.rfind("Goma", 0) == 0 ? "Duster" : "Can", m.accion);
+            if (m.dibujo)
+                bs.back().imagen = m.dibujo;
         }
         tarjeta_("Avanzado", "Cada valor, uno a uno", "ToolChangeStick", [s] {
             abrir(editorBruto("Opciones avanzadas", s.objeto, s.poner, [s] {

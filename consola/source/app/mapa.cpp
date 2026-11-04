@@ -10,6 +10,7 @@
 #include <ctime>
 #include <memory>
 #include "../core/mapa.hpp"
+#include "casas_fuera.hpp"
 #include "dibujos.hpp"
 #include "mapa_panel.hpp"
 #include "mapa_pintor.hpp"
@@ -53,7 +54,7 @@ uint16_t iconoTipo(Tipo t)
     return 0;
 }
 
-enum Modo { Mirar, Llevar, Marcar, Goma };
+enum Modo { Mirar, Llevar, Marcar, Goma, LlevarCruce };
 
 // Lo que se cuenta para «Ordenar la isla» (en toda la capa o en la zona), una vez por cambio.
 struct Cuenta {
@@ -96,12 +97,14 @@ struct Estado {
     Chips chips;
     std::vector<SDL_Rect> flotantes; // los recuadros encima del mapa (los nombres de los edificios no van debajo)
     Cuenta cuenta;
+    // Llevando un puente o una cuesta: su hueco en la lista de edificios.
+    int cruce = -1;
     // Cuántas iguales a la del cursor hay (se mira al mover el cursor).
     int igualesVersion = -1, igualesX = -1, igualesY = -1, igualesCapa = -1, iguales = 0;
 };
 
 std::shared_ptr<Estado> g_estado;
-std::vector<std::vector<uint8_t>> g_deshacer; // las dos capas antes de cada cambio
+std::vector<std::vector<uint8_t>> g_deshacer; // las dos capas y los edificios (puentes...) antes de cada cambio
 constexpr size_t MAX_DESHACER = 12;
 int g_version = 0; // sube con cada cambio: lo que se cuenta en las pantallas se vuelve a contar
 bool g_tocado = false; // se ha cambiado algo desde que se abrió el mapa
@@ -126,6 +129,8 @@ void recordar()
     g_tocado = true;
     const uint8_t* p = principal().data() + CAMPO;
     g_deshacer.emplace_back(p, p + 2 * TAM_CAPA);
+    const uint8_t* b = principal().data() + EDIFICIOS;
+    g_deshacer.back().insert(g_deshacer.back().end(), b, b + NUM_EDIFICIOS * 0x14);
     if (g_deshacer.size() > MAX_DESHACER)
         g_deshacer.erase(g_deshacer.begin());
 }
@@ -144,7 +149,9 @@ void deshacer()
         return;
     }
     g_version++;
-    std::copy(g_deshacer.back().begin(), g_deshacer.back().end(), principal().begin() + CAMPO);
+    const auto& d = g_deshacer.back();
+    std::copy(d.begin(), d.begin() + 2 * TAM_CAPA, principal().begin() + CAMPO);
+    std::copy(d.begin() + 2 * TAM_CAPA, d.end(), principal().begin() + EDIFICIOS);
     g_deshacer.pop_back();
     partida::cambiaPrincipal();
     cambiado("Deshecho");
@@ -220,8 +227,10 @@ const std::vector<Edificio>& losEdificios()
 {
     static std::vector<Edificio> v;
     static const uint8_t* de = nullptr;
-    if (de != principal().data() || v.empty())
+    static int version = -1;
+    if (de != principal().data() || v.empty() || version != g_version)
     {
+        version = g_version;
         std::vector<std::string> nombres;
         for (const auto& j : partida::jugadores)
             nombres.push_back(j.nombre);
@@ -238,6 +247,20 @@ const Edificio* edificioEn(double x, double y)
     for (const auto& b : losEdificios())
         if (!b.cruce() && b.contiene(x, y))
             return &b;
+    return nullptr;
+}
+
+// El puente o la cuesta que pasa por ese punto (con su giro), o nullptr.
+const Edificio* cruceEn(double x, double y)
+{
+    for (const auto& b : losEdificios())
+        if (b.cruce())
+        {
+            const double a = -b.angulo * M_PI / 180, dx = x - b.x, dy = y - b.y;
+            const double lx = dx * std::cos(a) - dy * std::sin(a), ly = dx * std::sin(a) + dy * std::cos(a);
+            if (std::abs(lx) <= b.w / 2 && std::abs(ly) <= b.h / 2)
+                return &b;
+        }
     return nullptr;
 }
 
@@ -673,6 +696,275 @@ void abrirHerramientas(std::shared_ptr<Estado> e)
     });
 }
 
+// ------------------------------------------------------------------------------------------ puentes y cuestas
+// Cada material con sus seis modelos (BridgeType de NHSE): recto corto, mediano y largo; en diagonal, igual.
+struct MaterialPuente {
+    const char* interno; // su dibujo en fachadas.bin
+    const char* nombre;
+    uint16_t modelos[6];
+};
+const MaterialPuente MATERIALES[] = {
+    {"BridgeStone", "Puente de piedra", {0, 1, 2, 3, 4, 5}},
+    {"BridgeLog", "Puente de troncos", {14, 13, 15, 16, 17, 18}},
+    {"BridgeWood", "Puente de tablones", {44, 37, 45, 46, 47, 48}},
+    {"BridgeJapanese", "Puente de madera", {19, 12, 20, 21, 22, 23}},
+    {"BridgeRed", "Puente de madera rojo", {32, 24, 33, 34, 35, 36}},
+    {"BridgeSuspension", "Puente colgante", {7, 6, 8, 9, 10, 11}},
+    {"BridgeIron", "Puente de hierro", {39, 25, 40, 41, 42, 43}},
+    {"BridgeBricks", "Puente de ladrillo", {49, 38, 52, 53, 54, 55}},
+};
+const char* const FORMAS[6] = {"Recto y corto", "Recto y mediano", "Recto y largo", "En diagonal, corto", "En diagonal, mediano", "En diagonal, largo"};
+const char* const FORMAS_DETALLE[6] = {"Para ríos estrechos", "El de siempre", "Para ríos anchos", "Cruza el río en diagonal",
+    "Cruza el río en diagonal", "Cruza el río en diagonal"};
+// Las cuestas (SlopeType de NHSE).
+struct ModeloCuesta {
+    const char* interno;
+    const char* nombre;
+    uint16_t modelo;
+};
+const ModeloCuesta CUESTAS_UI[] = {
+    {"SlopeStoneStair", "Escalera de piedra", 0}, {"SlopeWoodStair", "Escalera de troncos", 3}, {"SlopeBrickStair", "Escalera de ladrillos", 4},
+    {"SlopeIronStair", "Escalera de acero rojo", 1}, {"SlopeIronStairBlue", "Escalera de acero azul", 31}, {"SlopeWood", "Rampa de tablas blancas", 2},
+    {"SlopeWoodBlue", "Rampa de tablas azules", 30}, {"SlopeNatural", "Rampa natural", 29},
+};
+
+// El material y la forma de un modelo de puente; false si no es de la lista.
+bool buscarPuente(uint16_t modelo, int& material, int& forma)
+{
+    for (int m = 0; m < (int)(sizeof(MATERIALES) / sizeof(MATERIALES[0])); m++)
+        for (int f = 0; f < 6; f++)
+            if (MATERIALES[m].modelos[f] == modelo)
+            {
+                material = m, forma = f;
+                return true;
+            }
+    return false;
+}
+
+int buscarCuesta(uint16_t modelo)
+{
+    for (int i = 0; i < (int)(sizeof(CUESTAS_UI) / sizeof(CUESTAS_UI[0])); i++)
+        if (CUESTAS_UI[i].modelo == modelo)
+            return i;
+    return -1;
+}
+
+std::string nombreCruce(int tipo, uint16_t modelo)
+{
+    int m, f;
+    if (tipo == PUENTE)
+        return buscarPuente(modelo, m, f) ? MATERIALES[m].nombre : "Puente";
+    const int c = buscarCuesta(modelo);
+    return c >= 0 ? CUESTAS_UI[c].nombre : "Cuesta";
+}
+
+std::string formaCruce(int tipo, uint16_t modelo)
+{
+    int m, f;
+    return tipo == PUENTE && buscarPuente(modelo, m, f) ? FORMAS[f] : "";
+}
+
+// Su dibujo (de fachadas.bin, como el Mac) o, si no está, el del menú del juego.
+SDL_Texture* dibujoCruce(int tipo, uint16_t modelo)
+{
+    int m, f;
+    const int c = tipo == PUENTE ? -1 : buscarCuesta(modelo);
+    const char* interno = tipo == PUENTE ? (buscarPuente(modelo, m, f) ? MATERIALES[m].interno : nullptr) : (c >= 0 ? CUESTAS_UI[c].interno : nullptr);
+    if (interno)
+        if (SDL_Texture* t = casas_fuera::dibujoNombrado(interno))
+            return t;
+    return dibujos::menu(tipo == PUENTE ? "Bridge" : "Slope");
+}
+
+const char* const GIROS[4] = {"Sin girar", "Girado a la derecha", "Dado la vuelta", "Girado a la izquierda"};
+
+// Elegir entre tarjetas con su dibujo (los materiales, las formas...): «elegido» con su número, tras volver.
+struct Opcion {
+    std::string texto, detalle;
+    SDL_Texture* dibujo;
+};
+void elegirConDibujo(const std::string& titulo, const std::string& explicacion, std::vector<Opcion> opciones, int actual, std::function<void(int)> elegido)
+{
+    abrir([=](Vista& v) {
+        v.titulo = titulo;
+        v.explicacion = explicacion;
+        const int n = (int)opciones.size(), filas = (n + 1) / 2;
+        const int alto = std::min(96, (ABAJO - 90 - 112) / std::max(1, filas) - 12);
+        for (int i = 0; i < n; i++)
+        {
+            Boton b{{60 + (i % 2) * 590, 112 + (i / 2) * (alto + 12), 570, alto}, opciones[i].texto, [elegido, i] {
+                volver();
+                elegido(i);
+            }};
+            b.grande = true;
+            b.detalle = opciones[i].detalle;
+            b.imagen = opciones[i].dibujo;
+            b.marcado = i == actual;
+            v.b.push_back(b);
+        }
+        v.b.push_back({{W - 60 - 300, ABAJO - 66, 300, 56}, "Volver", [] { volver(); }});
+        v.atras = [] { volver(); };
+    }, std::max(0, actual));
+}
+
+// Un puente: primero el material y luego la forma. «hecho» con el modelo.
+void elegirPuente(const std::string& para, uint16_t actual, std::function<void(uint16_t)> hecho)
+{
+    int ma = -1, fa = 1;
+    buscarPuente(actual, ma, fa);
+    std::vector<Opcion> ops;
+    for (const auto& m : MATERIALES)
+        ops.push_back({m.nombre, "", dibujoCruce(PUENTE, m.modelos[1])});
+    elegirConDibujo("Elige el puente", "De qué está hecho. Después, su forma. " + para, ops, ma, [hecho, ma, fa](int m) {
+        std::vector<Opcion> fs;
+        for (int f = 0; f < 6; f++)
+            fs.push_back({FORMAS[f], FORMAS_DETALLE[f], dibujoCruce(PUENTE, MATERIALES[m].modelos[f])});
+        elegirConDibujo(MATERIALES[m].nombre, "Elige su forma: los largos sirven para ríos más anchos.", fs, m == ma ? fa : 1,
+            [hecho, m](int f) { hecho(MATERIALES[m].modelos[f]); });
+    });
+}
+
+void elegirCuesta(const std::string& para, uint16_t actual, std::function<void(uint16_t)> hecho)
+{
+    std::vector<Opcion> ops;
+    for (const auto& c : CUESTAS_UI)
+        ops.push_back({c.nombre, "", dibujoCruce(CUESTA, c.modelo)});
+    elegirConDibujo("Elige la cuesta", para, ops, buscarCuesta(actual), [hecho](int i) { hecho(CUESTAS_UI[i].modelo); });
+}
+
+std::string cuantosCruces(int tipo)
+{
+    const int n = contarCruces(principal(), tipo);
+    return tipo == PUENTE ? (n == 1 ? "La isla tiene 1 puente." : "La isla tiene " + std::to_string(n) + " puentes.")
+                          : (n == 1 ? "La isla tiene 1 cuesta." : "La isla tiene " + std::to_string(n) + " cuestas.");
+}
+
+// Pone un puente o una cuesta en el cursor.
+void ponerCruceAqui(std::shared_ptr<Estado> e, int tipo, uint16_t modelo)
+{
+    recordar();
+    if (ponerCruce(principal(), tipo, modelo, e->cx, e->cy, 0) < 0)
+    {
+        olvidarUltimo();
+        avisar("No cabe ni un edificio más en la isla: quita antes un puente o una cuesta.", true);
+        return;
+    }
+    hecho(tipo == PUENTE ? "Puente puesto (muévelo o gíralo si no queda justo encima del río)" : "Cuesta puesta (muévela o gírala si no queda justo en el desnivel)");
+}
+
+// Llevar un puente o una cuesta: se mueve con el cursor; A lo deja, B lo devuelve a su sitio.
+void empezarLlevarCruce(Estado& e, int i)
+{
+    const auto& v = losEdificios();
+    for (const auto& b : v)
+        if (b.indice == i)
+            e.cx = (int)b.x & ~1, e.cy = (int)b.y & ~1;
+    recordar();
+    e.cruce = i;
+    e.modo = LlevarCruce;
+    seguir(e);
+}
+
+void seguirCruce(Estado& e)
+{
+    if (e.modo != LlevarCruce)
+        return;
+    for (const auto& b : losEdificios())
+        if (b.indice == e.cruce && ((int)b.x != e.cx || (int)b.y != e.cy))
+        {
+            moverCruce(principal(), e.cruce, e.cx, e.cy);
+            g_version++;
+            partida::cambiaPrincipal();
+            return;
+        }
+}
+
+void cancelarLlevarCruce(Estado& e)
+{
+    e.modo = Mirar;
+    if (g_deshacer.empty())
+        return;
+    const auto& d = g_deshacer.back();
+    std::copy(d.begin() + 2 * TAM_CAPA, d.end(), principal().begin() + EDIFICIOS);
+    g_deshacer.pop_back();
+    g_version++;
+    partida::cambiaPrincipal();
+    avisar("Se queda donde estaba.");
+}
+
+// La pantalla de un puente o una cuesta (A en el mapa): cambiarlo, girarlo, moverlo o quitarlo.
+Pantalla pantallaCruce(std::shared_ptr<Estado> e, int i)
+{
+    return [e, i](Vista& v) {
+        const auto& m = principal();
+        const int tipo = (m[EDIFICIOS + i * 0x14] | (m[EDIFICIOS + i * 0x14 + 1] << 8));
+        if (tipo != PUENTE && tipo != CUESTA)
+        {
+            volver();
+            return;
+        }
+        const uint16_t modelo = modeloCruce(m, i);
+        const int giro = giroCruce(m, i);
+        const bool puente = tipo == PUENTE;
+        v.titulo = nombreCruce(tipo, modelo);
+        v.explicacion = puente ? "Un puente de la isla. Lo que cambies se ve al momento en el mapa." : "Una cuesta de la isla. Lo que cambies se ve al momento en el mapa.";
+        const std::string forma = formaCruce(tipo, modelo), cuantos = cuantosCruces(tipo);
+        SDL_Texture* d = dibujoCruce(tipo, modelo);
+        const std::string titulo = v.titulo;
+        v.dibujo = [d, forma, giro, cuantos, titulo] {
+            tarjeta({60, 112, 1160, 196});
+            foto({84, 136, 148, 148}, d, {}, false);
+            texto(encajar(titulo, 940, g_titulo), 256, 140, MARRON, g_titulo);
+            texto((forma.empty() ? "" : forma + " · ") + GIROS[giro], 256, 196, MARRON_SUAVE);
+            texto(cuantos, 256, 238, MARRON_SUAVE, g_pequena);
+        };
+        std::vector<Boton> bs;
+        auto tarjeta_ = [&](const std::string& t, const std::string& det, SDL_Texture* img, std::function<void()> f) {
+            Boton b{{}, t, std::move(f)};
+            b.detalle = det;
+            b.grande = true;
+            b.imagen = img;
+            bs.push_back(b);
+        };
+        tarjeta_(puente ? "Cambiar el puente" : "Cambiar la cuesta", puente ? "Otro material u otra forma" : "Otra escalera o rampa", d, [e, i, tipo, modelo, giro] {
+            auto poner = [e, i, giro](uint16_t nuevo) {
+                recordar();
+                cambiarCruce(principal(), i, nuevo, giro);
+                hecho("Cambiado");
+            };
+            if (tipo == PUENTE)
+                elegirPuente("", modelo, poner);
+            else
+                elegirCuesta("Elige cuál poner en su lugar.", modelo, poner);
+        });
+        tarjeta_("Girar", GIROS[(giro + 1) & 3], dibujos::menu("Windmill"), [i, modelo, giro] {
+            recordar();
+            cambiarCruce(principal(), i, modelo, giro + 1);
+            hecho("Girado");
+        });
+        tarjeta_("Mover", "Llévalo con el cursor", dibujos::menu("OneroomCardboard"), [e, i] {
+            volver();
+            empezarLlevarCruce(*e, i);
+        });
+        tarjeta_("Quitar", puente ? "La isla se queda sin este puente" : "La isla se queda sin esta cuesta", dibujos::menu("Can"), [i, puente] {
+            confirmar(puente ? "Quitar el puente" : "Quitar la cuesta", std::string(puente ? "¿Quitar este puente" : "¿Quitar esta cuesta") + "? Se puede deshacer en el mapa.",
+                "Sí, quitar", [i, puente] {
+                    recordar();
+                    quitarCruce(principal(), i);
+                    volver();
+                    hecho(puente ? "Puente quitado" : "Cuesta quitada");
+                });
+        });
+        for (size_t k = 0; k < bs.size(); k++)
+        {
+            bs[k].r = {60 + (int)(k % 2) * 590, 324 + (int)(k / 2) * 92, 570, 80};
+            v.b.push_back(bs[k]);
+        }
+        v.b.push_back({{W - 60 - 300, ABAJO - 66, 300, 56}, "Volver", [] { volver(); }});
+        v.atras = [] { volver(); };
+    };
+}
+
 // El sitio del cursor como lo usan la pantalla de un sitio y el panel: la cosa de la capa, o el cuadro vacío. false si
 // está fuera de la isla.
 bool crearSitio(std::shared_ptr<Estado> e, Sitio& s, bool conIguales)
@@ -741,6 +1033,21 @@ bool crearSitio(std::shared_ptr<Estado> e, Sitio& s, bool conIguales)
             e->aviso.clear();
             hecho("Girado");
         };
+    if (!hay && e->capa == 0 && conIguales)
+    {
+        s.mas.push_back({"Poner un puente\nAquí, sobre el río", [e] {
+            elegirPuente("Se pone donde está el cursor.", 1, [e](uint16_t m) {
+                volver();
+                ponerCruceAqui(e, PUENTE, m);
+            });
+        }, dibujos::menu("Bridge")});
+        s.mas.push_back({"Poner una cuesta\nAquí, en un desnivel", [e] {
+            elegirCuesta("Se pone donde está el cursor.", 0, [e](uint16_t m) {
+                volver();
+                ponerCruceAqui(e, CUESTA, m);
+            });
+        }, dibujos::menu("Slope")});
+    }
     if (hay)
     {
         s.mover = [e, pos] {
@@ -777,11 +1084,18 @@ bool crearSitio(std::shared_ptr<Estado> e, Sitio& s, bool conIguales)
     return true;
 }
 
+
 // Qué hay en el cursor (A): la cosa de la capa, o el edificio, o el cuadro vacío.
 void abrirSitio(std::shared_ptr<Estado> e)
 {
     Objeto o;
     int rx, ry;
+    if (!cosaEn(*e, e->cx, e->cy, o, rx, ry))
+        if (const Edificio* c = cruceEn(e->cx + 1, e->cy + 1))
+        {
+            abrir(pantallaCruce(e, c->indice));
+            return;
+        }
     if (!cosaEn(*e, e->cx, e->cy, o, rx, ry))
         if (const Edificio* b = edificioEn(e->cx + 1, e->cy + 1))
         {
@@ -869,8 +1183,15 @@ void terminarGoma(Estado& e)
         cambiado("Quitadas " + numero(e.borradas));
 }
 
+
+
 void dejarModo(Estado& e)
 {
+    if (e.modo == LlevarCruce)
+    {
+        cancelarLlevarCruce(e);
+        return;
+    }
     if (e.modo == Goma)
         terminarGoma(e);
     e.modo = Mirar;
@@ -922,6 +1243,11 @@ void pulsarA(std::shared_ptr<Estado> e)
         case Llevar:
             dejarLlevado(*e);
             break;
+        case LlevarCruce:
+            seguirCruce(*e);
+            e->modo = Mirar;
+            hecho("Movido");
+            break;
         case Marcar:
             if (!e->esquina)
             {
@@ -957,6 +1283,7 @@ bool entrada(std::shared_ptr<Estado> e, u64 down, u64 held, int tx, int ty)
     Estado& s = *e;
     if (!lienzo().listo())
         return true;
+    seguirCruce(s); // llevando un puente, va donde está el cursor
     int dx = 0, dy = 0;
     if (down & HidNpadButton_AnyLeft) dx = -1;
     if (down & HidNpadButton_AnyRight) dx = 1;
@@ -1188,6 +1515,14 @@ void dibujarMapa(std::shared_ptr<Estado> e)
             tamano(o, w, h);
             r = pantalla(s, rx + ORIGEN_X, ry + ORIGEN_Y, w, h);
         }
+        else if (const Edificio* c = cruceEn(s.cx + 1, s.cy + 1))
+        {
+            // Su caja, girada como esté (en diagonal, un cuadrado que lo abarca).
+            const double a = std::fmod(std::abs(c->angulo), 180.0);
+            const bool recto = std::abs(a) < 1 || std::abs(a - 180) < 1, tumbado = std::abs(a - 90) < 1;
+            const double w = recto ? c->w : tumbado ? c->h : (c->w + c->h) * 0.7071, h = recto ? c->h : tumbado ? c->w : w;
+            r = pantalla(s, c->x - w / 2, c->y - h / 2, w, h);
+        }
         else if (const Edificio* b = edificioEn(s.cx + 1, s.cy + 1))
             r = pantalla(s, b->x - b->w / 2, b->y - b->h / 2, b->w, b->h);
         else
@@ -1363,6 +1698,20 @@ void dibujarPanel(std::shared_ptr<Estado> e)
         }
         y += 52;
     };
+    if (s.modo == LlevarCruce)
+    {
+        const uint16_t modelo = modeloCruce(principal(), s.cruce);
+        const int tipo = principal()[EDIFICIOS + s.cruce * 0x14];
+        cabecera(dibujoCruce(tipo, modelo), {}, nombreCruce(tipo, modelo), "Moviéndolo");
+        y = encabezado("", "Lleva el cursor a su nuevo sitio (o tócalo) y pulsa A. Se ve en el mapa según lo mueves.", x, y, ancho) + 16;
+        Chip dejar{{}, "Dejar aquí", [e] { pulsarA(e); }};
+        dejar.principal = true;
+        dejar.tecla = "A";
+        Chip cancelar{{}, "Cancelar", [e] { cancelarLlevarCruce(*e); }};
+        cancelar.tecla = "B";
+        fila({dejar, cancelar});
+        return;
+    }
     if (s.modo == Llevar)
     {
         cabecera(dibujoDe(s.llevado), colorDe(s.llevado), nombre(s.llevado), "Moviéndolo");
@@ -1517,6 +1866,18 @@ void dibujarPanel(std::shared_ptr<Estado> e)
             texto("Ocupa " + std::to_string(std::max(1, w / 2)) + " × " + std::to_string(std::max(1, h / 2)) + " cuadros.", x, y, MARRON_SUAVE, g_pequena);
         return;
     }
+    if (const Edificio* b = cruceEn(s.cx + 1, s.cy + 1))
+    {
+        const uint16_t modelo = modeloCruce(principal(), b->indice);
+        foto({x + (ancho - 120) / 2, y, 120, 120}, dibujoCruce(b->tipo, modelo), {}, false);
+        y += 136;
+        const std::string forma = formaCruce(b->tipo, modelo);
+        y = encabezado(nombreCruce(b->tipo, modelo), (forma.empty() ? "" : forma + ". ") + "Pulsa A para cambiarlo, girarlo, moverlo o quitarlo.", x, y, ancho) + 12;
+        Chip abrirlo{{x, y, ancho, 44}, b->tipo == PUENTE ? "Cambiar el puente" : "Cambiar la cuesta", [e] { abrirSitio(e); }};
+        abrirlo.tecla = "A";
+        ch.poner(abrirlo);
+        return;
+    }
     if (const Edificio* b = edificioEn(s.cx + 1, s.cy + 1))
     {
         const uint16_t i = iconoDeEdificio(b->tipo);
@@ -1594,7 +1955,7 @@ Pantalla pantallaMapa()
         };
         switch (e->modo)
         {
-            case Llevar: v.teclas = {{"A", "Dejar aquí"}, {"L R", "Zoom"}, {"B", "Cancelar"}}; break;
+            case Llevar: case LlevarCruce: v.teclas = {{"A", "Dejar aquí"}, {"L R", "Zoom"}, {"B", "Cancelar"}}; break;
             case Marcar: v.teclas = {{"A", "Esquina"}, {"L R", "Zoom"}, {"B", "Cancelar"}}; break;
             case Goma: v.teclas = {{"A", "Borrar"}, {"Y", "Goma"}, {"L R", "Zoom"}, {"B", "Dejar la goma"}}; break;
             default:

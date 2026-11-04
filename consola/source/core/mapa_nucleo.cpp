@@ -650,4 +650,77 @@ std::vector<Edificio> edificios(const std::vector<uint8_t>& main, const std::vec
     return res;
 }
 
+// ------------------------------------------------------------------------------------- puentes y cuestas
+namespace {
+uint8_t* edificio(std::vector<uint8_t>& main, int i) { return main.data() + EDIFICIOS + i * 0x14; }
+const uint8_t* edificio(const std::vector<uint8_t>& main, int i) { return main.data() + EDIFICIOS + i * 0x14; }
+void pon16(uint8_t* p, int v) { p[0] = (uint8_t)v, p[1] = (uint8_t)(v >> 8); }
+bool esCruce(const std::vector<uint8_t>& main, int i)
+{
+    if (i < 0 || i >= NUM_EDIFICIOS)
+        return false;
+    const int t = lee16(edificio(main, i));
+    return t == PUENTE || t == CUESTA;
+}
+} // namespace
+
+int ponerCruce(std::vector<uint8_t>& main, int tipo, uint16_t modelo, int x, int y, int giro)
+{
+    for (int i = 0; i < NUM_EDIFICIOS; i++)
+    {
+        uint8_t* b = edificio(main, i);
+        if (lee16(b) != 0)
+            continue;
+        // Como Building de NHSE: todo a cero menos tipo, sitio, giro y modelo.
+        std::fill(b, b + 0x14, 0);
+        pon16(b, tipo);
+        pon16(b + 2, x);
+        pon16(b + 4, y);
+        b[6] = (uint8_t)(giro & 3);
+        pon16(b + 8, modelo);
+        return i;
+    }
+    return -1;
+}
+
+bool cambiarCruce(std::vector<uint8_t>& main, int i, uint16_t modelo, int giro)
+{
+    if (!esCruce(main, i))
+        return false;
+    uint8_t* b = edificio(main, i);
+    b[6] = (uint8_t)(giro & 3);
+    pon16(b + 8, modelo);
+    return true;
+}
+
+bool moverCruce(std::vector<uint8_t>& main, int i, int x, int y)
+{
+    if (!esCruce(main, i))
+        return false;
+    uint8_t* b = edificio(main, i);
+    pon16(b + 2, x);
+    pon16(b + 4, y);
+    return true;
+}
+
+bool quitarCruce(std::vector<uint8_t>& main, int i)
+{
+    if (!esCruce(main, i))
+        return false;
+    uint8_t* b = edificio(main, i);
+    std::fill(b, b + 0x14, 0); // Building.Clear
+    return true;
+}
+
+int contarCruces(const std::vector<uint8_t>& main, int tipo)
+{
+    int n = 0;
+    for (int i = 0; i < NUM_EDIFICIOS; i++)
+        n += lee16(edificio(main, i)) == tipo;
+    return n;
+}
+
+uint16_t modeloCruce(const std::vector<uint8_t>& main, int i) { return esCruce(main, i) ? lee16(edificio(main, i) + 8) : 0; }
+int giroCruce(const std::vector<uint8_t>& main, int i) { return esCruce(main, i) ? edificio(main, i)[6] & 3 : 0; }
+
 } // namespace mapa

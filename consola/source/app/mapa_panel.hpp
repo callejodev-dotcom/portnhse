@@ -22,7 +22,12 @@ struct Sitio {
     std::function<void()> mover;                    // null si no se mueve desde aquí
     bool plantas = false;                           // ofrecer también plantas, vallas y rocas
     int soloCategoria = -1;                         // solo objetos de esa categoría (paredes y suelos)
-    std::vector<std::pair<std::string, std::function<void()>>> mas; // más botones (quitar todas iguales...)
+    struct Mas {
+        std::string texto;               // «título\ndetalle»
+        std::function<void()> accion;
+        SDL_Texture* dibujo = nullptr;   // si no, el de quitar (o la goma)
+    };
+    std::vector<Mas> mas;                // más botones (quitar todas iguales, poner un puente...)
     std::function<std::pair<int, int>()> posicion;  // la casilla, para «Opciones avanzadas» (null: no se dice)
 };
 

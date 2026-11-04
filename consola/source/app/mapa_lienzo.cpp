@@ -2,6 +2,7 @@
 // objetos y los edificios, como IslandMapView de NHSE para Mac. Se compone en la CPU por trozos de 256 × 256 puntos y
 // cada trozo se sube a su textura solo cuando cambia algo de lo que se ve en él.
 #include <algorithm>
+#include <tuple>
 #include <cmath>
 #include <cstring>
 #include <map>
@@ -379,14 +380,33 @@ static std::vector<Edificio> g_edificios;
 static uint32_t g_plaza[2];
 static std::vector<SDL_Texture*> g_texEdificios; // cada edificio dibujado (para los trozos con dibujos)
 
+Lienzo& lienzo()
+{
+    static Lienzo l;
+    return l;
+}
+
 void ponerEdificios(const std::vector<Edificio>& e, uint32_t plazaX, uint32_t plazaZ)
 {
+    // Los puentes y las cuestas van pintados con el suelo: si cambian, se vuelve a pintar cada trozo.
+    auto cruces = [](const std::vector<Edificio>& v) {
+        std::vector<std::tuple<int, double, double, double, double>> c;
+        for (const auto& b : v)
+            if (b.cruce())
+                c.emplace_back(b.tipo, b.x, b.y, b.angulo, b.w);
+        return c;
+    };
+    const bool otrosCruces = cruces(e) != cruces(g_edificios);
     g_edificios = e;
     g_plaza[0] = plazaX, g_plaza[1] = plazaZ;
     for (auto* t : g_texEdificios)
         if (t)
             SDL_DestroyTexture(t);
     g_texEdificios.assign(e.size(), nullptr);
+    if (otrosCruces)
+    {
+        lienzo().marcarTodo();
+    }
 }
 
 void Lienzo::preparar(std::vector<uint8_t>& main)
@@ -405,6 +425,12 @@ void Lienzo::preparar(std::vector<uint8_t>& main)
     for (int i = 0; i < TROZOS_W * TROZOS_H; i++)
         trozos.push_back(std::make_unique<Trozo>());
     sucio.assign(TROZOS_W * TROZOS_H, true);
+}
+
+void Lienzo::marcarTodo()
+{
+    for (size_t t = 0; t < sucio.size(); t++)
+        marcar((int)t);
 }
 
 void Lienzo::marcar(int t)
@@ -844,11 +870,7 @@ void Lienzo::dibujar(std::vector<uint8_t>& main, const SDL_Rect& d, double x0, d
     SDL_RenderSetClipRect(ui::g_r, nullptr);
 }
 
-Lienzo& lienzo()
-{
-    static Lienzo l;
-    return l;
-}
+
 
 // ----------------------------------------------------------------------------------------------- dibujos de objetos
 uint16_t iconoDeEdificio(int tipo) { return iconoEdificio(tipo); }
