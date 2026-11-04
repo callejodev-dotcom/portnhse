@@ -32,6 +32,12 @@ bool hayCambios();
 bool leerArchivo(const std::string& ruta, std::vector<uint8_t>& datos);
 std::vector<std::string> archivos(const std::string& carpeta); // names of the files in a folder of the save
 
+// Otro archivo cifrado con comprobaciones (por ahora «postbox.dat», el buzón de un jugador): se lee y se comprueba la
+// primera vez que se pide; nullptr si no se puede o no está sano. Tras cambiarlo, cambiaOtro(); guardar() lo escribe con
+// lo demás. «ruta» como «/Villager0/postbox.dat» (su cabecera, «postboxHeader.dat», al lado).
+acnh::Archivo* otro(const std::string& ruta);
+void cambiaOtro(const std::string& ruta);
+
 std::string abrir();   // empty if it went well, or why not
 std::string guardar(); // empty if it went well, or why not
 void cerrar();

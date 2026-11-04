@@ -173,6 +173,7 @@ const Region REGIONES_MAIN[] = {
     {0x8a76b0, 0x03ce5c}, {0x8e4620, 0x037acc}, {0x91c0f0, 0x03ce5c}, {0x958f50, 0x057f3c},
 };
 const Region REGIONES_PERSONAL[] = {{0x00110, 0x37acc}, {0x37be0, 0x3ce5c}};
+const Region REGIONES_BUZON[] = {{0x100, 0x4732c}};
 
 uint32_t murmur3(const uint8_t* data, size_t len)
 {
@@ -201,6 +202,8 @@ bool regiones(size_t tam, const Region*& r, size_t& n)
         r = REGIONES_MAIN, n = sizeof(REGIONES_MAIN) / sizeof(Region);
     else if (tam == TAM_PERSONAL)
         r = REGIONES_PERSONAL, n = sizeof(REGIONES_PERSONAL) / sizeof(Region);
+    else if (tam == TAM_BUZON)
+        r = REGIONES_BUZON, n = 1;
     else
         return false;
     return true;
