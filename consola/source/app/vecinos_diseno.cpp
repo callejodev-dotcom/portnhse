@@ -213,14 +213,15 @@ void diseno(int hueco)
         const std::string n = nombreDiseno(d), autor = disenos::autor(d), isla = disenos::pueblo(d);
         // Sin nombre ni autor: el juego no le ha dado ninguno (todo a cero).
         const bool ninguno = disenos::nombre(d).empty() && autor.empty();
-        constexpr int X = 60, Y = 140, LADO = 384;
+        constexpr int X = 84, Y = 132, LADO = 360, TX = 484;
         v.dibujo = [tex, d, n, autor, isla, ninguno] {
+            panel({60, 112, 1160, 476}, "");
             cuadros({X, Y, LADO, LADO}, 24);
             if (ninguno)
             {
                 texto("No lleva ninguno", X + LADO / 2, Y + LADO / 2, MARRON_SUAVE, nullptr, Centro);
-                texto("No lleva ningún diseño", 500, 150, MARRON, g_grande);
-                texto("Ponle uno de los tuyos o uno de la SD.", 500, 206, MARRON_SUAVE);
+                texto("No lleva ningún diseño", TX, 140, MARRON, g_titulo);
+                texto("Ponle uno de los tuyos o uno de la SD.", TX, 196, MARRON_SUAVE);
                 return;
             }
             if (tex)
@@ -239,18 +240,20 @@ void diseno(int hueco)
                 redondo({q.x - 2, q.y - 2, q.w + 4, q.h + 4}, 13, GRIS);
                 redondo(q, 11, {r, g, b, 255});
             }
-            texto(encajar(n, 720, g_grande), 500, 150, MARRON, g_grande);
-            texto(encajar("Hecho por " + autor + " (" + isla + ")", 720), 500, 206, MARRON_SUAVE);
+            texto(encajar(n, 1196 - TX, g_titulo), TX, 140, MARRON, g_titulo);
+            texto(encajar("Hecho por " + autor + " (" + isla + ")", 1196 - TX), TX, 196, MARRON_SUAVE);
         };
-        v.b.push_back({{500, 270, 350, 96}, "Uno de la partida", [hueco] { deLaPartida(hueco); }});
-        v.b.push_back({{870, 270, 350, 96}, "Uno de la SD", [hueco] { deLaSd(hueco); }});
-        v.b.push_back({{500, 386, 350, 96}, "Guardar en la SD", [hueco] { guardar(hueco, false); }});
-        v.b.push_back({{870, 386, 350, 96}, "Guardar imagen", [hueco] { guardar(hueco, true); }});
+        v.b.push_back({{TX, 264, 346, 96}, "Uno de la partida", [hueco] { deLaPartida(hueco); }});
+        v.b.push_back({{TX + 366, 264, 346, 96}, "Uno de la SD", [hueco] { deLaSd(hueco); }});
+        v.b.push_back({{TX, 376, 346, 96}, "Guardar en la SD", [hueco] { guardar(hueco, false); }});
+        v.b.push_back({{TX + 366, 376, 346, 96}, "Guardar imagen", [hueco] { guardar(hueco, true); }});
+        for (auto& b : v.b)
+            b.grande = true;
         v.b[0].detalle = "Uno de tus diseños PRO";
         v.b[1].detalle = "Un archivo .nhpd";
         v.b[2].detalle = "Como archivo .nhpd";
         v.b[3].detalle = "Como imagen PNG";
-        v.b.push_back({{870, ABAJO - 76, 350, 64}, "Volver", [] { volver(); }});
+        v.b.push_back({{960, ABAJO - 60, 260, 52}, "Volver", [] { volver(); }});
     });
 }
 

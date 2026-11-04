@@ -205,13 +205,12 @@ void importarRecuerdoSd(int hueco, int r)
 }
 
 // ------------------------------------------------------------------------------------------- un recuerdo
-void unRecuerdo(int hueco, int r)
+// Lo que se puede cambiar de un recuerdo, en dos columnas dentro de «zona».
+void botonesRecuerdo(Vista& v, int hueco, int r, const SDL_Rect& zona)
 {
-    abrir([hueco, r](Vista& v) {
+    {
         const auto& m = partida::principal();
         const Recuerdo x = recuerdo(m, hueco, r);
-        v.titulo = nombre(hueco) + " y " + x.jugador;
-        v.explicacion = "Lo que " + nombre(hueco) + " recuerda de " + x.jugador + ", de " + x.isla + ".";
         std::vector<Boton> b;
         auto boton = [&](const std::string& t, const std::string& d, std::function<void()> f, bool activo = true) {
             Boton y{{}, t, std::move(f), activo};
@@ -258,16 +257,16 @@ void unRecuerdo(int hueco, int r)
             [visitas, x] { visitas(VISITAS_TUYAS, "Veces que " + x.jugador + " ha ido a su casa"); });
         boton("Visitas a casa de " + x.jugador, "Ha ido " + std::to_string(marcaRecuerdo(m, hueco, r, VISITAS_SUYAS)) + " veces",
             [visitas, x, hueco] { visitas(VISITAS_SUYAS, "Veces que " + nombre(hueco) + " ha ido a casa de " + x.jugador); });
-        boton("Todas las marcas", "Lo que han hecho juntos, una a una", [hueco, r] { marcasRecuerdo(hueco, r); });
+        boton("Todas las marcas", "Todo lo que han hecho juntos", [hueco, r] { marcasRecuerdo(hueco, r); });
         boton("Exportar a la SD", "Para llevarlo a otro vecino", [hueco, r] { exportarRecuerdoSd(hueco, r); });
         boton("Importar de la SD", "En lugar de este recuerdo", [hueco, r] { importarRecuerdoSd(hueco, r); });
+        const int ancho = (zona.w - 12) / 2, filas = ((int)b.size() + 1) / 2, alto = std::min(70, (zona.h - (filas - 1) * 8) / filas);
         for (int i = 0; i < (int)b.size(); i++)
         {
-            b[i].r = {50 + (i % 3) * 400, 140 + (i / 3) * 108, 380, 96};
+            b[i].r = {zona.x + (i % 2) * (ancho + 12), zona.y + (i / 2) * (alto + 8), ancho, alto};
             v.b.push_back(b[i]);
         }
-        v.b.push_back({{850, ABAJO - 76, 380, 64}, "Volver", [] { volver(); }});
-    });
+    }
 }
 } // namespace
 
@@ -280,22 +279,56 @@ std::string resumenRecuerdos(int hueco)
     return n == 0 ? "No conoce a nadie" : n == 1 ? "De 1 jugador" : "De " + std::to_string(n) + " jugadores";
 }
 
+// Como VillagerMemoryEditor del Mac: a la izquierda los 8 recuerdos (un jugador cada uno), a la derecha lo que recuerda
+// del elegido (el que tiene el cursor, o el último que se tocó).
 void recuerdos(int hueco)
 {
-    abrir([hueco](Vista& v) {
+    auto elegido = std::make_shared<int>(-1);
+    abrir([hueco, elegido](Vista& v) {
+        const auto& m = partida::principal();
         v.titulo = "Recuerdos de " + nombre(hueco);
         v.explicacion = "Lo que " + nombre(hueco) + " recuerda de cada jugador que conoce: saludos, apodo, visitas, fechas…";
+        const int f = foco();
+        if (f >= 0 && f < NUM_RECUERDOS && recuerdoUsado(m, hueco, f))
+            *elegido = f;
+        if (*elegido < 0 || !recuerdoUsado(m, hueco, *elegido))
+        {
+            *elegido = -1;
+            for (int r = 0; r < NUM_RECUERDOS && *elegido < 0; r++)
+                if (recuerdoUsado(m, hueco, r))
+                    *elegido = r;
+        }
         for (int r = 0; r < NUM_RECUERDOS; r++)
         {
-            const bool usado = recuerdoUsado(partida::principal(), hueco, r);
-            const Recuerdo x = recuerdo(partida::principal(), hueco, r);
-            Boton b{{60 + (r % 2) * 590, 150 + (r / 2) * 100, 570, 88}, usado ? x.jugador + " (" + x.isla + ")" : "Sin recuerdo",
-                [hueco, r] { unRecuerdo(hueco, r); }, usado};
+            const bool usado = recuerdoUsado(m, hueco, r);
+            const Recuerdo x = recuerdo(m, hueco, r);
+            Boton b{{60, 112 + r * 60, 300, 54}, usado ? x.jugador + " (" + x.isla + ")" : "Sin recuerdo", [elegido, r] {
+                *elegido = r;
+                enfocar(NUM_RECUERDOS);
+            }, usado, r == *elegido};
             if (usado)
-                b.detalle = std::string(NIVELES[nivelAmistad(x.amistad)]) + (x.apodo.empty() ? "" : " · Le llama «" + x.apodo + "»");
+                b.detalle = NIVELES[nivelAmistad(x.amistad)];
             v.b.push_back(b);
         }
-        v.b.push_back({{850, ABAJO - 76, 370, 64}, "Volver", [] { volver(); }});
+        const int r = *elegido;
+        const SDL_Rect zona = {380, 112, 840, 480};
+        if (r < 0)
+        {
+            v.dibujo = [hueco, zona] { panel(zona, "No conoce a nadie", "Book", nombre(hueco) + " todavía no ha conocido a ningún jugador."); };
+            v.b.push_back({{960, ABAJO - 60, 260, 52}, "Volver", [] { volver(); }});
+            return;
+        }
+        const Recuerdo x = recuerdo(m, hueco, r);
+        const int nivel = nivelAmistad(x.amistad);
+        const std::string titulo = x.jugador + ", de " + x.isla;
+        const std::string nivelTexto = std::string(NIVELES[nivel]) + " · " + std::to_string(x.amistad) + " de 255 puntos";
+        v.dibujo = [zona, titulo, nivel, nivelTexto] {
+            panel(zona, titulo);
+            filaCorazones(zona.x + 24, zona.y + 62, 30, 36, nivel);
+            texto(nivelTexto, zona.x + 24 + 7 * 36 + 12, zona.y + 77 - TTF_FontHeight(g_pequena) / 2, MARRON_SUAVE, g_pequena);
+        };
+        botonesRecuerdo(v, hueco, r, {zona.x + 20, zona.y + 108, zona.w - 40, zona.h - 124});
+        v.b.push_back({{960, ABAJO - 60, 260, 52}, "Volver", [] { volver(); }});
     });
 }
 
